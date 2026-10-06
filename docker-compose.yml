@@ -1,0 +1,57 @@
+x-app: &app
+  build: .
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-skypark}
+  restart: unless-stopped
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-skypark}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env}
+      POSTGRES_DB: ${POSTGRES_DB:-skypark}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  # для локальной разработки; на сервере убрать
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  migrator:
+    <<: *app
+    command: alembic upgrade head
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    ports:
+      - "8000:8000"
+    volumes:
+      - insightface:/root/.insightface  # веса модели (~300 МБ) скачиваются один раз
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+
+  # Напоминания за 15 минут и автозавершение посещений
+  worker:
+    <<: *app
+    command: python -m app.worker
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-skypark}
+      FACE_ENGINE: fake  # воркеру нейросеть не нужна
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
+  insightface:

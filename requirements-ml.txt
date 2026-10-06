@@ -1,0 +1,6 @@
+# Всё для продакшена: базовые зависимости + модель распознавания лиц.
+# insightface собирается из исходников: на Linux нужен компилятор (есть в Dockerfile),
+# на Windows — Microsoft C++ Build Tools. Поэтому локально проще FACE_ENGINE=fake или Docker.
+-r requirements.txt
+insightface>=0.7.3
+onnxruntime>=1.18
