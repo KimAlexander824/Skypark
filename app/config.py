@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     match_threshold: float = 0.5
     # Если два лучших кандидата отличаются меньше чем на это — ответ ambiguous.
     ambiguity_margin: float = 0.05
+    # Точность поиска по индексу HNSW (pgvector). По умолчанию в Postgres 40 — на
+    # 200 тыс. лиц это ~15% промахов; 200 — без промахов, ~15 мс на запрос.
+    hnsw_ef_search: int = 200
     # Сколько эмбеддингов хранить на ребёнка (первый — с регистрации — не удаляется).
     max_face_profiles_per_child: int = 5
 
