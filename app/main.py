@@ -1,31 +1,19 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 
-from app.api import (
-    auth,
-    bot,
-    children,
-    nanny,
-    notifications,
-    payments,
-    recognition,
-    visits,
-)
-from app.api.admin import ROUTERS as ADMIN_ROUTERS
-from app.services.errors import DomainError
-from app.services.face import get_face_engine
+from app.errors import install_error_handler
+from app.recognition.api import router as recognition_router
+from app.recognition.engine import get_face_engine
 
 log = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # Загружаем модель заранее. Если не вышло — API всё равно стартует:
-    # посещения работают, а распознавание отвечает 503 (§43).
+    # Загружаем модель заранее, чтобы первый запрос не ждал. Если не вышло —
+    # API всё равно стартует, а распознавание отвечает 503 (§43).
     try:
         get_face_engine()
     except Exception:  # noqa: BLE001
@@ -34,18 +22,11 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="СКАЙПАРК — ядро",
-    description="Распознавание лиц, посещения, продления, оплаты, уведомления.",
+    title="СКАЙПАРК — распознавание лиц",
+    description="Поиск ребёнка по фото, хранение эмбеддингов лиц (pgvector).",
     lifespan=lifespan,
 )
-
-
-@app.exception_handler(DomainError)
-async def domain_error_handler(_: Request, exc: DomainError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.code, "message": exc.message, **jsonable_encoder(exc.extra)},
-    )
+install_error_handler(app)
 
 
 @app.get("/api/health", tags=["Служебное"])
@@ -53,10 +34,4 @@ def health():
     return {"status": "ok"}
 
 
-# Ядро
-for module in (auth, children, recognition, visits, nanny, notifications, payments, bot):
-    app.include_router(module.router)
-
-# Администрирование (app/api/admin/) — новые разделы добавляются в ROUTERS там
-for admin_router in ADMIN_ROUTERS:
-    app.include_router(admin_router)
+app.include_router(recognition_router)

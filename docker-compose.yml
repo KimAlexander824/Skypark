@@ -41,17 +41,6 @@ services:
       migrator:
         condition: service_completed_successfully
 
-  # Напоминания за 15 минут и автозавершение посещений
-  worker:
-    <<: *app
-    command: python -m app.worker
-    environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-skypark}
-      FACE_ENGINE: fake  # воркеру нейросеть не нужна
-    depends_on:
-      migrator:
-        condition: service_completed_successfully
-
 volumes:
   pgdata:
   insightface:

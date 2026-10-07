@@ -8,3 +8,8 @@ venv/
 .vscode/
 .DS_Store
 *.onnx
+
+# Фото детей и дампы базы — персональные данные, в git не хранить
+photos/
+*.dump
+*.sql.gz

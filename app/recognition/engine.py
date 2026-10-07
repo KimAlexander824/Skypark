@@ -1,9 +1,10 @@
-"""Работа с лицами: фото (байты) → OpenCV → детектор/модель → эмбеддинг.
+"""Движок распознавания: фото (байты) → OpenCV → детектор/модель → эмбеддинг.
 
 Модель спрятана за интерфейсом FaceEngine, поэтому её легко подменить
 заглушкой (FakeFaceEngine) в тестах и при разработке без insightface.
 """
 
+import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Protocol
@@ -12,10 +13,14 @@ import cv2
 import numpy as np
 
 from app.config import Settings, get_settings
-from app.db.models import EMBEDDING_DIM
-import logging
-
-from app.services.errors import BadImage, LowQuality, MultipleFaces, NoFace, RecognitionUnavailable
+from app.recognition.errors import (
+    BadImage,
+    LowQuality,
+    MultipleFaces,
+    NoFace,
+    RecognitionUnavailable,
+)
+from app.recognition.models import EMBEDDING_DIM
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +41,7 @@ class DetectedFace:
     embedding: np.ndarray
     det_score: float
     thumbnail: bytes  # JPEG-вырезка лица (для сверки сотрудником)
-    card_photo: bytes  # всё фото, уменьшенное до 800 px (для карточки ребёнка)
+    card_photo: bytes  # всё фото, уменьшенное до 800 px (может пригодиться для карточки ребёнка)
 
 
 class FaceEngine(Protocol):
