@@ -10,10 +10,10 @@ from app.api import views
 from app.api.deps import Admin, CurrentUser, Now, SessionDep, Staff, actor
 from app.db.models import Child, FaceProfile, Visit
 from app.domain.enums import OPEN_VISIT_STATUSES, Role
-from app.schemas import ChildCard, ParentWithChildren, VisitOut
+from app.schemas import ChildCard, VisitOut
 from app.services import recognition, registration
 from app.services.common import audit
-from app.services.errors import ConsentRequired, Forbidden, NotFound, ParentNotFound
+from app.services.errors import ConsentRequired, Forbidden, NotFound
 from app.services.face import FaceEngine, extract_face, require_face_engine
 
 router = APIRouter(prefix="/api", tags=["Дети и родители"])
@@ -27,16 +27,6 @@ def _child(session, child_id: int) -> Child:
     return child
 
 
-@router.get("/parents/by-phone", response_model=ParentWithChildren)
-def parent_by_phone(phone: str, session: SessionDep, _: Staff):
-    """Шаг 1 регистрации (§5.1) и ручной поиск (§6.3): родитель и его дети по номеру."""
-    parent = registration.find_parent_by_phone(session, phone)
-    if parent is None:
-        raise ParentNotFound("Родитель с таким номером не найден")
-    return ParentWithChildren(
-        **views.parent_out(parent).model_dump(),
-        children=[views.child_short(c) for c in parent.children],
-    )
 
 
 @router.post("/registration", response_model=ChildCard, status_code=201)
@@ -87,9 +77,6 @@ def register(
     return views.child_card(session, child)
 
 
-@router.get("/children/{child_id}", response_model=ChildCard)
-def card(child_id: int, session: SessionDep, _: Staff):
-    return views.child_card(session, _child(session, child_id))
 
 
 @router.get("/children/{child_id}/visits", response_model=list[VisitOut])

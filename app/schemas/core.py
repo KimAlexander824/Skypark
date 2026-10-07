@@ -1,4 +1,4 @@
-"""Модели запросов и ответов API — контракт для фронтенда и бота."""
+"""Модели запросов и ответов API ядра — контракт для фронтенда и бота."""
 
 from datetime import date, datetime
 from decimal import Decimal
@@ -49,8 +49,6 @@ class ChildShort(ORM):
     gender: str | None
 
 
-class ParentWithChildren(ParentOut):
-    children: list[ChildShort]
 
 
 class ChildCard(ChildShort):
@@ -268,14 +266,3 @@ class BotExtendIn(BotChatIn):
 
     option_id: int
     promo_code: str | None = None
-
-
-class AuditOut(ORM):
-    id: int
-    actor_type: str
-    actor_user_id: int | None
-    action: str
-    entity_type: str
-    entity_id: int | None
-    data: dict
-    created_at: datetime

@@ -12,7 +12,6 @@ from app.schemas import (
     ExtensionCreate,
     ExtensionOptionOut,
     ExtensionResult,
-    NannyOut,
     OptionOut,
     PaymentOut,
     QuoteIn,
@@ -21,25 +20,14 @@ from app.schemas import (
     VisitDetail,
     VisitOut,
 )
-from app.services import extensions, nannies, pricing, visits
+from app.services import extensions, pricing, visits
 from app.services.errors import NotFound
 
 router = APIRouter(prefix="/api", tags=["Посещения"])
 
 
-@router.get("/duration-options", response_model=list[OptionOut])
-def duration_options(session: SessionDep, _: Staff, kind: OptionKind = OptionKind.VISIT):
-    """Варианты продолжительности (kind=visit) или продления (kind=extension)."""
-    return pricing.list_options(session, kind)
 
 
-@router.get("/nannies", response_model=list[NannyOut])
-def list_nannies(session: SessionDep, _: Staff, only_available: bool = False):
-    """Няни со статусом и загрузкой (§10). Назначить можно только available=true."""
-    states = nannies.list_states(session)
-    if only_available:
-        states = [s for s in states if s.available]
-    return [views.nanny_out(s) for s in states]
 
 
 @router.post("/visits/quote", response_model=QuoteOut)
