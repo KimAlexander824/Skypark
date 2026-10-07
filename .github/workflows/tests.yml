@@ -1,0 +1,54 @@
+# Автотесты на каждый Pull Request и пуш в main.
+# PR, у которого тесты не прошли, нельзя смёржить (если включена защита ветки main).
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: skypark
+          POSTGRES_PASSWORD: change-me
+          POSTGRES_DB: skypark_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U skypark -d skypark_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 15
+
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://skypark:change-me@localhost:5432/skypark_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Установить зависимости
+        run: pip install -r requirements-dev.txt
+
+      - name: Схема БД совпадает с миграциями
+        env:
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+          JWT_SECRET: ci-secret-0123456789abcdef0123456789abcdef
+          FACE_ENGINE: fake
+        run: |
+          alembic upgrade head
+          alembic check
+
+      - name: Тесты
+        run: pytest -q

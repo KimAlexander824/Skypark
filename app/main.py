@@ -5,7 +5,17 @@ from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from app.api import auth, bot, children, nanny, notifications, payments, recognition, visits
+from app.api import (
+    auth,
+    bot,
+    children,
+    nanny,
+    notifications,
+    payments,
+    recognition,
+    visits,
+)
+from app.api.admin import ROUTERS as ADMIN_ROUTERS
 from app.services.errors import DomainError
 from app.services.face import get_face_engine
 
@@ -43,5 +53,10 @@ def health():
     return {"status": "ok"}
 
 
+# Ядро
 for module in (auth, children, recognition, visits, nanny, notifications, payments, bot):
     app.include_router(module.router)
+
+# Администрирование (app/api/admin/) — новые разделы добавляются в ROUTERS там
+for admin_router in ADMIN_ROUTERS:
+    app.include_router(admin_router)
