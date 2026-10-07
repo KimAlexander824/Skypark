@@ -100,3 +100,9 @@ def test_search_uses_hnsw_index(db):
         )
     )
     assert "ix_face_profiles_hnsw" in plan
+
+
+def test_search_accuracy_setting_applied(db):
+    faces.enroll(db, 101, photo(ANNA))
+    faces.identify(db, photo(ANNA))
+    assert db.scalar(text("SHOW hnsw.ef_search")) == "200"

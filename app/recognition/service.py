@@ -18,7 +18,7 @@
 from dataclasses import dataclass
 
 import numpy as np
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -56,7 +56,11 @@ def find_candidates(
 ) -> list[Candidate]:
     """Топ-N детей по сходству. У ребёнка несколько эмбеддингов, поэтому берём
     search_k ближайших векторов (через HNSW-индекс) и оставляем лучший у каждого."""
-    threshold = get_settings().match_threshold
+    s = get_settings()
+    threshold = s.match_threshold
+    # HNSW — приближённый поиск: чем больше ef_search, тем меньше шанс пропустить
+    # нужного ребёнка. SET LOCAL действует только до конца текущей транзакции.
+    session.execute(text(f"SET LOCAL hnsw.ef_search = {int(s.hnsw_ef_search)}"))
     distance = FaceProfile.embedding.cosine_distance(embedding)
     rows = session.execute(
         select(FaceProfile.child_id, distance).order_by(distance).limit(search_k)
