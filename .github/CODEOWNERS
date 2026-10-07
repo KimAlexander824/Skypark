@@ -1,18 +1,11 @@
 # Кто обязательно ревьюит PR, затрагивающий эти файлы.
-# Замените @CORE_OWNER, @ADMIN_OWNER и @FRONTEND_OWNER на GitHub-логины участников.
+# Замените @RECOGNITION_OWNER на GitHub-логин владельца модуля распознавания.
 # Работает, если в настройках защиты main включено "Require review from Code Owners".
 # Правила читаются сверху вниз, побеждает ПОСЛЕДНЕЕ подходящее.
 
-# По умолчанию — владелец ядра
-*                               @CORE_OWNER
-
-# Администрирование (CRUD) — Акмаль
-/app/api/admin/                 @ADMIN_OWNER
-/app/db/models/admin.py         @ADMIN_OWNER
-/app/schemas/admin.py           @ADMIN_OWNER
-
-# Миграции меняют общую базу — ревьюят оба
-/migrations/                    @CORE_OWNER @ADMIN_OWNER
-
-# Фронтенд, когда появится в репозитории
-/frontend/                      @FRONTEND_OWNER
+# Модуль распознавания лиц
+/app/recognition/                @RECOGNITION_OWNER
+/scripts/evaluate_threshold.py   @RECOGNITION_OWNER
+/tests/test_service.py           @RECOGNITION_OWNER
+/tests/test_engine.py            @RECOGNITION_OWNER
+/tests/test_api.py               @RECOGNITION_OWNER

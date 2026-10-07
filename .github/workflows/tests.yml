@@ -44,7 +44,6 @@ jobs:
       - name: Схема БД совпадает с миграциями
         env:
           DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
-          JWT_SECRET: ci-secret-0123456789abcdef0123456789abcdef
           FACE_ENGINE: fake
         run: |
           alembic upgrade head
