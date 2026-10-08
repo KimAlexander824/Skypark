@@ -42,6 +42,7 @@ class DetectedFace:
     det_score: float
     thumbnail: bytes  # JPEG-вырезка лица (для сверки сотрудником)
     card_photo: bytes  # всё фото, уменьшенное до 800 px (может пригодиться для карточки ребёнка)
+    ignored_faces: int = 0  # сколько других (мелких) лиц в кадре проигнорировано
 
 
 class FaceEngine(Protocol):
@@ -181,7 +182,15 @@ def extract_face(
         raise NoFace("Лицо не найдено. Сфотографируйте ребёнка анфас при хорошем свете")
     faces.sort(key=_area, reverse=True)
     if require_single and len(faces) > 1:
-        raise MultipleFaces(f"В кадре несколько лиц ({len(faces)}) — нужен только один ребёнок")
+        # Мешают только лица, сопоставимые по размеру с главным: значит, рядом стоит
+        # ещё один человек и непонятно, кого регистрировать. Мелкие лица на заднем
+        # плане (прохожие, плакаты) игнорируем.
+        main_area = _area(faces[0])
+        rivals = [f for f in faces[1:] if _area(f) >= s.multiple_faces_min_ratio * main_area]
+        if rivals:
+            raise MultipleFaces(
+                f"В кадре несколько лиц ({len(rivals) + 1}) — нужен только один ребёнок"
+            )
 
     face = faces[0]
     x1, y1, x2, y2 = face.bbox
@@ -193,4 +202,5 @@ def extract_face(
         det_score=face.det_score,
         thumbnail=make_thumbnail(image, face.bbox),
         card_photo=encode_jpeg(image),
+        ignored_faces=len(faces) - 1,
     )

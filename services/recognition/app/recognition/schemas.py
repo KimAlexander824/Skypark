@@ -36,6 +36,7 @@ class EnrollOut(BaseModel):
     det_score: float
     source: str
     faces_count: int
+    ignored_faces: int  # мелкие лица в кадре, которые не учитывались; > 0 — сверить вырезку
 
 
 class FacesInfoOut(BaseModel):
