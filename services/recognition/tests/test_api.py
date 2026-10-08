@@ -45,3 +45,19 @@ def test_recognition_unavailable(client):
     r = client.post("/api/recognition/identify", files=files(ANNA))
     assert r.status_code == 503 and r.json()["error"] == "recognition_unavailable"
     assert client.get("/api/health").status_code == 200
+
+
+def test_invalid_source(client):
+    r = client.post("/api/recognition/faces/7", params={"source": "x"}, files=files(ANNA))
+    assert r.status_code == 400 and r.json()["error"] == "invalid_source"
+
+
+def test_internal_token(client, monkeypatch):
+    from app.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "internal_token", "secret")
+    r = client.get("/api/recognition/faces/7")
+    assert r.status_code == 401 and r.json()["error"] == "unauthorized"
+    r = client.get("/api/recognition/faces/7", headers={"X-Internal-Token": "secret"})
+    assert r.status_code == 200
+    assert client.get("/api/health").status_code == 200  # проверка здоровья без токена

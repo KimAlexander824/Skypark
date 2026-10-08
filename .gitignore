@@ -13,3 +13,6 @@ venv/
 photos/
 *.dump
 *.sql.gz
+
+# Снимок Redis, если он запускался в папке проекта
+dump.rdb

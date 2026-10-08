@@ -1,11 +1,14 @@
-# Кто обязательно ревьюит PR, затрагивающий эти файлы.
-# Замените @RECOGNITION_OWNER на GitHub-логин владельца модуля распознавания.
-# Работает, если в настройках защиты main включено "Require review from Code Owners".
-# Правила читаются сверху вниз, побеждает ПОСЛЕДНЕЕ подходящее.
+# Кто обязательно ревьюит PR, затрагивающий эти папки.
+# Замените логины-заглушки на настоящие GitHub-логины.
+# Работает, если в защите ветки main включено "Require review from Code Owners".
 
-# Модуль распознавания лиц
-/app/recognition/                @RECOGNITION_OWNER
-/scripts/evaluate_threshold.py   @RECOGNITION_OWNER
-/tests/test_service.py           @RECOGNITION_OWNER
-/tests/test_engine.py            @RECOGNITION_OWNER
-/tests/test_api.py               @RECOGNITION_OWNER
+# Сервис распознавания лиц (ядро)
+/services/recognition/          @KimAlexander824
+/docs/contracts/recognition.md  @KimAlexander824
+
+# Основной backend: CRUD, бизнес-логика, админка
+/services/backend/              @AKMAL_LOGIN
+
+# Общая инфраструктура — ревьюят оба
+/docker-compose.yml             @KimAlexander824 @AKMAL_LOGIN
+/infra/                         @KimAlexander824 @AKMAL_LOGIN

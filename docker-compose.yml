@@ -1,9 +1,22 @@
-x-app: &app
-  build: .
-  env_file: .env
-  environment:
-    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-skypark}
+# СКАЙПАРК — все сервисы вместе.
+#   docker compose up -d --build                       всё
+#   docker compose up -d --scale recognition-worker=3  больше воркеров распознавания
+# Настройки — в .env рядом с этим файлом (скопируйте .env.example).
+
+x-recognition: &recognition
+  build: ./services/recognition
   restart: unless-stopped
+  environment:
+    # Шарды: 3 базы на одном сервере Postgres. В продакшене — разные серверы,
+    # меняются только адреса. Порядок и число шардов после запуска не менять!
+    SHARD_DATABASE_URLS: >-
+      postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/recognition_1,postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/recognition_2,postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/recognition_3
+    REDIS_URL: redis://redis:6379
+    FACE_ENGINE: ${FACE_ENGINE:-insightface}
+    MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.5}
+    INTERNAL_TOKEN: ${INTERNAL_TOKEN:-}
+  volumes:
+    - insightface:/root/.insightface  # веса модели (~300 МБ) скачиваются один раз
 
 services:
   db:
@@ -12,35 +25,79 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-skypark}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env}
-      POSTGRES_DB: ${POSTGRES_DB:-skypark}
+      # Базы создаются при первом запуске (infra/postgres/init):
+      # шарды распознавания, база backend и тестовые базы.
+      POSTGRES_MULTIPLE_DATABASES: recognition_1,recognition_2,recognition_3,backend,recognition_test,recognition_test_2
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
     ports:
-      - "5432:5432"  # для локальной разработки; на сервере убрать
+      - "5432:5432"  # для разработки (DBeaver, тесты); на сервере убрать
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
       timeout: 3s
       retries: 15
 
-  migrator:
-    <<: *app
-    command: alembic upgrade head
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes  # очередь переживает перезапуск
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"  # для разработки; на сервере убрать
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  # ---------------- сервис распознавания (ядро) ----------------
+
+  recognition-migrator:  # миграции на все шарды и выход
+    <<: *recognition
+    command: python -m app.migrate
     restart: "no"
     depends_on:
       db:
         condition: service_healthy
 
-  api:
-    <<: *app
-    ports:
-      - "8000:8000"
-    volumes:
-      - insightface:/root/.insightface  # веса модели (~300 МБ) скачиваются один раз
+  recognition-worker:  # берёт задачи из очереди BullMQ; масштабируется --scale
+    <<: *recognition
+    command: python -m app.worker
     depends_on:
-      migrator:
+      redis:
+        condition: service_healthy
+      recognition-migrator:
         condition: service_completed_successfully
+
+  recognition-api:  # синхронный HTTP-вход для Swagger и отладки: http://localhost:8001/docs
+    <<: *recognition
+    ports:
+      - "8001:8000"
+    depends_on:
+      recognition-migrator:
+        condition: service_completed_successfully
+
+  # ---------------- backend (Акмаль) ----------------
+  # Когда появится services/backend/Dockerfile, раскомментировать и дополнить:
+  #
+  # backend:
+  #   build: ./services/backend
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-skypark}:${POSTGRES_PASSWORD}@db:5432/backend
+  #     REDIS_URL: redis://redis:6379   # очередь распознавания: см. docs/contracts/recognition.md
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
 
 volumes:
   pgdata:
+  redisdata:
   insightface:
