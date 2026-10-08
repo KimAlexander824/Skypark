@@ -37,3 +37,9 @@ class RecognitionUnavailable(DomainError):
 
     status_code = 503
     code = "recognition_unavailable"
+
+
+class InvalidSource(DomainError):
+    """source задан неверно (допустимо registration или visit)."""
+
+    code = "invalid_source"

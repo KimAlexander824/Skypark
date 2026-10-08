@@ -1,6 +1,14 @@
-from datetime import datetime
-
 from pydantic import BaseModel
+
+MESSAGES = {
+    "found": "Ребёнок найден",
+    "not_found": "Ребёнок не найден. Зарегистрировать нового ребёнка или выполнить поиск по номеру телефона",
+    "ambiguous": "Найдено несколько похожих детей. Выберите нужного",
+}
+
+
+def identify_message(status: str) -> str:
+    return MESSAGES[status]
 
 
 class CandidateOut(BaseModel):
@@ -12,8 +20,7 @@ class CandidateOut(BaseModel):
 class IdentifyOut(BaseModel):
     """status: found — ребёнок найден (child_id); not_found — нет совпадения
     (предложить регистрацию или поиск по телефону); ambiguous — несколько похожих
-    (сотрудник выбирает из candidates). Данные ребёнка (имя и т.д.) фронтенд
-    берёт по child_id из основной части API."""
+    (сотрудник выбирает из candidates)."""
 
     status: str
     child_id: int | None
@@ -22,12 +29,13 @@ class IdentifyOut(BaseModel):
     candidates: list[CandidateOut]
 
 
-class FaceProfileOut(BaseModel):
-    id: int
+class EnrollOut(BaseModel):
+    face_id: int
     child_id: int
+    shard: int
     det_score: float
     source: str
-    created_at: datetime
+    faces_count: int
 
 
 class FacesInfoOut(BaseModel):

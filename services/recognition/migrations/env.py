@@ -7,7 +7,14 @@ from app.config import get_settings
 from app.db.models import Base
 
 config = context.config
-config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("%", "%%"))
+# Адрес базы: из `alembic -x url=...` или от app.migrate (по очереди для каждого
+# шарда), иначе первый шард из настроек.
+_url = (
+    context.get_x_argument(as_dictionary=True).get("url")
+    or config.attributes.get("url")
+    or get_settings().shard_urls[0]
+)
+config.set_main_option("sqlalchemy.url", _url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
