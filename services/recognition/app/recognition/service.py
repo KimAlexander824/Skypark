@@ -43,6 +43,8 @@ class EnrollResult:
     det_score: float
     source: str
     faces_count: int
+    ignored_faces: int  # другие (мелкие) лица в кадре, которые не учитывались
+    thumbnail: bytes  # вырезка зарегистрированного лица — показать сотруднику для сверки
 
 
 # ---------------------------------------------------------------- поиск
@@ -126,6 +128,8 @@ def enroll(
             det_score=round(profile.det_score, 4),
             source=source,
             faces_count=count,
+            ignored_faces=face.ignored_faces,
+            thumbnail=face.thumbnail,
         )
 
 

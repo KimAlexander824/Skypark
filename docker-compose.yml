@@ -14,6 +14,7 @@ x-recognition: &recognition
     REDIS_URL: redis://redis:6379
     FACE_ENGINE: ${FACE_ENGINE:-insightface}
     MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.5}
+    MULTIPLE_FACES_MIN_RATIO: ${MULTIPLE_FACES_MIN_RATIO:-0.25}
     INTERNAL_TOKEN: ${INTERNAL_TOKEN:-}
   volumes:
     - insightface:/root/.insightface  # веса модели (~300 МБ) скачиваются один раз

@@ -77,7 +77,13 @@ def handle_enroll(data: dict) -> dict:
     if source not in service.SOURCES:
         raise UnrecoverableError(f"source должен быть одним из {service.SOURCES}")
     r = service.enroll(_child_id(data), _photo(data), source=source)
-    return {"ok": True, **r.__dict__}
+    result = {"ok": True, **r.__dict__, "thumbnail": base64.b64encode(r.thumbnail).decode("ascii")}
+    if r.ignored_faces:
+        result["warning"] = (
+            f"В кадре были ещё лица ({r.ignored_faces}), зарегистрировано самое крупное. "
+            "Проверьте по вырезке, что это ребёнок"
+        )
+    return result
 
 
 def handle_delete_faces(data: dict) -> dict:

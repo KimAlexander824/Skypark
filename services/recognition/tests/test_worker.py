@@ -1,6 +1,7 @@
 """Очередь BullMQ: воркер + клиент для backend (настоящий Redis)."""
 
 import asyncio
+import base64
 
 from app.recognition import service
 from client.recognition_client import RecognitionJobFailed
@@ -18,6 +19,8 @@ def test_enroll_identify_delete_through_queue(queue_env):
 
     r1, r2, found, deleted, after = queue_env(scenario)
     assert r1["ok"] and r1["child_id"] == 101 and r1["shard"] == 1 and r1["faces_count"] == 1
+    assert r1["ignored_faces"] == 0 and "warning" not in r1
+    assert base64.b64decode(r1["thumbnail"])[:2] == b"\xff\xd8"  # вырезка лица для сверки
     assert r2["ok"] and r2["shard"] == 0
     assert found["ok"] and found["status"] == "found" and found["child_id"] == 101
     assert found["message"] == "Ребёнок найден"

@@ -71,7 +71,7 @@ def add_face(
     """Добавить фото лица ребёнку. source=registration — первое фото (в кадре ровно
     одно лицо), source=visit — фото с повторного визита (берётся самое крупное лицо)."""
     r = service.enroll(child_id, photo.file.read(), source=source, engine=engine)
-    return EnrollOut(**r.__dict__)
+    return EnrollOut.model_validate(r, from_attributes=True)
 
 
 @router.get("/faces/{child_id}", response_model=FacesInfoOut)

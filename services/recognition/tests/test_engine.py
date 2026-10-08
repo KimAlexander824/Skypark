@@ -32,9 +32,27 @@ def test_largest_face_for_identify():
 
 
 def test_registration_requires_single_face():
-    eng = StubEngine(face(0, 0, 100, 100), face(150, 150, 280, 280))
+    eng = StubEngine(face(0, 0, 100, 100), face(150, 150, 280, 280))  # 59% — сопоставимо
     with pytest.raises(MultipleFaces):
         extract_face(eng, photo(ANNA), require_single=True, settings=S)
+
+
+def test_small_background_face_ignored_at_registration():
+    main, small = face(50, 50, 250, 250, seed=1), face(0, 0, 90, 90, seed=2)  # 20% площади
+    f = extract_face(StubEngine(small, main), photo(ANNA), require_single=True, settings=S)
+    assert np.allclose(f.embedding, main.embedding) and f.ignored_faces == 1
+
+
+def test_ratio_threshold_and_strict_mode():
+    main, other = face(50, 50, 250, 250, seed=1), face(0, 0, 110, 110, seed=2)  # 30%
+    with pytest.raises(MultipleFaces):  # 30% >= 25% — сопоставимо
+        extract_face(StubEngine(main, other), photo(ANNA), require_single=True, settings=S)
+    loose = Settings(min_det_score=0.6, min_face_px=80, max_image_side=1280, multiple_faces_min_ratio=0.4)
+    assert extract_face(StubEngine(main, other), photo(ANNA), require_single=True, settings=loose).ignored_faces == 1
+    strict = Settings(min_det_score=0.6, min_face_px=80, max_image_side=1280, multiple_faces_min_ratio=0)
+    small = face(0, 0, 90, 90, seed=3)
+    with pytest.raises(MultipleFaces):  # строгий режим: любое второе лицо
+        extract_face(StubEngine(main, small), photo(ANNA), require_single=True, settings=strict)
 
 
 def test_low_detector_score_ignored():

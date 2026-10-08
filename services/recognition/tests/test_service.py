@@ -67,15 +67,29 @@ def test_photo_errors(clean):
         service.enroll(101, photo(ANNA), source="other")
 
 
-def test_registration_requires_single_face(clean):
+def two_faces(second_bbox):
+    """Движок-заглушка: главное лицо (240x240) + ещё одно лицо заданного размера."""
+
     class TwoFaces:
         def detect(self, image):
             from app.recognition.engine import FakeFaceEngine, RawFace
 
             f = FakeFaceEngine().detect(image)[0]
-            return [f, RawFace((0, 0, 100, 100), 0.9, f.embedding)]
+            return [f, RawFace(second_bbox, 0.9, f.embedding)]
 
+    return TwoFaces()
+
+
+def test_registration_rejects_comparable_second_face(clean):
+    rival = two_faces((0, 0, 200, 200))  # ~70% площади главного — рядом ещё человек
     with pytest.raises(MultipleFaces):
-        service.enroll(101, photo(ANNA), engine=TwoFaces())
+        service.enroll(101, photo(ANNA), engine=rival)
     # с визита — можно, берётся самое крупное лицо
-    assert service.enroll(101, photo(ANNA), source="visit", engine=TwoFaces()).faces_count == 1
+    assert service.enroll(101, photo(ANNA), source="visit", engine=rival).faces_count == 1
+
+
+def test_registration_ignores_small_background_face(clean):
+    background = two_faces((0, 0, 100, 100))  # ~17% площади главного — прохожий сзади
+    r = service.enroll(101, photo(ANNA), engine=background)
+    assert r.faces_count == 1 and r.ignored_faces == 1
+    assert r.thumbnail[:2] == b"\xff\xd8"  # вырезка для сверки сотрудником

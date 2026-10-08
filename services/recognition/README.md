@@ -54,6 +54,7 @@ backend кладёт задачу, воркеры её выполняют.
 | `MATCH_THRESHOLD` | 0.5 | порог «тот же ребёнок» — подобрать на реальных фото |
 | `AMBIGUITY_MARGIN` | 0.05 | разница двух лучших меньше → `ambiguous` |
 | `HNSW_EF_SEARCH` | 200 | точность поиска по индексу |
+| `MULTIPLE_FACES_MIN_RATIO` | 0.25 | при регистрации лица меньше этой доли главного игнорируются; 0 — строго одно лицо |
 | `MAX_FACE_PROFILES_PER_CHILD` | 5 | фото лица на ребёнка |
 | `INTERNAL_TOKEN` | — | токен HTTP API (`X-Internal-Token`) |
 
