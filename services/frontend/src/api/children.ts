@@ -51,6 +51,8 @@ export interface RegisterChildInput {
   parent: { existingId: ID } | { new: NewParentInput }
   child: NewChildInput
   createdBy: ID
+  /** Сотрудник подтвердил, что это другой ребёнок, хотя лицо совпало (например, близнецы) — имя совпавшего ребёнка. */
+  faceMatchOverride?: string
 }
 
 function toListItem(child: Child): ChildListItem {
@@ -153,7 +155,13 @@ export const childrenApi = {
       createdBy: input.createdBy,
     }
     db.children.push(child)
-    audit({ action: 'child_registered', actorId: input.createdBy, subject: `${child.firstName} ${child.lastName}`, link: `/children/${child.id}` })
+    audit({
+      action: 'child_registered',
+      actorId: input.createdBy,
+      subject: `${child.firstName} ${child.lastName}`,
+      details: input.faceMatchOverride ? `Лицо совпало с «${input.faceMatchOverride}» — подтверждено, что это другой ребёнок` : undefined,
+      link: `/children/${child.id}`,
+    })
     persist()
     return child
   },
