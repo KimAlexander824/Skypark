@@ -1,0 +1,43 @@
+import type { AuditEntry, NotificationEvent, Visit } from '@/types'
+import { db, uid } from './mock/db'
+
+/*
+ * Журнал действий (ТЗ §41) и уведомления (ТЗ §15, §30). На backend это будут отдельные
+ * таблицы и очередь отправки в Telegram; здесь — записи в демо-базе.
+ * Функции не вызывают persist(): сохраняет вызывающий метод API вместе со своими изменениями.
+ */
+
+const AUDIT_LIMIT = 1000
+const NOTIFICATIONS_LIMIT = 300
+
+export const PARENT_ACTOR = 'Родитель (Telegram)'
+export const SYSTEM_ACTOR = 'Система'
+
+export function audit(entry: Omit<AuditEntry, 'id' | 'at'>) {
+  db.audit.unshift({ id: uid('a'), at: new Date().toISOString(), ...entry })
+  if (db.audit.length > AUDIT_LIMIT) db.audit.length = AUDIT_LIMIT
+}
+
+export const childLabel = (childId: string) => {
+  const c = db.children.find((x) => x.id === childId)
+  return c ? `${c.firstName} ${c.lastName}` : '—'
+}
+
+/** Уведомление о событии посещения. Родителю — в Telegram, если он привязан (ТЗ §44). */
+export function notify(visit: Visit, event: NotificationEvent, recipients: ('parent' | 'staff')[], text: string) {
+  const child = db.children.find((c) => c.id === visit.childId)
+  const parent = db.parents.find((p) => p.id === child?.parentId)
+  const at = new Date().toISOString()
+  for (const recipient of recipients)
+    db.notifications.unshift({
+      id: uid('nt'),
+      at,
+      event,
+      recipient,
+      visitId: visit.id,
+      childId: visit.childId,
+      text,
+      ...(recipient === 'parent' ? { delivery: parent?.telegram?.linked ? 'sent' : 'not_linked' } : { read: false }),
+    })
+  if (db.notifications.length > NOTIFICATIONS_LIMIT) db.notifications.length = NOTIFICATIONS_LIMIT
+}

@@ -1,5 +1,5 @@
 import type { Tone } from '@/components/ui/Display'
-import type { NannyStatus, PaymentStatus, Role, VisitStatus } from '@/types'
+import type { AuditAction, NannyStatus, NotificationEvent, PaymentStatus, Role, VisitStatus } from '@/types'
 
 interface StatusMeta {
   label: string
@@ -38,4 +38,27 @@ export const roleLabel: Record<Role, string> = {
   admin: 'Администратор',
   staff: 'Сотрудник',
   nanny: 'Няня',
+}
+
+// ТЗ §41
+export const auditActionLabel: Record<AuditAction, string> = {
+  child_registered: 'Зарегистрировал ребёнка',
+  visit_created: 'Создал посещение и назначил няню',
+  visit_finished: 'Завершил посещение',
+  visit_extended: 'Продлил посещение',
+  extension_declined: 'Отказался от продления',
+  discount_applied: 'Применил скидку',
+  discount_saved: 'Скидка',
+  promo_saved: 'Промокод',
+}
+
+// ТЗ §15, §30
+export const notificationEventLabel: Record<NotificationEvent, string> = {
+  visit_started: 'Посещение началось',
+  ending_soon: 'До окончания 15 минут',
+  extended: 'Продление выполнено',
+  extension_declined: 'Отказ от продления',
+  payment_paid: 'Оплата выполнена',
+  payment_failed: 'Ошибка оплаты',
+  visit_finished: 'Посещение завершено',
 }

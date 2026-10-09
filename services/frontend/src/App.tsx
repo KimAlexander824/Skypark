@@ -5,6 +5,7 @@ import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { DiscountsPage } from '@/pages/admin/DiscountsPage'
 import { EmployeesPage } from '@/pages/admin/EmployeesPage'
 import { NanniesAdminPage } from '@/pages/admin/NanniesAdminPage'
+import { AuditLogPage } from '@/pages/admin/AuditLogPage'
 import { NewsPage } from '@/pages/admin/NewsPage'
 import { ParentsPage } from '@/pages/admin/ParentsPage'
 import { PaymentsPage } from '@/pages/admin/PaymentsPage'
@@ -16,6 +17,7 @@ import { ChildRegistrationPage } from '@/pages/children/ChildRegistrationPage'
 import { ChildrenListPage } from '@/pages/children/ChildrenListPage'
 import { NannyPage } from '@/pages/nanny/NannyPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { NotificationsPage } from '@/pages/NotificationsPage'
 import { PreferencesPage } from '@/pages/PreferencesPage'
 import { ReceptionPage } from '@/pages/ReceptionPage'
 import { NewVisitPage } from '@/pages/visits/NewVisitPage'
@@ -53,6 +55,7 @@ export default function App() {
         <Route path="visits/new" element={<RequireAuth roles={[...reception]}><NewVisitPage /></RequireAuth>} />
 
         {/* Няня — ТЗ §13 */}
+        <Route path="notifications" element={<RequireAuth roles={[...reception]}><NotificationsPage /></RequireAuth>} />
         <Route path="nanny" element={<RequireAuth roles={['nanny']}><NannyPage /></RequireAuth>} />
 
         {/* Личные настройки сотрудника и няни */}
@@ -68,6 +71,7 @@ export default function App() {
         <Route path="admin/promocodes" element={<RequireAuth roles={[...admin]}><PromoCodesPage /></RequireAuth>} />
         <Route path="admin/news" element={<RequireAuth roles={[...admin]}><NewsPage /></RequireAuth>} />
         <Route path="admin/schedule" element={<RequireAuth roles={[...admin]}><SchedulePage /></RequireAuth>} />
+        <Route path="admin/audit" element={<RequireAuth roles={[...admin]}><AuditLogPage /></RequireAuth>} />
         <Route path="admin/settings" element={<RequireAuth roles={[...admin]}><SettingsPage /></RequireAuth>} />
       </Route>
 

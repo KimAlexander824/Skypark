@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ChevronDown, LogOut, Menu, X } from 'lucide-react'
 import { Logo } from '@/components/brand/Logo'
 import { useAuth, useCurrentUser } from '@/features/auth/AuthProvider'
+import { useUnreadNotifications } from '@/features/notifications/queries'
 import { cn, fullName } from '@/lib/format'
 import { roleLabel } from '@/lib/statuses'
 import { isItemActive, navigationFor, type NavGroup, type NavItem } from './navigation'
@@ -89,10 +90,17 @@ function NavItemLink({ item, nested }: { item: NavItem; nested?: boolean }) {
           {isActive && <span className="absolute top-2 bottom-2 left-0 w-[3px] rounded-r-full bg-accent-500" />}
           <Icon className={cn(nested ? 'size-4' : 'size-[18px]', isActive ? 'text-accent-600' : 'text-mist-400 group-hover:text-ink-900')} />
           <span className="flex-1">{item.label}</span>
+          {item.badge === 'unreadNotifications' && <UnreadBadge />}
         </>
       )}
     </NavLink>
   )
+}
+
+function UnreadBadge() {
+  const { data } = useUnreadNotifications()
+  if (!data) return null
+  return <span className="tabular min-w-5 rounded-full bg-accent-500 px-1.5 text-center text-[11px] leading-5 font-bold text-snow">{data > 99 ? '99+' : data}</span>
 }
 
 function NavGroupSection({ group, open, onToggle }: { group: NavGroup; open: boolean; onToggle: () => void }) {

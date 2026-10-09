@@ -22,7 +22,7 @@ import { CameraCapture } from '@/components/camera/CameraCapture'
 import { Button } from '@/components/ui/Button'
 import { Avatar, Badge, Card, IconTile, PageHeader } from '@/components/ui/Display'
 import { FieldShell, Input, PhoneInput, Textarea } from '@/components/ui/Field'
-import { Segmented } from '@/components/ui/Overlay'
+import { Modal, Segmented } from '@/components/ui/Overlay'
 import { Stepper } from '@/components/ui/Stepper'
 import { useCurrentUser } from '@/features/auth/AuthProvider'
 import { useParentLookup, useRegisterChild } from '@/features/children/queries'
@@ -117,24 +117,23 @@ export function ChildRegistrationPage() {
   }
 
   const [saving, setSaving] = useState<string>()
+  /** Лицо совпало с уже зарегистрированным ребёнком — спрашиваем сотрудника (близнецы). */
+  const [duplicate, setDuplicate] = useState<{ child: Child; parent: Parent }>()
 
   /*
    * Порядок по контракту распознавания (docs/contracts/recognition.md):
    * 1) поиск по фото — не зарегистрирован ли ребёнок уже; 2) создать карточку;
    * 3) запомнить лицо (source=registration); если не получилось — карточка остаётся «без фото».
    */
-  const submit = async () => {
+  const submit = async (override?: Child) => {
     try {
-      if (photo && faceMode === 'service') {
+      if (photo && faceMode === 'service' && !override) {
         setSaving('Проверяем, нет ли ребёнка в базе…')
         const found = await faceApi.identify(photo)
         if (found.status === 'match' || found.status === 'ambiguous') {
           const id = found.status === 'match' ? found.childId : found.candidates[0].childId
           const dup = await childrenApi.get(id)
-          toast.warning('Похоже, ребёнок уже зарегистрирован', {
-            description: `${fullName(dup.child)} · родитель ${fullName(dup.parent)}`,
-            action: { label: 'Открыть', onClick: () => navigate(`/children/${id}`) },
-          })
+          setDuplicate({ child: dup.child, parent: dup.parent })
           return
         }
         if (found.status !== 'not_found' && found.status !== 'unavailable') {
@@ -149,6 +148,7 @@ export function ChildRegistrationPage() {
         parent: parent.kind === 'existing' ? { existingId: parent.parent.id } : { new: (parent as { data: NewParentInput }).data },
         child: { ...child, firstName: child.firstName.trim(), lastName: child.lastName.trim(), photoUrl: photo },
         createdBy: user.id,
+        faceMatchOverride: override ? fullName(override) : undefined,
       })
 
       if (photo) {
@@ -378,7 +378,7 @@ export function ChildRegistrationPage() {
                 </dl>
               </div>
               <StepFooter onBack={() => setStep(2)}>
-                <Button size="lg" onClick={submit} loading={Boolean(saving)} leftIcon={<PartyPopper />}>
+                <Button size="lg" onClick={() => submit()} loading={Boolean(saving)} leftIcon={<PartyPopper />}>
                   {saving ?? 'Создать карточку'}
                 </Button>
               </StepFooter>
@@ -388,7 +388,68 @@ export function ChildRegistrationPage() {
 
         <SummaryAside step={step} parentName={parentName} phone={phone} child={child} photo={photo} />
       </div>
+
+      <DuplicateModal
+        match={duplicate}
+        onClose={() => setDuplicate(undefined)}
+        onOpen={(id) => navigate(`/children/${id}`)}
+        onRegisterAnyway={(c) => {
+          setDuplicate(undefined)
+          submit(c)
+        }}
+      />
     </div>
+  )
+}
+
+/**
+ * Лицо на фото совпало с уже зарегистрированным ребёнком. Обычно это повторная регистрация —
+ * открываем карточку. Но у близнецов лица могут совпасть: тогда сотрудник подтверждает,
+ * что это другой ребёнок, и это фиксируется в журнале действий (ТЗ §41).
+ */
+function DuplicateModal({
+  match,
+  onClose,
+  onOpen,
+  onRegisterAnyway,
+}: {
+  match?: { child: Child; parent: Parent }
+  onClose: () => void
+  onOpen: (childId: string) => void
+  onRegisterAnyway: (child: Child) => void
+}) {
+  // помним последнее совпадение, чтобы содержимое не пропадало во время анимации закрытия
+  const [last, setLast] = useState(match)
+  if (match && match !== last) setLast(match)
+  const m = match ?? last
+
+  return (
+    <Modal open={Boolean(match)} onClose={onClose} size="xs" bare>
+      {m && (
+        <div className="px-6 pt-5 pb-6 text-center sm:pt-7">
+          <div className="flex justify-center">
+            <Avatar src={m.child.photoUrl} firstName={m.child.firstName} lastName={m.child.lastName} seed={m.child.id} size="lg" />
+          </div>
+          <h2 className="mt-4 text-[19px] font-extrabold tracking-tight text-ink-900">Ребёнок уже зарегистрирован?</h2>
+          <p className="mx-auto mt-1.5 max-w-[290px] text-[13.5px] leading-snug font-medium text-mist-500">
+            Лицо на фото совпало с карточкой <b className="text-ink-900">{fullName(m.child)}</b> (родитель {fullName(m.parent)}, {formatPhone(m.parent.phone)}).
+          </p>
+
+          <div className="mt-5 flex flex-col gap-2">
+            <Button size="lg" variant="contrast" className="w-full" onClick={() => onOpen(m.child.id)}>
+              Открыть карточку
+            </Button>
+            <Button size="lg" variant="secondary" className="w-full" onClick={() => onRegisterAnyway(m.child)}>
+              Это другой ребёнок (близнец)
+            </Button>
+            <button type="button" onClick={onClose} className="h-11 rounded-full text-sm font-bold text-mist-500 transition hover:text-ink-900">
+              Отмена
+            </button>
+          </div>
+          <p className="mt-3 text-[11.5px] leading-snug font-medium text-mist-400">Регистрация другого ребёнка с совпавшим лицом сохранится в журнале действий.</p>
+        </div>
+      )}
+    </Modal>
   )
 }
 

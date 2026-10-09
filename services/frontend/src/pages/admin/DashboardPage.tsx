@@ -111,7 +111,7 @@ export function DashboardPage() {
           icon={<ClipboardList />}
           value={data?.visits.total}
           delta={data && <Delta current={data.visits.total} previous={data.previous.visits} />}
-          footnote="к прошлому периоду"
+          footnote={data && `активно ${data.visits.active} · завершено ${data.visits.completed}`}
         />
         <StatTile
           label="Сумма оплат"

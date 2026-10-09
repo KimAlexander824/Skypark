@@ -16,7 +16,6 @@ import {
   RefreshCw,
   ScanFace,
   Search,
-  Sparkles,
   UserRoundSearch,
   UserRoundX,
   Users,
@@ -110,15 +109,7 @@ export function ReceptionPage() {
             icon={<ScanFace />}
             title="Распознавание по лицу"
             description="Для повторного посещения"
-            action={
-              faceMode === 'service' ? (
-                <Badge tone="violet" icon={<Sparkles />}>
-                  AI
-                </Badge>
-              ) : (
-                <Badge tone="neutral">Демо</Badge>
-              )
-            }
+            action={faceMode === 'mock' ? <Badge tone="neutral">Демо</Badge> : undefined}
           />
           <div className="grid gap-5 px-5 pb-5 md:grid-cols-[1fr_minmax(240px,0.8fr)] xl:grid-cols-1 2xl:grid-cols-[1fr_minmax(260px,0.8fr)]">
             <CameraCapture key={cameraKey} value={photo} onChange={onPhoto} scanning={recognize.isPending} />
