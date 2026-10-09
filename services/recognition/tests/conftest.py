@@ -35,6 +35,7 @@ os.environ.update(
     FACE_ENGINE="fake",
     MAX_FACE_PROFILES_PER_CHILD="3",
     INTERNAL_TOKEN="",
+    APP_ENV="dev",
 )
 
 # --- «лица» для FakeFaceEngine (BGR) ---

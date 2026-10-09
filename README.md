@@ -36,6 +36,17 @@ docker compose up -d --build
 - Postgres (`localhost:5432`, пользователь `skypark`) содержит базы `recognition_1..3` (шарды),
   `backend`, тестовые базы. Они создаются при ПЕРВОМ запуске: чтобы пересоздать — `docker compose down -v`.
 
+## Продакшен
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+В `.env` на сервере обязательно задать `POSTGRES_PASSWORD`, `REDIS_PASSWORD`,
+`INTERNAL_TOKEN` (сгенерировать: `python -c "import secrets; print(secrets.token_urlsafe(32))"`).
+Наружу не открыт ни один порт — только backend через HTTPS. Подробности, мониторинг и резервные
+копии: [`services/recognition/README.md`](services/recognition/README.md#безопасность-и-продакшен).
+
 ## Правила работы
 
 - Каждый работает в своей папке `services/<сервис>/` и в своей ветке, в `main` — только через PR.

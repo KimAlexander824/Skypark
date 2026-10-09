@@ -1,9 +1,14 @@
-.git
+# В образ не попадают: настройки с паролями, фото, дампы, кеши
 .env
-.venv
-venv
-__pycache__
-.pytest_cache
+photos/
+*.dump
+*.sql.gz
+dump.rdb
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+tests/
+.git
 .idea
-tests
-photos

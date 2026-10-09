@@ -29,7 +29,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from client.recognition_client import RecognitionClient  # noqa: E402
 
-IMAGE_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+IMAGE_EXT = {".jpg", ".jpeg", ".png"}  # сервис принимает только JPEG и PNG
 FIRST_ID = 900001  # тестовые child_id, чтобы не пересечься с настоящими детьми
 
 

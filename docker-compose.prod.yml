@@ -1,0 +1,63 @@
+# Продакшен-настройки поверх docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Что меняется по сравнению с разработкой:
+#   - наружу не открыт НИ ОДИН порт: базы, Redis и API распознавания доступны только
+#     сервисам внутри сети docker. Наружу смотрит только backend (через HTTPS-прокси);
+#   - Redis с паролем и БЕЗ записи на диск: фото детей из задач не попадают на диск.
+#     Если Redis перезапустится, задачи в очереди пропадут — backend получит ошибку
+#     и сотрудник найдёт ребёнка по телефону; потерянные удаления лиц подберёт
+#     ночная сверка sync_children (docs/contracts/recognition.md);
+#   - APP_ENV=prod: сервис не запустится с паролями-примерами, без токена,
+#     с FACE_ENGINE=fake; Swagger выключен;
+#   - контейнеры распознавания: файловая система только для чтения, без привилегий;
+#   - тестовые базы не создаются.
+#
+# В .env на сервере ОБЯЗАТЕЛЬНО (сгенерировать: python -c "import secrets; print(secrets.token_urlsafe(32))"):
+#   POSTGRES_PASSWORD, REDIS_PASSWORD, INTERNAL_TOKEN
+# Требуется Docker Compose 2.24+ (для !reset).
+
+x-recognition-prod: &recognition-prod
+  environment:
+    APP_ENV: prod
+    REDIS_URL: redis://:${REDIS_PASSWORD:?Задайте REDIS_PASSWORD в .env}@redis:6379
+    INTERNAL_TOKEN: ${INTERNAL_TOKEN:?Задайте INTERNAL_TOKEN в .env (32+ символа)}
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  logging:  # журнал доступа (AUDIT) идёт в stdout; на сервере его забирает сборщик логов
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "20"
+
+services:
+  db:
+    ports: !reset []
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: recognition_1,recognition_2,recognition_3,backend
+
+  redis:
+    ports: !reset []
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Задайте REDIS_PASSWORD в .env}
+    command: >-
+      sh -c 'exec redis-server --requirepass "$$REDIS_PASSWORD" --save "" --appendonly no'
+    volumes: !reset []
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep -q PONG"]
+
+  recognition-migrator:
+    <<: *recognition-prod
+
+  recognition-worker:
+    <<: *recognition-prod
+
+  recognition-api:
+    <<: *recognition-prod
+    ports: !reset []

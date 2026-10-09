@@ -4,6 +4,8 @@ name: recognition
 on:
   pull_request:
     paths: ["services/recognition/**", ".github/workflows/recognition.yml"]
+  schedule:
+    - cron: "17 4 * * 1"  # раз в неделю: новые уязвимости находят и в старых версиях
   push:
     branches: [main]
     paths: ["services/recognition/**", ".github/workflows/recognition.yml"]
@@ -64,3 +66,9 @@ jobs:
 
       - name: Тесты
         run: pytest -q
+
+      # Известные уязвимости в зависимостях (база PyPI/OSV). Проверяется ровно то,
+      # что ставится в Docker-образ (requirements.lock). Нашлась — обновить версию,
+      # перегенерировать lock (README сервиса) и прогнать тесты.
+      - name: Уязвимости в зависимостях (pip-audit)
+        run: pip-audit -r requirements.lock --require-hashes --disable-pip

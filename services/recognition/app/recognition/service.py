@@ -14,7 +14,7 @@ from app.config import get_settings
 from app.db.session import Shards, get_shards
 from app.recognition import repository as repo
 from app.recognition.engine import FaceEngine, extract_face, require_face_engine
-from app.recognition.errors import InvalidSource
+from app.recognition.errors import InvalidSource, SyncRefused
 from app.recognition.repository import Candidate
 
 SOURCES = ("registration", "visit")
@@ -139,6 +139,57 @@ def delete_faces(child_id: int, *, shards: Shards | None = None) -> int:
     shards = shards or get_shards()
     with shards.session_for(child_id) as session, session.begin():
         return repo.delete_faces(session, child_id)
+
+
+@dataclass
+class SyncResult:
+    dry_run: bool
+    known: int  # сколько детей прислал backend
+    stored: int  # у скольких детей есть лица в базе распознавания
+    orphans: list[int]  # лица есть, а ребёнка у backend нет
+    deleted: int  # сколько фото лиц удалено (0 при dry_run)
+
+
+def sync_children(
+    child_ids: list[int],
+    *,
+    dry_run: bool = False,
+    allow_empty: bool = False,
+    force: bool = False,
+    shards: Shards | None = None,
+) -> SyncResult:
+    """Сверка с backend: удалить лица детей, которых у backend больше нет.
+
+    Нужна, если задача delete_faces потерялась (Redis перезапустился, backend
+    упал между удалением ребёнка и отправкой задачи). Backend присылает ПОЛНЫЙ
+    список существующих child_id; всё, чего в нём нет, — «сироты».
+
+    Защита от ошибки backend (пустой или обрезанный список удалил бы всех):
+    - пустой список — отказ, если не allow_empty;
+    - сирот больше SYNC_MAX_DELETE_RATIO (20%) от хранимых и больше 5 — отказ, если не force.
+    """
+    shards = shards or get_shards()
+    known = set(child_ids)
+    if not known and not allow_empty:
+        raise SyncRefused("Пустой список детей. Если база детей действительно пуста — allow_empty=true")
+    stored: set[int] = set()
+    for i in range(len(shards.engines)):
+        with shards.session(i) as session:
+            stored |= repo.stored_child_ids(session)
+    orphans = sorted(stored - known)
+    limit = max(5, get_settings().sync_max_delete_ratio * len(stored))
+    if len(orphans) > limit and not force and not dry_run:
+        raise SyncRefused(
+            f"Сверка удалила бы лица {len(orphans)} детей из {len(stored)} — подозрительно много. "
+            "Проверьте список (dry_run=true покажет, кого именно); если всё верно — force=true",
+            orphans=len(orphans),
+            stored=len(stored),
+        )
+    deleted = 0
+    if not dry_run:
+        for child_id in orphans:
+            deleted += delete_faces(child_id, shards=shards)
+    return SyncResult(dry_run, len(known), len(stored), orphans, deleted)
 
 
 # ---------------------------------------------------------------- чтение

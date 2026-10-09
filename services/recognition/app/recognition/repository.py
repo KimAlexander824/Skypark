@@ -71,6 +71,11 @@ def delete_faces(session: Session, child_id: int) -> int:
     return result.rowcount or 0
 
 
+def stored_child_ids(session: Session) -> set[int]:
+    """Все child_id, у которых в этом шарде есть лица."""
+    return set(session.scalars(select(FaceProfile.child_id).distinct()))
+
+
 def count_faces(session: Session, child_id: int) -> int:
     return session.scalar(
         select(func.count()).select_from(FaceProfile).where(FaceProfile.child_id == child_id)
