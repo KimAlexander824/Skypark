@@ -4,6 +4,7 @@ import { ArrowRight, Clock3 } from 'lucide-react'
 import type { VisitListItem } from '@/api/visits'
 import { cn, formatDuration, formatTime, fullName, plural } from '@/lib/format'
 import { visitTiming } from '@/lib/time'
+import { t, LOCALE } from '@/i18n'
 
 /** Цвет посещения по срочности: продлено — peri, ≤15 мин — blush, остальное — butter. */
 export const visitTone = (v: VisitListItem, now: number) =>
@@ -27,7 +28,7 @@ export function EndTimeline({
   now,
   linkToChild = true,
   showAllLink = true,
-  title = 'Окончание посещений',
+  title = t('Окончание посещений'),
 }: {
   current?: VisitListItem[]
   completed?: VisitListItem[]
@@ -60,14 +61,14 @@ export function EndTimeline({
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h2 className="text-[17px] font-extrabold text-ink-900">{title}</h2>
-          <p className="text-xs text-ink-500">Сегодня, {new Date(now).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</p>
+          <p className="text-xs text-ink-500">{t('Сегодня, ')} {new Date(now).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long' })}</p>
         </div>
         <Clock3 className="size-5 text-ink-400" />
       </div>
 
       <div className="grid grid-cols-[44px_1fr] text-[11px] font-semibold text-ink-400">
-        <span>Время</span>
-        <span>Кто заканчивает</span>
+        <span>{t('Время')}</span>
+        <span>{t('Кто заканчивает')}</span>
       </div>
 
       <ol className="mt-2">
@@ -95,7 +96,8 @@ export function EndTimeline({
 
       {later > 0 && (
         <p className="mt-1 text-center text-xs font-semibold text-ink-500">
-          Ещё {later} {plural(later, ['окончание', 'окончания', 'окончаний'])} позже
+          
+          {t('Ещё ')} {later} {plural(later, [t('окончание'), t('окончания'), t('окончаний')])}  {t(' позже')}
         </p>
       )}
 
@@ -104,7 +106,8 @@ export function EndTimeline({
           to="/visits"
           className="glass-accent mt-3 flex h-10 items-center justify-center gap-2 rounded-full text-[13px] font-bold transition hover:brightness-105"
         >
-          Все посещения <ArrowRight className="size-4" />
+          
+          {t('Все посещения ')} <ArrowRight className="size-4" />
         </Link>
       )}
     </section>
@@ -147,7 +150,7 @@ function TimelineItem({ entry, now, link }: { entry: TimelineEntry; now: number;
           {fullName(v.child)}
         </div>
         <div className="truncate text-[11px] text-ink-500">
-          {entry.done ? 'Завершено' : `через ${formatDuration(left / 60_000)}`} · {v.nanny?.firstName ?? '—'}
+          {entry.done ? t('Завершено') : t('через {0}', formatDuration(left / 60_000))} · {v.nanny?.firstName ?? '—'}
         </div>
       </div>
       <span className="tabular text-[12px] font-extrabold text-ink-900">{formatTime(new Date(entry.at).toISOString())}</span>

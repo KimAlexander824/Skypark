@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Banknote,
+  Camera,
   CalendarDays,
   Clock3,
   History,
@@ -16,11 +17,14 @@ import {
   UsersRound,
 } from 'lucide-react'
 import type { ChildDetail, VisitWithNanny } from '@/api/children'
-import { faceApi } from '@/api/face'
+import { faceApi, type FaceErrorCode } from '@/api/face'
 import { Button } from '@/components/ui/Button'
 import { PastelStat } from '@/components/admin/AdminKit'
 import { Avatar, Badge, Card, CardHeader, EmptyState, IconTile, Skeleton } from '@/components/ui/Display'
-import { useChild } from '@/features/children/queries'
+import { useAddFacePhoto, useChild } from '@/features/children/queries'
+import { CameraCapture } from '@/components/camera/CameraCapture'
+import { Modal } from '@/components/ui/Overlay'
+import { toast } from 'sonner'
 import {
   cn,
   formatAge,
@@ -35,6 +39,7 @@ import {
 import { paymentStatus, visitStatus } from '@/lib/statuses'
 import { isOngoing, useNow, visitTiming, visitTotalMinutes as totalMinutes, visitTotalPrice as totalPrice } from '@/lib/time'
 import { TelegramLogo } from '@/components/brand/TelegramLogo'
+import { t, localized } from '@/i18n'
 
 export function ChildDetailPage() {
   const { id = '' } = useParams()
@@ -46,12 +51,13 @@ export function ChildDetailPage() {
       <Card>
         <EmptyState
           icon={<ScanFace />}
-          title="Карточка не найдена"
+          title={t('Карточка не найдена')}
           description={(error as Error)?.message}
           action={
             <Link to="/children">
               <Button variant="secondary" leftIcon={<ArrowLeft />}>
-                К списку детей
+                
+                {t('К списку детей')}
               </Button>
             </Link>
           }
@@ -73,10 +79,13 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
     paid: visits.filter((v) => v.paymentStatus === 'paid').reduce((s, v) => s + totalPrice(v), 0),
   }
 
+  const [addingPhoto, setAddingPhoto] = useState(false)
+
   return (
     <div className="animate-slide-up">
+      <AddPhotoModal childId={child.id} open={addingPhoto} onClose={() => setAddingPhoto(false)} />
       <Link to="/children" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-900">
-        <ArrowLeft className="size-4" /> К списку детей
+        <ArrowLeft className="size-4" />  {t(' К списку детей')}
       </Link>
 
       {/* Hero */}
@@ -94,15 +103,16 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
               <h1 className="text-2xl font-extrabold tracking-tight text-ink-900 sm:text-[28px]">{fullName(child)}</h1>
               {active ? (
                 <Badge tone="success" dot pulse>
-                  Сейчас в парке
+                  
+                  {t('Сейчас в парке')}
                 </Badge>
               ) : stats.visits === 0 ? (
-                <Badge tone="sun">Новый</Badge>
+                <Badge tone="sun">{t('Новый')}</Badge>
               ) : null}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-500">
               <span>
-                {formatAge(child.birthDate)} · {child.gender === 'female' ? 'девочка' : 'мальчик'}
+                {formatAge(child.birthDate)} · {child.gender === 'female' ? t('девочка') : t('мальчик')}
               </span>
               <span className="flex items-center gap-1.5">
                 <CalendarDays className="size-4" />
@@ -111,14 +121,21 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
               <span className={cn('flex items-center gap-1.5', child.hasFaceProfile ? 'text-success-600' : 'text-warning-700')}>
                 {child.hasFaceProfile && <FaceThumb childId={child.id} />}
                 <ScanFace className="size-4" />
-                {child.hasFaceProfile ? 'Профиль лица сохранён' : 'Нет фото для распознавания'}
+                {child.hasFaceProfile ? t('Профиль лица сохранён') : t('Нет фото для распознавания')}
               </span>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {!child.hasFaceProfile && (
+              <Button size="lg" variant="secondary" leftIcon={<Camera />} onClick={() => setAddingPhoto(true)}>
+                
+                {t('Добавить фото')}
+              </Button>
+            )}
             <Link to={`/visits/new?childId=${child.id}`} aria-disabled={Boolean(active)} className={cn(active && 'pointer-events-none')}>
               <Button size="lg" leftIcon={<Play />} disabled={Boolean(active)}>
-                Начать посещение
+                
+                {t('Начать посещение')}
               </Button>
             </Link>
           </div>
@@ -128,32 +145,32 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
 
       {/* Stats */}
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <PastelStat tone="butter" icon={<History />} label="Посещений" value={stats.visits} />
-        <PastelStat tone="peri" icon={<Clock3 />} label="Время в парке" value={formatDuration(stats.minutes)} />
-        <PastelStat tone="blush" icon={<TimerReset />} label="Продлений" value={stats.extensions} />
-        <PastelStat tone="olive" icon={<Banknote />} label="Оплачено" value={formatMoney(stats.paid)} />
+        <PastelStat tone="butter" icon={<History />} label={t('Посещений')} value={stats.visits} />
+        <PastelStat tone="peri" icon={<Clock3 />} label={t('Время в парке')} value={formatDuration(stats.minutes)} />
+        <PastelStat tone="blush" icon={<TimerReset />} label={t('Продлений')} value={stats.extensions} />
+        <PastelStat tone="olive" icon={<Banknote />} label={t('Оплачено')} value={formatMoney(stats.paid)} />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
         <Card>
           <CardHeader
             icon={<History />}
-            title="История посещений"
-            description={visits.length ? `Всего записей: ${visits.length}` : undefined}
+            title={t('История посещений')}
+            description={visits.length ? t('Всего записей: {0}', visits.length) : undefined}
           />
           {visits.length ? <VisitsTable visits={visits} /> : (
             <EmptyState
               className="pt-4"
               icon={<CalendarDays />}
-              title="Посещений ещё не было"
-              description="Оформите первое посещение — оно появится здесь."
+              title={t('Посещений ещё не было')}
+              description={t('Оформите первое посещение — оно появится здесь.')}
             />
           )}
         </Card>
 
         <div className="flex flex-col gap-5">
           <Card>
-            <CardHeader icon={<UsersRound />} title="Родитель" />
+            <CardHeader icon={<UsersRound />} title={t('Родитель')} />
             <div className="px-5 pb-5">
               <div className="flex items-center gap-3">
                 <Avatar firstName={parent.firstName} lastName={parent.lastName} seed={parent.id} />
@@ -174,13 +191,13 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
               >
                 <TelegramLogo className={cn('size-9', !parent.telegram?.linked && 'opacity-40 grayscale')} />
                 <div className="min-w-0 flex-1 text-sm">
-                  <div className="font-bold text-ink-900">{parent.telegram?.linked ? 'Telegram привязан' : 'Telegram не привязан'}</div>
+                  <div className="font-bold text-ink-900">{parent.telegram?.linked ? t('Telegram привязан') : t('Telegram не привязан')}</div>
                   <div className="truncate font-medium text-mist-500">
                     {parent.telegram?.linked
                       ? parent.telegram.username
                         ? `@${parent.telegram.username}`
-                        : 'Уведомления включены'
-                      : 'Родитель не получит уведомления'}
+                        : t('Уведомления включены')
+                      : t('Родитель не получит уведомления')}
                   </div>
                 </div>
               </div>
@@ -192,10 +209,10 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
           <Card>
             <CardHeader
               icon={<UsersRound />}
-              title="Дети родителя"
+              title={t('Дети родителя')}
               action={
                 <Link to={`/children/new?phone=${parent.phone}`}>
-                  <Button size="icon-sm" variant="soft" aria-label="Добавить ребёнка" title="Добавить ребёнка">
+                  <Button size="icon-sm" variant="soft" aria-label={t('Добавить ребёнка')} title={t('Добавить ребёнка')}>
                     <UserRoundPlus />
                   </Button>
                 </Link>
@@ -208,7 +225,7 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
                   <div className="truncate text-sm font-bold text-ink-900">{child.firstName}</div>
                   <div className="text-xs text-ink-500">{formatAge(child.birthDate)}</div>
                 </div>
-                <Badge tone="brand">Открыт</Badge>
+                <Badge tone="brand">{t('Открыт')}</Badge>
               </li>
               {siblings.map((s) => (
                 <li key={s.id}>
@@ -226,7 +243,7 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
 
           {child.note && (
             <Card>
-              <CardHeader icon={<NotebookPen />} title="Заметка" />
+              <CardHeader icon={<NotebookPen />} title={t('Заметка')} />
               <p className="px-5 pb-5 text-sm leading-relaxed text-ink-700">{child.note}</p>
             </Card>
           )}
@@ -249,12 +266,12 @@ function ActiveVisitBanner({ visit }: { visit: VisitWithNanny }) {
             <Timer />
           </IconTile>
           <div>
-            <div className="text-xs font-semibold text-ink-500">Осталось</div>
+            <div className="text-xs font-semibold text-ink-500">{t('Осталось')}</div>
             <div className={cn('tabular text-lg font-extrabold', soon ? 'text-ink-900' : 'text-ink-900')}>{formatDuration(left)}</div>
           </div>
         </div>
-        <InfoPair label="Время" value={`${formatTime(visit.startAt)} — ${formatTime(visit.endAt)}`} />
-        {visit.nanny && <InfoPair label="Няня" value={fullName(visit.nanny)} />}
+        <InfoPair label={t('Время')} value={`${formatTime(visit.startAt)} — ${formatTime(visit.endAt)}`} />
+        {visit.nanny && <InfoPair label={t('Няня')} value={fullName(visit.nanny)} />}
         <Badge tone={meta.tone} className="ml-auto">
           {meta.label}
         </Badge>
@@ -285,12 +302,12 @@ function VisitsTable({ visits }: { visits: VisitWithNanny[] }) {
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-y border-cream-200 bg-cream-100 text-xs text-ink-500">
-            <th className="py-2.5 pr-3 pl-5 font-semibold">Дата</th>
-            <th className="px-3 py-2.5 font-semibold">Время</th>
-            <th className="px-3 py-2.5 font-semibold">Няня</th>
-            <th className="px-3 py-2.5 font-semibold">Длительность</th>
-            <th className="px-3 py-2.5 text-right font-semibold">Стоимость</th>
-            <th className="py-2.5 pr-5 pl-3 font-semibold">Статус</th>
+            <th className="py-2.5 pr-3 pl-5 font-semibold">{t('Дата')}</th>
+            <th className="px-3 py-2.5 font-semibold">{t('Время')}</th>
+            <th className="px-3 py-2.5 font-semibold">{t('Няня')}</th>
+            <th className="px-3 py-2.5 font-semibold">{t('Длительность')}</th>
+            <th className="px-3 py-2.5 text-right font-semibold">{t('Стоимость')}</th>
+            <th className="py-2.5 pr-5 pl-3 font-semibold">{t('Статус')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-cream-200">
@@ -361,10 +378,63 @@ function FaceThumb({ childId }: { childId: string }) {
   return (
     <img
       src={src}
-      alt="Сохранённое лицо"
-      title="Это лицо сохранено для распознавания"
+      alt={t('Сохранённое лицо')}
+      title={t('Это лицо сохранено для распознавания')}
       onError={() => setFailed(true)}
       className="size-7 rounded-lg object-cover ring-1 ring-success-500/40"
     />
+  )
+}
+
+const photoErrorText: Record<FaceErrorCode, string> = localized(() => ({
+  no_face: t('Лицо не найдено. Сфотографируйте ребёнка анфас при хорошем свете'),
+  multiple_faces: t('В кадре несколько лиц. Сфотографируйте только ребёнка'),
+  low_quality: t('Лицо слишком маленькое. Подойдите ближе'),
+  bad_image: t('Не удалось прочитать фото. Сфотографируйте ещё раз'),
+  unavailable: t('Сервис распознавания недоступен. Попробуйте позже'),
+}))
+
+/** Фото для распознавания, если при регистрации лицо не сохранилось или фото пропустили. */
+function AddPhotoModal({ childId, open, onClose }: { childId: string; open: boolean; onClose: () => void }) {
+  const [photo, setPhoto] = useState<string>()
+  const add = useAddFacePhoto(childId)
+
+  const close = () => {
+    setPhoto(undefined)
+    add.reset()
+    onClose()
+  }
+
+  const save = async () => {
+    if (!photo) return
+    const r = await add.mutateAsync(photo).catch(() => undefined)
+    if (!r) return toast.error(t('Не удалось сохранить фото'))
+    if (!r.ok) return toast.error(t('Лицо не сохранено'), { description: r.message ?? photoErrorText[r.error] })
+    if (r.ignoredFaces > 0) toast.info(t('В кадре были другие лица'), { description: t('Проверьте, что сохранено лицо нужного ребёнка') })
+    toast.success(t('Фото для распознавания сохранено'))
+    close()
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={close}
+      title={t('Фото для распознавания')}
+      description={t('В кадре должен быть только ребёнок — анфас, при хорошем свете.')}
+      footer={
+        <>
+          <Button variant="ghost" onClick={close}>
+            
+            {t('Отмена')}
+          </Button>
+          <Button onClick={save} disabled={!photo} loading={add.isPending} leftIcon={<ScanFace />}>
+            
+            {t('Сохранить')}
+          </Button>
+        </>
+      }
+    >
+      {open && <CameraCapture value={photo} onChange={setPhoto} />}
+    </Modal>
   )
 }

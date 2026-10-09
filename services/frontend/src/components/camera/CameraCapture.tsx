@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Camera, CameraOff, ImageUp, RefreshCw, SwitchCamera } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/format'
+import { t } from '@/i18n'
 
 const MAX_SIDE = 640
 
@@ -40,7 +41,7 @@ export interface CameraCaptureProps {
   autoStart?: boolean
 }
 
-export function CameraCapture({ value, onChange, hint = 'Лицо ребёнка в центре кадра', className, scanning, autoStart = true }: CameraCaptureProps) {
+export function CameraCapture({ value, onChange, hint = t('Лицо ребёнка в центре кадра'), className, scanning, autoStart = true }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -115,7 +116,7 @@ export function CameraCapture({ value, onChange, hint = 'Лицо ребёнка
     <div className={cn('flex flex-col gap-3', className)}>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#111114] ring-1 ring-cream-300">
         {value ? (
-          <img src={value} alt="Фото ребёнка" className="size-full object-cover" />
+          <img src={value} alt={t('Фото ребёнка')} className="size-full object-cover" />
         ) : (
           <video
             ref={videoRef}
@@ -150,7 +151,7 @@ export function CameraCapture({ value, onChange, hint = 'Лицо ребёнка
             {state === 'starting' ? (
               <>
                 <RefreshCw className="size-8 animate-spin text-snow/60" />
-                <p className="text-sm text-snow/70">Подключаем камеру...</p>
+                <p className="text-sm text-snow/70">{t('Подключаем камеру...')}</p>
               </>
             ) : (
               <>
@@ -159,15 +160,16 @@ export function CameraCapture({ value, onChange, hint = 'Лицо ребёнка
                 </span>
                 <div>
                   <p className="font-bold">
-                    {state === 'denied' ? 'Нет доступа к камере' : state === 'unavailable' ? 'Камера недоступна' : 'Камера выключена'}
+                    {state === 'denied' ? t('Нет доступа к камере') : state === 'unavailable' ? t('Камера недоступна') : t('Камера выключена')}
                   </p>
                   <p className="mt-1 text-sm text-snow/60">
-                    {state === 'denied' ? 'Разрешите доступ в настройках браузера или загрузите фото' : 'Можно загрузить фото с устройства'}
+                    {state === 'denied' ? t('Разрешите доступ в настройках браузера или загрузите фото') : t('Можно загрузить фото с устройства')}
                   </p>
                 </div>
                 {state === 'idle' && (
                   <Button size="sm" variant="secondary" onClick={() => start()} leftIcon={<Camera />}>
-                    Включить камеру
+                    
+                    {t('Включить камеру')}
                   </Button>
                 )}
               </>
@@ -182,7 +184,7 @@ export function CameraCapture({ value, onChange, hint = 'Лицо ребёнка
             type="button"
             onClick={switchCamera}
             className="absolute top-3 right-3 flex size-10 items-center justify-center rounded-xl bg-black/50 text-snow backdrop-blur transition hover:bg-black/70"
-            aria-label="Сменить камеру"
+            aria-label={t('Сменить камеру')}
           >
             <SwitchCamera className="size-5" />
           </button>
@@ -192,15 +194,17 @@ export function CameraCapture({ value, onChange, hint = 'Лицо ребёнка
       <div className="flex gap-2">
         {value ? (
           <Button variant="secondary" className="flex-1" onClick={retake} leftIcon={<RefreshCw />}>
-            Переснять
+            
+            {t('Переснять')}
           </Button>
         ) : (
           <Button className="flex-1" onClick={capture} disabled={state !== 'live'} leftIcon={<Camera />}>
-            Сфотографировать
+            
+            {t('Сфотографировать')}
           </Button>
         )}
         <Button variant="secondary" onClick={() => fileRef.current?.click()} leftIcon={<ImageUp />}>
-          <span className="hidden sm:inline">Загрузить</span>
+          <span className="hidden sm:inline">{t('Загрузить')}</span>
         </Button>
         <input
           ref={fileRef}

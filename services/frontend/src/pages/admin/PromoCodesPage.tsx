@@ -12,6 +12,7 @@ import { cn, formatShortDate } from '@/lib/format'
 import { toIsoDate } from '@/lib/schedule'
 import type { PromoCode } from '@/types'
 import { DiscountFields, discountValue } from './DiscountsPage'
+import { t } from '@/i18n'
 
 const KEY = ['admin', 'promocodes']
 
@@ -26,31 +27,31 @@ export function PromoCodesPage() {
   const [removing, setRemoving] = useState<PromoCode>()
 
   const toggle = useAdminMutation((p: PromoCode) => promoCodesApi.setStatus(p.id, p.status === 'active' ? 'inactive' : 'active'), { invalidate: [KEY] })
-  const remove = useAdminMutation((p: PromoCode) => promoCodesApi.remove(p.id), { invalidate: [KEY], success: 'Промокод удалён' })
+  const remove = useAdminMutation((p: PromoCode) => promoCodesApi.remove(p.id), { invalidate: [KEY], success: t('Промокод удалён') })
 
   const columns: Column<PromoCode>[] = [
     {
       key: 'code',
-      header: 'Код',
+      header: t('Код'),
       cell: (p) => (
         <button
           onClick={(e) => {
             e.stopPropagation()
             navigator.clipboard?.writeText(p.code)
-            toast.success(`Скопировано: ${p.code}`)
+            toast.success(t('Скопировано: {0}', p.code))
           }}
           className="group inline-flex items-center gap-1.5 rounded-xl bg-accent-50 px-2.5 py-1 font-mono text-[13px] font-bold tracking-wider text-accent-700 ring-1 ring-accent-100"
-          title="Скопировать"
+          title={t('Скопировать')}
         >
           {p.code}
           <Copy className="size-3.5 text-accent-400 group-hover:text-accent-700" />
         </button>
       ),
     },
-    { key: 'value', header: 'Скидка', cell: (p) => <span className="tabular font-extrabold text-ink-900">{discountValue(p.kind, p.value)}</span> },
+    { key: 'value', header: t('Скидка'), cell: (p) => <span className="tabular font-extrabold text-ink-900">{discountValue(p.kind, p.value)}</span> },
     {
       key: 'period',
-      header: 'Период',
+      header: t('Период'),
       cell: (p) => (
         <span className="tabular text-ink-700">
           {formatShortDate(p.dateFrom)} — {formatShortDate(p.dateTo)}
@@ -59,14 +60,14 @@ export function PromoCodesPage() {
     },
     {
       key: 'usage',
-      header: 'Использования',
+      header: t('Использования'),
       cell: (p) => {
         const pct = Math.min(100, (p.usedCount / p.usageLimit) * 100)
         return (
           <div className="w-36">
             <div className="tabular mb-1 flex justify-between text-xs">
               <span className="font-bold text-ink-900">{p.usedCount}</span>
-              <span className="text-ink-500">из {p.usageLimit}</span>
+              <span className="text-ink-500">{t('из ')} {p.usageLimit}</span>
             </div>
             <div className="h-1.5 rounded-full bg-cream-200">
               <div className={cn('h-full rounded-full', pct >= 100 ? 'bg-danger-500' : 'bg-accent-500')} style={{ width: `${pct}%` }} />
@@ -77,7 +78,7 @@ export function PromoCodesPage() {
     },
     {
       key: 'per',
-      header: 'На родителя',
+      header: t('На родителя'),
       align: 'center',
       cell: (p) => (
         <Pill tone="peri">
@@ -88,7 +89,7 @@ export function PromoCodesPage() {
     },
     {
       key: 'status',
-      header: 'Активен',
+      header: t('Активен'),
       align: 'center',
       cell: (p) => (
         <div onClick={(e) => e.stopPropagation()} className="inline-flex">
@@ -102,10 +103,10 @@ export function PromoCodesPage() {
       align: 'right',
       cell: (p) => (
         <div className="flex justify-end gap-0.5">
-          <IconAction label="Редактировать" onClick={() => setEditing(p)}>
+          <IconAction label={t('Редактировать')} onClick={() => setEditing(p)}>
             <Pencil />
           </IconAction>
-          <IconAction label="Удалить" onClick={() => setRemoving(p)} danger>
+          <IconAction label={t('Удалить')} onClick={() => setRemoving(p)} danger>
             <Trash2 />
           </IconAction>
         </div>
@@ -116,20 +117,21 @@ export function PromoCodesPage() {
   return (
     <div className="animate-slide-up">
       <AdminHeader
-        title="Промокоды"
-        description="Коды со скидкой, лимитами использования и сроком действия"
+        title={t('Промокоды')}
+        description={t('Коды со скидкой, лимитами использования и сроком действия')}
         actions={
           <Button leftIcon={<Plus />} onClick={() => setEditing('new')}>
-            Новый промокод
+            
+            {t('Новый промокод')}
           </Button>
         }
       />
 
       <StatsRow>
-        <PastelStat tone="butter" icon={<TicketPercent />} label="Всего промокодов" value={data?.length} />
-        <PastelStat tone="olive" icon={<CircleCheckBig />} label="Активных" value={data?.filter((p) => p.status === 'active').length} />
-        <PastelStat tone="blush" icon={<Users />} label="Использований" value={data?.reduce((s, p) => s + p.usedCount, 0)} />
-        <PastelStat tone="peri" icon={<CircleX />} label="Исчерпано лимитов" value={data?.filter((p) => p.usedCount >= p.usageLimit).length} />
+        <PastelStat tone="butter" icon={<TicketPercent />} label={t('Всего промокодов')} value={data?.length} />
+        <PastelStat tone="olive" icon={<CircleCheckBig />} label={t('Активных')} value={data?.filter((p) => p.status === 'active').length} />
+        <PastelStat tone="blush" icon={<Users />} label={t('Использований')} value={data?.reduce((s, p) => s + p.usedCount, 0)} />
+        <PastelStat tone="peri" icon={<CircleX />} label={t('Исчерпано лимитов')} value={data?.filter((p) => p.usedCount >= p.usageLimit).length} />
       </StatsRow>
 
       <PromoChecker />
@@ -141,7 +143,7 @@ export function PromoCodesPage() {
           loading={isLoading}
           rowKey={(p) => p.id}
           onRowClick={(p) => setEditing(p)}
-          empty={<EmptyBlock icon={<TicketPercent />} title="Промокодов пока нет" action={<Button onClick={() => setEditing('new')}>Создать промокод</Button>} />}
+          empty={<EmptyBlock icon={<TicketPercent />} title={t('Промокодов пока нет')} action={<Button onClick={() => setEditing('new')}>{t('Создать промокод')}</Button>} />}
         />
       </Panel>
 
@@ -149,9 +151,9 @@ export function PromoCodesPage() {
       <ConfirmModal
         open={Boolean(removing)}
         onClose={() => setRemoving(undefined)}
-        title="Удалить промокод?"
-        description={removing && `Промокод ${removing.code} перестанет работать.`}
-        confirmLabel="Удалить"
+        title={t('Удалить промокод?')}
+        description={removing && t('Промокод {0} перестанет работать.', removing.code)}
+        confirmLabel={t('Удалить')}
         danger
         loading={remove.isPending}
         onConfirm={() => removing && remove.mutate(removing, { onSuccess: () => setRemoving(undefined) })}
@@ -178,8 +180,8 @@ function PromoChecker() {
           <ScanSearch className="size-5" />
         </span>
         <div>
-          <div className="font-extrabold text-ink-900">Проверка промокода</div>
-          <div className="text-xs font-medium text-mist-500">Срок, статус и лимит использований</div>
+          <div className="font-extrabold text-ink-900">{t('Проверка промокода')}</div>
+          <div className="text-xs font-medium text-mist-500">{t('Срок, статус и лимит использований')}</div>
         </div>
       </div>
       <div className="flex flex-1 gap-2 sm:ml-auto sm:max-w-md">
@@ -190,11 +192,12 @@ function PromoChecker() {
             setResult(undefined)
           }}
           onKeyDown={(e) => e.key === 'Enter' && check()}
-          placeholder="Введите код"
+          placeholder={t('Введите код')}
           className="h-11 min-w-0 flex-1 rounded-full bg-white/80 px-4 font-mono text-sm font-bold tracking-wider text-ink-900 ring-1 ring-mist-200 placeholder:font-sans placeholder:font-normal placeholder:tracking-normal placeholder:text-mist-400 focus:ring-2 focus:ring-accent-400 focus:outline-none"
         />
         <Button className="rounded-full" onClick={check} loading={loading}>
-          Проверить
+          
+          {t('Проверить')}
         </Button>
       </div>
       {result && (
@@ -205,7 +208,7 @@ function PromoChecker() {
           )}
         >
           {result.valid ? <CircleCheckBig className="size-4" /> : <CircleX className="size-4" />}
-          {result.valid ? `Действует: ${discountValue(result.promo.kind, result.promo.value)}` : result.reason}
+          {result.valid ? t('Действует: {0}', discountValue(result.promo.kind, result.promo.value)) : result.reason}
         </div>
       )}
     </section>
@@ -232,44 +235,46 @@ function PromoForm({ promo, onClose }: { promo?: PromoCode; onClose: () => void 
   const set = <K extends keyof PromoInput>(k: K, v: PromoInput[K]) => setForm((f) => ({ ...f, [k]: v }))
   const save = useAdminMutation((f: PromoInput) => promoCodesApi.save(f, user.id, promo?.id), {
     invalidate: [KEY],
-    success: promo ? 'Промокод сохранён' : 'Промокод создан',
+    success: promo ? t('Промокод сохранён') : t('Промокод создан'),
   })
 
   return (
     <Modal
       open
       onClose={onClose}
-      title={promo ? 'Редактировать промокод' : 'Новый промокод'}
-      description={promo ? `Использован ${promo.usedCount} раз` : undefined}
+      title={promo ? t('Редактировать промокод') : t('Новый промокод')}
+      description={promo ? t('Использован {0} раз', promo.usedCount) : undefined}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            
+            {t('Отмена')}
           </Button>
           <Button loading={save.isPending} onClick={() => save.mutate(form, { onSuccess: onClose })}>
-            Сохранить
+            
+            {t('Сохранить')}
           </Button>
         </>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
-          label="Код"
+          label={t('Код')}
           required
           value={form.code}
           onChange={(e) => set('code', e.target.value.toUpperCase())}
           className="font-mono font-bold tracking-wider"
           containerClassName="sm:col-span-2"
           rightSlot={
-            <Button type="button" size="icon-sm" variant="ghost" onClick={() => set('code', randomCode())} aria-label="Сгенерировать" title="Сгенерировать">
+            <Button type="button" size="icon-sm" variant="ghost" onClick={() => set('code', randomCode())} aria-label={t('Сгенерировать')} title={t('Сгенерировать')}>
               <Dices />
             </Button>
           }
         />
         <DiscountFields form={form} set={set} />
-        <NumberInput label="Лимит использований" min={1} value={form.usageLimit} onValueChange={(v) => set('usageLimit', v)} />
-        <NumberInput label="Макс. на одного родителя" min={1} value={form.perParentLimit} onValueChange={(v) => set('perParentLimit', v)} />
-        <Switch checked={form.status === 'active'} onChange={(v) => set('status', v ? 'active' : 'inactive')} label="Промокод активен" />
+        <NumberInput label={t('Лимит использований')} min={1} value={form.usageLimit} onValueChange={(v) => set('usageLimit', v)} />
+        <NumberInput label={t('Макс. на одного родителя')} min={1} value={form.perParentLimit} onValueChange={(v) => set('perParentLimit', v)} />
+        <Switch checked={form.status === 'active'} onChange={(v) => set('status', v ? 'active' : 'inactive')} label={t('Промокод активен')} />
       </div>
     </Modal>
   )

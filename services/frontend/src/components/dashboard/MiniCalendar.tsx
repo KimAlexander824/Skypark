@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import type { DateRange } from '@/api/analytics'
 import { cn } from '@/lib/format'
+import { t, LOCALE, localized } from '@/i18n'
 
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+const WEEKDAYS = localized(() => ([t('Пн'), t('Вт'), t('Ср'), t('Чт'), t('Пт'), t('Сб'), t('Вс')]))
 const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString()
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
@@ -33,7 +34,7 @@ export function MiniCalendar({ value, onChange }: { value: DateRange; onChange: 
     }
   }
 
-  const title = `${month.toLocaleDateString('ru-RU', { month: 'long' })} ${month.getFullYear()}`
+  const title = `${month.toLocaleDateString(LOCALE, { month: 'long' })} ${month.getFullYear()}`
 
   return (
     <div>
@@ -41,7 +42,7 @@ export function MiniCalendar({ value, onChange }: { value: DateRange; onChange: 
         <button
           onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
           className="flex size-8 items-center justify-center rounded-full text-ink-700 transition hover:bg-white"
-          aria-label="Предыдущий месяц"
+          aria-label={t('Предыдущий месяц')}
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -50,7 +51,7 @@ export function MiniCalendar({ value, onChange }: { value: DateRange; onChange: 
           onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
           disabled={month.getFullYear() === today.getFullYear() && month.getMonth() === today.getMonth()}
           className="flex size-8 items-center justify-center rounded-full text-ink-700 transition hover:bg-white disabled:opacity-30"
-          aria-label="Следующий месяц"
+          aria-label={t('Следующий месяц')}
         >
           <ArrowRight className="size-4" />
         </button>
@@ -94,7 +95,7 @@ export function MiniCalendar({ value, onChange }: { value: DateRange; onChange: 
           )
         })}
       </div>
-      <p className="mt-2 min-h-4 text-center text-[11.5px] font-medium text-mist-500">{anchor ? 'Выберите вторую дату периода' : ' '}</p>
+      <p className="mt-2 min-h-4 text-center text-[11.5px] font-medium text-mist-500">{anchor ? t('Выберите вторую дату периода') : ' '}</p>
     </div>
   )
 }

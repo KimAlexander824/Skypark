@@ -1,20 +1,22 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowUpRight, Baby, CalendarDays, ClipboardList, Plus, TimerReset, Users, Wallet } from 'lucide-react'
+import { ArrowUpRight, Baby, CalendarDays, ClipboardList, TimerReset, Users, Wallet } from 'lucide-react'
 import { analyticsApi, type DashboardStats, type DateRange } from '@/api/analytics'
 import type { NannyWithLoad, VisitListItem } from '@/api/visits'
 import { MiniCalendar } from '@/components/dashboard/MiniCalendar'
-import { Delta, GlassButton, GlassCard, GlassHeader, GlassSegmented, StatTile, toneChip, type GlassTone } from '@/components/glass/Glass'
+import { Delta, GlassCard, GlassHeader, GlassSegmented, StatTile, toneChip, type GlassTone } from '@/components/glass/Glass'
 import { ComparisonBarChart, Donut, GlassAreaChart } from '@/components/glass/GlassCharts'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { LanguageSwitch } from '@/components/ui/LanguageSwitch'
 import { usePopover } from '@/components/ui/usePopover'
 import { useCurrentUser } from '@/features/auth/AuthProvider'
 import { useNannies, useVisits } from '@/features/visits/queries'
 import { cn, formatDuration, formatMoney, formatTime, fullName, plural } from '@/lib/format'
 import { nannyStatus } from '@/lib/statuses'
 import { formatCountdown, useNow, visitTiming } from '@/lib/time'
+import { t as tr, LOCALE } from '@/i18n'
 
 /* ---------- Период (ТЗ §24) ---------- */
 
@@ -33,19 +35,18 @@ const presetRange = (p: Exclude<Preset, 'custom'>): DateRange =>
     month: { from: day(-29), to: day() },
   })[p]
 
-const shortDate = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' })
+const shortDate = { format: (d: Date) => d.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric' }) }
 const rangeText = (r: DateRange) =>
   r.from.toDateString() === r.to.toDateString() ? shortDate.format(r.from) : `${shortDate.format(r.from)} — ${shortDate.format(r.to)}`
 
 const compactMoney = (v: number) =>
-  v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1).replace('.', ',')} млн` : v >= 1000 ? `${Math.round(v / 1000)} тыс` : String(v)
+  v >= 1_000_000 ? tr('{0} млн', (v / 1_000_000).toFixed(1).replace('.', ',')) : v >= 1000 ? tr('{0} тыс', Math.round(v / 1000)) : String(v)
 
 
 /* ---------- Страница ---------- */
 
 export function DashboardPage() {
   const user = useCurrentUser()
-  const navigate = useNavigate()
   const [preset, setPreset] = useState<Preset>('today')
   const [range, setRange] = useState<DateRange>(() => presetRange('today'))
 
@@ -60,7 +61,7 @@ export function DashboardPage() {
   const now = useNow(1000)
 
   const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер'
+  const greeting = hour < 12 ? tr('Доброе утро') : hour < 18 ? tr('Добрый день') : tr('Добрый вечер')
 
   return (
     <div className="animate-slide-up">
@@ -71,7 +72,7 @@ export function DashboardPage() {
             {greeting}, {user.firstName}
           </h1>
           <p className="mt-1 text-sm font-medium text-mist-500">
-            Посещения, оплаты и работа нянь · {rangeText(range)}
+            {rangeText(range)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -82,10 +83,10 @@ export function DashboardPage() {
               setRange(presetRange(p as Exclude<Preset, 'custom'>))
             }}
             options={[
-              { value: 'today', label: 'Сегодня' },
-              { value: 'yesterday', label: 'Вчера' },
-              { value: 'week', label: 'Неделя' },
-              { value: 'month', label: 'Месяц' },
+              { value: 'today', label: tr('Сегодня') },
+              { value: 'yesterday', label: tr('Вчера') },
+              { value: 'week', label: tr('Неделя') },
+              { value: 'month', label: tr('Месяц') },
             ]}
           />
           <RangePicker
@@ -96,9 +97,7 @@ export function DashboardPage() {
               setRange(r)
             }}
           />
-          <GlassButton variant="accent" onClick={() => navigate('/visits/new')}>
-            <Plus /> Новое посещение
-          </GlassButton>
+          <LanguageSwitch />
           <ThemeToggle />
         </div>
       </div>
@@ -106,36 +105,32 @@ export function DashboardPage() {
       {/* KPI */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatTile
-          label="Посещения"
+          label={tr('Посещения')}
           tone="accent"
           icon={<ClipboardList />}
           value={data?.visits.total}
           delta={data && <Delta current={data.visits.total} previous={data.previous.visits} />}
-          footnote={data && `активно ${data.visits.active} · завершено ${data.visits.completed}`}
         />
         <StatTile
-          label="Сумма оплат"
+          label={tr('Сумма оплат')}
           tone="rose"
           icon={<Wallet />}
           value={data && compactMoney(data.payments.amount)}
           delta={data && <Delta current={data.payments.amount} previous={data.previous.payments} />}
-          footnote="сум"
         />
         <StatTile
-          label="Новые дети"
+          label={tr('Новые дети')}
           tone="grape"
           icon={<Baby />}
           value={data?.children.new}
           delta={data && <Delta current={data.children.new} previous={data.previous.newChildren} />}
-          footnote={data && `всего в базе ${data.children.registered}`}
         />
         <StatTile
-          label="Продления"
+          label={tr('Продления')}
           tone="mint"
           icon={<TimerReset />}
           value={data?.extensions.count}
           delta={data && <Delta current={data.extensions.count} previous={data.previous.extensions} />}
-          footnote={data && `${Math.round(data.extensions.percent)}% посещений`}
         />
       </div>
 
@@ -143,15 +138,16 @@ export function DashboardPage() {
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.9fr)]">
         <GlassCard className="p-5">
           <GlassHeader
-            title="Динамика посещений"
-            subtitle={data ? (data.granularity === 'hour' ? 'По часам' : 'По дням') + ` · в среднем ${formatDuration(data.visits.avgMinutes)}` : ' '}
-            action={<Pill tone="accent">{data ? `${data.visits.active} сейчас в парке` : '…'}</Pill>}
+            title={tr('Динамика посещений')}
+            subtitle={data ? (data.granularity === 'hour' ? tr('По часам') : tr('По дням')) + tr(' · в среднем {0}', formatDuration(data.visits.avgMinutes)) : ' '}
+            action={<Pill tone="accent">{data ? tr('{0} сейчас в парке', data.visits.active) : '…'}</Pill>}
           />
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold">
-            <Legend color="bg-accent-500" label="Этот период" value={data ? String(data.visits.total) : undefined} />
+            <Legend color="bg-accent-500" label={tr('Этот период')} value={data ? String(data.visits.total) : undefined} />
             <span className="inline-flex items-center gap-1.5 text-mist-600">
               <span className="size-2 rounded-full bg-mist-300" />
-              Прошлый период
+              
+              {tr('Прошлый период')}
               {data && <b className="tabular font-bold text-ink-900">{data.previous.visits}</b>}
             </span>
           </div>
@@ -160,8 +156,8 @@ export function DashboardPage() {
               <ComparisonBarChart
                 current={data.visitsSeries}
                 previous={data.previousVisitsSeries}
-                ariaLabel="Посещения: текущий и прошлый период"
-                format={(v) => `${v} ${plural(v, ['посещение', 'посещения', 'посещений'])}`}
+                ariaLabel={tr('Посещения: текущий и прошлый период')}
+                format={(v) => `${v} ${plural(v, [tr('посещение'), tr('посещения'), tr('посещений')])}`}
               />
             ) : (
               <ChartSkeleton h={220} />
@@ -170,22 +166,22 @@ export function DashboardPage() {
         </GlassCard>
 
         <GlassCard className="flex flex-col p-5">
-          <GlassHeader title="Выручка" subtitle="Посещения и продления" />
+          <GlassHeader title={tr('Выручка')} subtitle={tr('Посещения и продления')} />
           {data ? (
             <>
               <div className="mt-3 flex items-end gap-2">
                 <span className="tabular text-[26px] leading-8 font-extrabold tracking-tight text-ink-900">{formatMoney(data.payments.amount)}</span>
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
-                <Legend color="bg-accent-500" label="Посещения" value={formatMoney(data.payments.amount - data.payments.extensionsAmount)} />
-                <Legend color="bg-mint-500" label="Продления" value={formatMoney(data.payments.extensionsAmount)} />
+                <Legend color="bg-accent-500" label={tr('Посещения')} value={formatMoney(data.payments.amount - data.payments.extensionsAmount)} />
+                <Legend color="bg-mint-500" label={tr('Продления')} value={formatMoney(data.payments.extensionsAmount)} />
               </div>
               <div className="mt-auto pt-4">
-                <GlassAreaChart data={data.revenueSeries} height={150} ariaLabel="Сумма оплат" format={formatMoney} />
+                <GlassAreaChart data={data.revenueSeries} height={150} ariaLabel={tr('Сумма оплат')} format={formatMoney} />
               </div>
               <div className="mt-3 flex gap-2 text-xs font-semibold">
-                <span className="rounded-full bg-mint-50 px-2.5 py-1 text-mint-600">Успешных: {data.payments.success}</span>
-                <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-500">Ошибок: {data.payments.failed}</span>
+                <span className="rounded-full bg-mint-50 px-2.5 py-1 text-mint-600">{tr('Успешных: ')} {data.payments.success}</span>
+                <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-500">{tr('Ошибок: ')} {data.payments.failed}</span>
               </div>
             </>
           ) : (
@@ -194,7 +190,7 @@ export function DashboardPage() {
         </GlassCard>
 
         <GlassCard className="flex flex-col p-5">
-          <GlassHeader title="Повторные визиты" subtitle="Доля детей, пришедших снова" />
+          <GlassHeader title={tr('Повторные визиты')} subtitle={tr('Доля детей, пришедших снова')} />
           {data ? <RepeatDonut data={data} /> : <ChartSkeleton h={240} />}
         </GlassCard>
       </div>
@@ -203,10 +199,10 @@ export function DashboardPage() {
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <GlassCard className="p-5">
           <GlassHeader
-            title="Работа нянь"
-            subtitle={data ? `Отработано ${formatDuration(data.nannies.hours * 60)} · средняя загрузка ${data.nannies.avgLoad.toFixed(1).replace('.', ',')}` : ' '}
+            title={tr('Работа нянь')}
+            subtitle={data ? tr('Отработано {0} · средняя загрузка {1}', formatDuration(data.nannies.hours * 60), data.nannies.avgLoad.toFixed(1).replace('.', ',')) : ' '}
             action={
-              <Link to="/admin/nannies" className="glass flex size-8 items-center justify-center rounded-full text-ink-900 transition hover:bg-white" aria-label="Все няни">
+              <Link to="/admin/nannies" className="glass flex size-8 items-center justify-center rounded-full text-ink-900 transition hover:bg-white" aria-label={tr('Все няни')}>
                 <ArrowUpRight className="size-4" />
               </Link>
             }
@@ -255,13 +251,13 @@ function RepeatDonut({ data }: { data: DashboardStats }) {
         center={
           <>
             <span className="tabular text-[28px] leading-none font-extrabold text-ink-900">{pct}%</span>
-            <span className="mt-1 text-[11px] font-semibold text-mist-500">повторных</span>
+            <span className="mt-1 text-[11px] font-semibold text-mist-500">{tr('повторных')}</span>
           </>
         }
       />
       <div className="w-full space-y-2 text-[13px] font-semibold">
-        <LegendRow color="bg-accent-500" label="Повторные" value={repeat} />
-        <LegendRow color="bg-grape-500" label="Первое посещение" value={first} />
+        <LegendRow color="bg-accent-500" label={tr('Повторные')} value={repeat} />
+        <LegendRow color="bg-grape-500" label={tr('Первое посещение')} value={first} />
       </div>
     </div>
   )
@@ -303,11 +299,11 @@ function NanniesTable({ stats, nannies }: { stats?: DashboardStats; nannies?: Na
       <table className="w-full min-w-[560px] text-sm">
         <thead>
           <tr className="text-left text-[11.5px] font-semibold text-mist-500">
-            <th className="pb-2 pl-1 font-semibold">Няня</th>
-            <th className="pb-2 font-semibold">Отработано</th>
-            <th className="pb-2 text-right font-semibold">Детей</th>
-            <th className="pb-2 pl-6 font-semibold">Сейчас</th>
-            <th className="pb-2 text-right font-semibold">Статус</th>
+            <th className="pb-2 pl-1 font-semibold">{tr('Няня')}</th>
+            <th className="pb-2 font-semibold">{tr('Отработано')}</th>
+            <th className="pb-2 text-right font-semibold">{tr('Детей')}</th>
+            <th className="pb-2 pl-6 font-semibold">{tr('Сейчас')}</th>
+            <th className="pb-2 text-right font-semibold">{tr('Статус')}</th>
           </tr>
         </thead>
         <tbody>
@@ -354,10 +350,10 @@ function EndingSoon({ visits, now }: { visits?: VisitListItem[]; now: number }) 
   return (
     <GlassCard className="flex flex-col p-5">
       <GlassHeader
-        title="Скоро заканчиваются"
-        subtitle={visits ? `${visits.length} ${plural(visits.length, ['ребёнок', 'ребёнка', 'детей'])} в парке` : ' '}
+        title={tr('Скоро заканчиваются')}
+        subtitle={visits ? tr('{0} {1} в парке', visits.length, plural(visits.length, [tr('ребёнок'), tr('ребёнка'), tr('детей')])) : ' '}
         action={
-          <Link to="/visits" className="glass flex size-8 items-center justify-center rounded-full text-ink-900 transition hover:bg-white" aria-label="Все посещения">
+          <Link to="/visits" className="glass flex size-8 items-center justify-center rounded-full text-ink-900 transition hover:bg-white" aria-label={tr('Все посещения')}>
             <ArrowUpRight className="size-4" />
           </Link>
         }
@@ -367,7 +363,7 @@ function EndingSoon({ visits, now }: { visits?: VisitListItem[]; now: number }) 
       ) : visits.length === 0 ? (
         <div className="mt-4 flex flex-1 flex-col items-center justify-center rounded-2xl bg-white/50 py-10 text-center">
           <Users className="size-6 text-mist-400" />
-          <p className="mt-2 text-sm font-semibold text-mist-500">Детей в парке нет</p>
+          <p className="mt-2 text-sm font-semibold text-mist-500">{tr('Детей в парке нет')}</p>
         </div>
       ) : (
         <ul className="mt-3 space-y-1.5">
@@ -392,7 +388,7 @@ function EndingSoon({ visits, now }: { visits?: VisitListItem[]; now: number }) 
                       <span className="h-1 flex-1 overflow-hidden rounded-full bg-mist-200">
                         <span className={cn('block h-full rounded-full', soon ? 'bg-rose-500' : 'bg-accent-500')} style={{ width: `${t.progress}%` }} />
                       </span>
-                      <span className="tabular text-[11px] font-semibold text-mist-500">до {formatTime(v.endAt)}</span>
+                      <span className="tabular text-[11px] font-semibold text-mist-500">{tr('до ')} {formatTime(v.endAt)}</span>
                     </div>
                   </div>
                   <span
@@ -428,10 +424,10 @@ function RangePicker({ value, onChange, active }: { value: DateRange; onChange: 
           'inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-[13px] font-bold transition active:scale-[0.97]',
           active ? 'glass-accent' : 'glass text-ink-900 hover:bg-white',
         )}
-        aria-label="Выбрать период"
+        aria-label={tr('Выбрать период')}
       >
         <CalendarDays className="size-4" />
-        {active ? rangeText(value) : 'Период'}
+        {active ? rangeText(value) : tr('Период')}
       </button>
       {open &&
         pos &&

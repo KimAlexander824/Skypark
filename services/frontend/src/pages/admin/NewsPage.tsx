@@ -11,15 +11,16 @@ import { ConfirmModal, Modal, Segmented } from '@/components/ui/Overlay'
 import { cn, formatDate, formatTime } from '@/lib/format'
 import type { News, NewsStatus } from '@/types'
 import { DateTimePicker } from '@/components/ui/DatePicker'
+import { t, localized } from '@/i18n'
 
 const KEY = ['admin', 'news']
 
 // ТЗ §29
-const statusMeta: Record<NewsStatus, { label: string; tone: PastelTone | 'dark' | 'muted' }> = {
-  draft: { label: 'Черновик', tone: 'butter' },
-  published: { label: 'Опубликовано', tone: 'olive' },
-  archived: { label: 'Архив', tone: 'muted' },
-}
+const statusMeta: Record<NewsStatus, { label: string; tone: PastelTone | 'dark' | 'muted' }> = localized(() => ({
+  draft: { label: t('Черновик'), tone: 'butter' },
+  published: { label: t('Опубликовано'), tone: 'olive' },
+  archived: { label: t('Архив'), tone: 'muted' },
+}))
 
 
 export function NewsPage() {
@@ -27,7 +28,7 @@ export function NewsPage() {
   const [tab, setTab] = useState<NewsStatus | 'all'>('all')
   const [editing, setEditing] = useState<News | 'new'>()
   const [removing, setRemoving] = useState<News>()
-  const remove = useAdminMutation((n: News) => newsApi.remove(n.id), { invalidate: [KEY], success: 'Новость удалена' })
+  const remove = useAdminMutation((n: News) => newsApi.remove(n.id), { invalidate: [KEY], success: t('Новость удалена') })
 
   const count = (s: NewsStatus) => data?.filter((n) => n.status === s).length
   const rows = data?.filter((n) => tab === 'all' || n.status === tab)
@@ -35,20 +36,21 @@ export function NewsPage() {
   return (
     <div className="animate-slide-up">
       <AdminHeader
-        title="Новости"
-        description="Информационные материалы для родителей"
+        title={t('Новости')}
+        description={t('Информационные материалы для родителей')}
         actions={
           <Button leftIcon={<Plus />} onClick={() => setEditing('new')}>
-            Новая новость
+            
+            {t('Новая новость')}
           </Button>
         }
       />
 
       <StatsRow>
-        <PastelStat tone="peri" icon={<Newspaper />} label="Всего материалов" value={data?.length} />
-        <PastelStat tone="olive" icon={<Send />} label="Опубликовано" value={count('published')} />
-        <PastelStat tone="butter" icon={<FilePen />} label="Черновиков" value={count('draft')} />
-        <PastelStat tone="blush" icon={<Archive />} label="В архиве" value={count('archived')} />
+        <PastelStat tone="peri" icon={<Newspaper />} label={t('Всего материалов')} value={data?.length} />
+        <PastelStat tone="olive" icon={<Send />} label={t('Опубликовано')} value={count('published')} />
+        <PastelStat tone="butter" icon={<FilePen />} label={t('Черновиков')} value={count('draft')} />
+        <PastelStat tone="blush" icon={<Archive />} label={t('В архиве')} value={count('archived')} />
       </StatsRow>
 
       <Panel
@@ -59,10 +61,10 @@ export function NewsPage() {
             size="sm"
             className="bg-cream-200/70"
             options={[
-              { value: 'all', label: 'Все' },
-              { value: 'published', label: 'Опубликовано' },
-              { value: 'draft', label: 'Черновики' },
-              { value: 'archived', label: 'Архив' },
+              { value: 'all', label: t('Все') },
+              { value: 'published', label: t('Опубликовано') },
+              { value: 'draft', label: t('Черновики') },
+              { value: 'archived', label: t('Архив') },
             ]}
           />
         }
@@ -74,7 +76,7 @@ export function NewsPage() {
             ))}
           </div>
         ) : !rows?.length ? (
-          <EmptyBlock icon={<Newspaper />} title="Здесь пока пусто" action={<Button onClick={() => setEditing('new')}>Написать новость</Button>} />
+          <EmptyBlock icon={<Newspaper />} title={t('Здесь пока пусто')} action={<Button onClick={() => setEditing('new')}>{t('Написать новость')}</Button>} />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
             {rows.map((n, i) => (
@@ -102,10 +104,10 @@ export function NewsPage() {
                       {formatDate(n.publishAt)}, {formatTime(n.publishAt)}
                     </span>
                     <div className="flex gap-0.5">
-                      <IconAction label="Редактировать" onClick={() => setEditing(n)}>
+                      <IconAction label={t('Редактировать')} onClick={() => setEditing(n)}>
                         <Pencil />
                       </IconAction>
-                      <IconAction label="Удалить" onClick={() => setRemoving(n)} danger>
+                      <IconAction label={t('Удалить')} onClick={() => setRemoving(n)} danger>
                         <Trash2 />
                       </IconAction>
                     </div>
@@ -121,9 +123,9 @@ export function NewsPage() {
       <ConfirmModal
         open={Boolean(removing)}
         onClose={() => setRemoving(undefined)}
-        title="Удалить новость?"
-        description={removing && `«${removing.title}» будет удалена. Вместо удаления можно перенести её в архив.`}
-        confirmLabel="Удалить"
+        title={t('Удалить новость?')}
+        description={removing && t('«{0}» будет удалена. Вместо удаления можно перенести её в архив.', removing.title)}
+        confirmLabel={t('Удалить')}
         danger
         loading={remove.isPending}
         onConfirm={() => removing && remove.mutate(removing, { onSuccess: () => setRemoving(undefined) })}
@@ -139,33 +141,35 @@ function NewsForm({ news, onClose }: { news?: News; onClose: () => void }) {
       : { title: '', text: '', publishAt: new Date().toISOString(), status: 'draft' },
   )
   const set = <K extends keyof NewsInput>(k: K, v: NewsInput[K]) => setForm((f) => ({ ...f, [k]: v }))
-  const save = useAdminMutation((f: NewsInput) => newsApi.save(f, news?.id), { invalidate: [KEY], success: news ? 'Новость сохранена' : 'Новость создана' })
+  const save = useAdminMutation((f: NewsInput) => newsApi.save(f, news?.id), { invalidate: [KEY], success: news ? t('Новость сохранена') : t('Новость создана') })
 
   return (
     <Modal
       open
       onClose={onClose}
       size="lg"
-      title={news ? 'Редактировать новость' : 'Новая новость'}
+      title={news ? t('Редактировать новость') : t('Новая новость')}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            
+            {t('Отмена')}
           </Button>
           <Button loading={save.isPending} onClick={() => save.mutate(form, { onSuccess: onClose })}>
-            Сохранить
+            
+            {t('Сохранить')}
           </Button>
         </>
       }
     >
       <div className="grid gap-4">
         <ImagePicker value={form.imageUrl} onChange={(v) => set('imageUrl', v)} />
-        <Input label="Заголовок" required value={form.title} onChange={(e) => set('title', e.target.value)} autoFocus />
-        <Textarea label="Текст" required rows={5} value={form.text} onChange={(e) => set('text', e.target.value)} />
+        <Input label={t('Заголовок')} required value={form.title} onChange={(e) => set('title', e.target.value)} autoFocus />
+        <Textarea label={t('Текст')} required rows={5} value={form.text} onChange={(e) => set('text', e.target.value)} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <DateTimePicker label="Дата публикации" value={form.publishAt} onChange={(v) => set('publishAt', v)} />
+          <DateTimePicker label={t('Дата публикации')} value={form.publishAt} onChange={(v) => set('publishAt', v)} />
           <div className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-semibold text-ink-700">Статус</span>
+            <span className="text-[13px] font-semibold text-ink-700">{t('Статус')}</span>
             <Segmented<NewsStatus>
               value={form.status}
               onChange={(s) => set('status', s)}

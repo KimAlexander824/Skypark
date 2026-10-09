@@ -28,6 +28,7 @@ import { useFinishVisit, useNannies, useVisits, visitKeys } from '@/features/vis
 import { cn, formatDuration, formatMoney, formatPhone, formatShortDate, formatTime, fullName } from '@/lib/format'
 import { paymentStatus, visitStatus } from '@/lib/statuses'
 import { formatCountdown, useNow, visitTiming, visitTotalMinutes, visitTotalPrice } from '@/lib/time'
+import { t as tr } from '@/i18n'
 
 const isToday = (iso?: string) => Boolean(iso) && new Date(iso!).toDateString() === new Date().toDateString()
 
@@ -56,20 +57,20 @@ export function VisitsPage() {
   return (
     <div className="animate-slide-up">
       <PageHeader
-        title="Посещения"
-        description="Текущие посещения, таймеры и история"
+        title={tr('Посещения')}
+        description={tr('Текущие посещения, таймеры и история')}
         actions={
           <Link to="/visits/new">
-            <Button leftIcon={<Plus />}>Новое посещение</Button>
+            <Button leftIcon={<Plus />}>{tr('Новое посещение')}</Button>
           </Link>
         }
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <PastelStat icon={<Users />} tone="butter" label="Сейчас в парке" value={current.data ? active.length : undefined} />
-        <PastelStat icon={<AlarmClock />} tone="blush" label="Заканчиваются (≤15 мин)" value={current.data ? soon : undefined} />
-        <PastelStat icon={<CircleCheckBig />} tone="olive" label="Завершено сегодня" value={history.data ? completedToday : undefined} />
-        <PastelStat icon={<HeartHandshake />} tone="peri" label="Свободных нянь" value={freeNannies} />
+        <PastelStat icon={<Users />} tone="butter" label={tr('Сейчас в парке')} value={current.data ? active.length : undefined} />
+        <PastelStat icon={<AlarmClock />} tone="blush" label={tr('Заканчиваются (≤15 мин)')} value={current.data ? soon : undefined} />
+        <PastelStat icon={<CircleCheckBig />} tone="olive" label={tr('Завершено сегодня')} value={history.data ? completedToday : undefined} />
+        <PastelStat icon={<HeartHandshake />} tone="peri" label={tr('Свободных нянь')} value={freeNannies} />
       </div>
 
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -77,9 +78,9 @@ export function VisitsPage() {
           value={scope}
           onChange={setScope}
           options={[
-            { value: 'current', label: 'Текущие' },
-            { value: 'completed', label: 'Завершённые' },
-            { value: 'all', label: 'Все' },
+            { value: 'current', label: tr('Текущие') },
+            { value: 'completed', label: tr('Завершённые') },
+            { value: 'all', label: tr('Все') },
           ]}
         />
       </div>
@@ -91,11 +92,11 @@ export function VisitsPage() {
           <Card>
             <EmptyState
               icon={<ClipboardList />}
-              title="Сейчас нет активных посещений"
-              description="Оформите посещение — таймер запустится автоматически."
+              title={tr('Сейчас нет активных посещений')}
+              description={tr('Оформите посещение — таймер запустится автоматически.')}
               action={
                 <Link to="/visits/new">
-                  <Button leftIcon={<Play />}>Начать посещение</Button>
+                  <Button leftIcon={<Play />}>{tr('Начать посещение')}</Button>
                 </Link>
               }
             />
@@ -174,7 +175,7 @@ function VisitCard({ visit, now, onFinish, onParentReply }: { visit: VisitListIt
     if (t.over && !expiredRef.current) {
       expiredRef.current = true
       qc.invalidateQueries({ queryKey: visitKeys.all })
-      toast.info(`Время посещения закончилось: ${fullName(visit.child)}`)
+      toast.info(tr('Время посещения закончилось: {0}', fullName(visit.child)))
     }
   }, [t.over, qc, visit.child])
 
@@ -200,25 +201,25 @@ function VisitCard({ visit, now, onFinish, onParentReply }: { visit: VisitListIt
 
       <div className="flex items-center gap-5 px-5 py-5">
         <ProgressRing value={t.progress} tone={tone}>
-          <span className="text-[11px] font-semibold text-mist-500">осталось</span>
+          <span className="text-[11px] font-semibold text-mist-500">{tr('осталось')}</span>
           <span className="tabular text-[22px] leading-tight font-extrabold tracking-tight text-ink-900">{formatCountdown(t.leftMs)}</span>
         </ProgressRing>
         <dl className="grid flex-1 grid-cols-1 gap-2.5 text-sm">
-          <Info label="Время" value={`${formatTime(visit.startAt)} — ${formatTime(visit.endAt)}`} />
-          <Info label="Прошло" value={formatDuration(t.elapsedMin)} />
+          <Info label={tr('Время')} value={`${formatTime(visit.startAt)} — ${formatTime(visit.endAt)}`} />
+          <Info label={tr('Прошло')} value={formatDuration(t.elapsedMin)} />
           <Info
-            label="Продление"
+            label={tr('Продление')}
             value={
               pendingExt ? (
-                <span className="text-sun-600">ждёт оплаты</span>
+                <span className="text-sun-600">{tr('ждёт оплаты')}</span>
               ) : declined ? (
-                <span className="text-rose-500">{extMin > 0 ? `+${formatDuration(extMin)}, дальше отказ` : 'отказ'}</span>
+                <span className="text-rose-500">{extMin > 0 ? tr('+{0}, дальше отказ', formatDuration(extMin)) : tr('отказ')}</span>
               ) : extMin > 0 ? (
                 <span className="inline-flex items-center gap-1 text-mint-600">
                   <TimerReset className="size-3.5" />+{formatDuration(extMin)}
                 </span>
               ) : (
-                <span className="text-mist-400">нет</span>
+                <span className="text-mist-400">{tr('нет')}</span>
               )
             }
           />
@@ -229,11 +230,12 @@ function VisitCard({ visit, now, onFinish, onParentReply }: { visit: VisitListIt
         <div className="mx-5 mb-4 flex items-center gap-3 rounded-2xl bg-rose-50 px-3.5 py-2.5 ring-1 ring-rose-100">
           <TelegramLogo className={cn('size-7', !visit.parent.telegram?.linked && 'opacity-40 grayscale')} />
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug font-semibold text-ink-800">
-            {visit.parent.telegram?.linked ? 'Родителю предложено продление' : 'Telegram не привязан — спросите родителя лично'}
+            {visit.parent.telegram?.linked ? tr('Родителю предложено продление') : tr('Telegram не привязан — спросите родителя лично')}
           </div>
           {visit.parent.telegram?.linked && (
             <button type="button" onClick={onParentReply} className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-sky-500 transition hover:bg-white/70">
-              Ответ родителя
+              
+              {tr('Ответ родителя')}
             </button>
           )}
         </div>
@@ -250,7 +252,8 @@ function VisitCard({ visit, now, onFinish, onParentReply }: { visit: VisitListIt
           </div>
         )}
         <Button size="sm" variant="secondary" onClick={onFinish} leftIcon={<Square className="fill-current" />}>
-          Завершить
+          
+          {tr('Завершить')}
         </Button>
       </div>
     </GlassCard>
@@ -282,8 +285,8 @@ function FinishModal({ visit, now, onClose }: { visit?: VisitListItem; now: numb
     if (!visit) return
     try {
       await finish.mutateAsync({ id: visit.id, by: user.id })
-      toast.success('Посещение завершено', { description: fullName(visit.child) })
-      if (visit.parent.telegram?.linked) toast.info('Родителю отправлено уведомление о завершении', { icon: <TelegramLogo className="size-8" /> })
+      toast.success(tr('Посещение завершено'), { description: fullName(visit.child) })
+      if (visit.parent.telegram?.linked) toast.info(tr('Родителю отправлено уведомление о завершении'), { icon: <TelegramLogo className="size-8" /> })
       onClose()
     } catch (e) {
       toast.error(errorMessage(e))
@@ -310,15 +313,16 @@ function FinishModal({ visit, now, onClose }: { visit?: VisitListItem; now: numb
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[10px] font-semibold text-mist-500">осталось</span>
+              <span className="text-[10px] font-semibold text-mist-500">{tr('осталось')}</span>
               <span className="tabular text-[17px] font-extrabold text-ink-900">{formatCountdown(t.leftMs)}</span>
             </div>
           </div>
 
-          <h2 className="mt-4 text-[19px] font-extrabold tracking-tight text-ink-900">Завершить посещение?</h2>
+          <h2 className="mt-4 text-[19px] font-extrabold tracking-tight text-ink-900">{tr('Завершить посещение?')}</h2>
           <p className="mx-auto mt-1.5 max-w-[280px] text-[13.5px] leading-snug font-medium text-mist-500">
-            Время ещё не вышло. Няня освободится, посещение сохранится в истории
-            {v.parent.telegram?.linked ? ', родитель получит уведомление.' : '.'}
+            
+            {tr('Время ещё не вышло. Няня освободится, посещение сохранится в истории')}
+            {v.parent.telegram?.linked ? tr(', родитель получит уведомление.') : '.'}
           </p>
 
           <div className="mt-5 flex items-center gap-3 rounded-2xl bg-white/70 p-3 text-left ring-1 ring-white">
@@ -342,14 +346,15 @@ function FinishModal({ visit, now, onClose }: { visit?: VisitListItem; now: numb
               disabled={finish.isPending}
               className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-danger-500 text-[15px] font-bold text-snow shadow-[0_8px_20px_-8px_rgb(229_72_77/0.6)] transition hover:bg-danger-600 active:scale-[0.98] disabled:opacity-60"
             >
-              {finish.isPending ? 'Завершаем…' : 'Завершить сейчас'}
+              {finish.isPending ? tr('Завершаем…') : tr('Завершить сейчас')}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="h-12 rounded-2xl bg-mist-100 text-[15px] font-bold text-ink-900 transition hover:bg-mist-200 active:scale-[0.98]"
             >
-              Отмена
+              
+              {tr('Отмена')}
             </button>
           </div>
         </div>
@@ -372,7 +377,7 @@ function HistoryTable({ items, loading }: { items?: VisitListItem[]; loading: bo
   if (!items?.length)
     return (
       <Card>
-        <EmptyState icon={<Hourglass />} title="Записей нет" description="Завершённые посещения появятся здесь." />
+        <EmptyState icon={<Hourglass />} title={tr('Записей нет')} description={tr('Завершённые посещения появятся здесь.')} />
       </Card>
     )
   return (
@@ -381,14 +386,14 @@ function HistoryTable({ items, loading }: { items?: VisitListItem[]; loading: bo
         <table className="w-full min-w-[860px] text-left text-sm">
           <thead>
             <tr className="border-b border-cream-200 bg-cream-100 text-xs text-ink-500">
-              <th className="py-3 pr-3 pl-5 font-semibold">Ребёнок</th>
-              <th className="px-3 py-3 font-semibold">Дата</th>
-              <th className="px-3 py-3 font-semibold">Время</th>
-              <th className="px-3 py-3 font-semibold">Няня</th>
-              <th className="px-3 py-3 font-semibold">Длительность</th>
-              <th className="px-3 py-3 text-right font-semibold">Стоимость</th>
-              <th className="px-3 py-3 font-semibold">Завершил</th>
-              <th className="py-3 pr-5 pl-3 font-semibold">Статус</th>
+              <th className="py-3 pr-3 pl-5 font-semibold">{tr('Ребёнок')}</th>
+              <th className="px-3 py-3 font-semibold">{tr('Дата')}</th>
+              <th className="px-3 py-3 font-semibold">{tr('Время')}</th>
+              <th className="px-3 py-3 font-semibold">{tr('Няня')}</th>
+              <th className="px-3 py-3 font-semibold">{tr('Длительность')}</th>
+              <th className="px-3 py-3 text-right font-semibold">{tr('Стоимость')}</th>
+              <th className="px-3 py-3 font-semibold">{tr('Завершил')}</th>
+              <th className="py-3 pr-5 pl-3 font-semibold">{tr('Статус')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-cream-200">
@@ -408,7 +413,7 @@ function HistoryTable({ items, loading }: { items?: VisitListItem[]; loading: bo
                   <td className="tabular px-3 py-3 font-semibold text-ink-800">{formatShortDate(v.startAt)}</td>
                   <td className="tabular px-3 py-3 text-ink-600">
                     {formatTime(v.startAt)} — {formatTime(v.endedAt ?? v.endAt)}
-                    {early && <span className="ml-1.5 text-xs font-semibold text-warning-700">досрочно</span>}
+                    {early && <span className="ml-1.5 text-xs font-semibold text-warning-700">{tr('досрочно')}</span>}
                   </td>
                   <td className="px-3 py-3 text-ink-700">{v.nanny ? fullName(v.nanny) : '—'}</td>
                   <td className="px-3 py-3 font-semibold text-ink-800">
@@ -426,7 +431,7 @@ function HistoryTable({ items, loading }: { items?: VisitListItem[]; loading: bo
                     )}
                     <div className={cn('text-xs font-medium', pay.tone === 'success' ? 'text-success-600' : 'text-ink-500')}>{pay.label}</div>
                   </td>
-                  <td className="px-3 py-3 text-ink-600">{v.status === 'cancelled' ? '—' : (v.endedByName ?? 'Автоматически')}</td>
+                  <td className="px-3 py-3 text-ink-600">{v.status === 'cancelled' ? '—' : (v.endedByName ?? tr('Автоматически'))}</td>
                   <td className="py-3 pr-5 pl-3">
                     <Badge tone={st.tone}>{st.label}</Badge>
                   </td>

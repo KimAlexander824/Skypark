@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react'
 import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react'
 import { cn } from '@/lib/format'
+import { t } from '@/i18n'
 
 /* Дизайн v3 — Apple / liquid glass. */
 
@@ -57,7 +58,7 @@ export function ToneIcon({ tone, children, size = 'md' }: { tone: GlassTone; chi
 /** Изменение относительно прошлого периода. */
 export function Delta({ current, previous, invert }: { current: number; previous: number; invert?: boolean }) {
   if (!previous && !current) return <DeltaPill kind="flat">0%</DeltaPill>
-  if (!previous) return <DeltaPill kind="up">новое</DeltaPill>
+  if (!previous) return <DeltaPill kind="up">{t('новое')}</DeltaPill>
   const pct = Math.round(((current - previous) / previous) * 100)
   if (pct === 0) return <DeltaPill kind="flat">0%</DeltaPill>
   const good = invert ? pct < 0 : pct > 0

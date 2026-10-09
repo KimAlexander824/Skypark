@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { ImagePlus, X } from 'lucide-react'
 import { cn } from '@/lib/format'
+import { t } from '@/i18n'
 
 /** Сжимает изображение до maxSide и возвращает JPEG data URL. */
 export function compressImage(file: File, maxSide = 960): Promise<string> {
@@ -23,7 +24,7 @@ export function compressImage(file: File, maxSide = 960): Promise<string> {
 export function ImagePicker({
   value,
   onChange,
-  label = 'Изображение',
+  label = t('Изображение'),
   shape = 'wide',
   maxSide,
 }: {
@@ -50,7 +51,7 @@ export function ImagePicker({
               type="button"
               onClick={() => onChange(undefined)}
               className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-full bg-ink-900/70 text-mist-50 backdrop-blur transition hover:bg-ink-900"
-              aria-label="Удалить изображение"
+              aria-label={t('Удалить изображение')}
             >
               <X className="size-4" />
             </button>
@@ -62,7 +63,7 @@ export function ImagePicker({
             className="flex size-full flex-col items-center justify-center gap-1.5 text-ink-500 transition hover:bg-cream-200/60 hover:text-ink-900"
           >
             <ImagePlus className="size-6" />
-            <span className="text-xs font-semibold">Загрузить</span>
+            <span className="text-xs font-semibold">{t('Загрузить')}</span>
           </button>
         )}
       </div>

@@ -10,6 +10,7 @@ import { ThemePicker } from '@/components/ui/ThemePicker'
 import { ConfirmModal } from '@/components/ui/Overlay'
 import { formatDuration, formatMoney } from '@/lib/format'
 import type { AppSettings } from '@/types'
+import { t } from '@/i18n'
 
 const KEY = ['admin', 'settings']
 
@@ -21,7 +22,7 @@ export function SettingsPage() {
     if (data) setDraft(structuredClone(data))
   }, [data])
 
-  const save = useAdminMutation((s: AppSettings) => appSettingsApi.save(s), { invalidate: [KEY, ['settings', 'visits']], success: 'Настройки сохранены' })
+  const save = useAdminMutation((s: AppSettings) => appSettingsApi.save(s), { invalidate: [KEY, ['settings', 'visits']], success: t('Настройки сохранены') })
   const dirty = Boolean(data && draft && JSON.stringify(data) !== JSON.stringify(draft))
 
   if (isLoading || !draft)
@@ -35,17 +36,19 @@ export function SettingsPage() {
   return (
     <div className="animate-slide-up">
       <AdminHeader
-        title="Настройки"
-        description="Оформление, тарифы, варианты продолжительности и продления"
+        title={t('Настройки')}
+        description={t('Оформление, тарифы, варианты продолжительности и продления')}
         actions={
           <>
             {dirty && (
               <Button variant="ghost" leftIcon={<Undo2 />} onClick={() => setDraft(structuredClone(data))}>
-                Отменить
+                
+                {t('Отменить')}
               </Button>
             )}
             <Button leftIcon={<Save />} disabled={!dirty} loading={save.isPending} onClick={() => save.mutate(draft)}>
-              Сохранить
+              
+              {t('Сохранить')}
             </Button>
           </>
         }
@@ -53,14 +56,14 @@ export function SettingsPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Panel className="lg:col-span-2">
-          <SectionTitle icon={<Palette />} tone="bg-peri-300" title="Оформление" text="Тема интерфейса сохраняется на этом устройстве и применяется сразу" />
+          <SectionTitle icon={<Palette />} tone="bg-peri-300" title={t('Оформление')} text={t('Тема интерфейса сохраняется на этом устройстве и применяется сразу')} />
           <ThemePicker />
         </Panel>
 
         <Panel>
-          <SectionTitle icon={<Wallet />} tone="bg-butter-300" title="Стоимость" text="Цена посещения и продления считается от стоимости часа" />
+          <SectionTitle icon={<Wallet />} tone="bg-butter-300" title={t('Стоимость')} text={t('Цена посещения и продления считается от стоимости часа')} />
           <NumberInput
-            label="Стоимость часа, сум"
+            label={t('Стоимость часа, сум')}
             min={0}
             step={1000}
             value={draft.hourlyRate}
@@ -77,28 +80,29 @@ export function SettingsPage() {
         </Panel>
 
         <Panel>
-          <SectionTitle icon={<BellRing />} tone="bg-blush-300" title="Уведомление о продлении" text="Родитель получает предложение продлить посещение в Telegram" />
+          <SectionTitle icon={<BellRing />} tone="bg-blush-300" title={t('Уведомление о продлении')} text={t('Родитель получает предложение продлить посещение в Telegram')} />
           <div className="flex items-center gap-3 rounded-2xl bg-mist-100/80 p-4">
-            <span className="tabular text-[28px] font-extrabold text-ink-900">{draft.extensionNoticeMin} мин</span>
-            <span className="text-sm text-ink-600">до окончания посещения</span>
+            <span className="tabular text-[28px] font-extrabold text-ink-900">{draft.extensionNoticeMin}  {t(' мин')}</span>
+            <span className="text-sm text-ink-600">{t('до окончания посещения')}</span>
           </div>
         </Panel>
 
         <Panel>
-          <SectionTitle icon={<Clock3 />} tone="bg-olive-300" title="Продолжительность посещения" text="Варианты, которые сотрудник выбирает при оформлении" />
+          <SectionTitle icon={<Clock3 />} tone="bg-olive-300" title={t('Продолжительность посещения')} text={t('Варианты, которые сотрудник выбирает при оформлении')} />
           <MinutesEditor value={draft.durations} onChange={(v) => setDraft({ ...draft, durations: v })} hourlyRate={draft.hourlyRate} />
         </Panel>
 
         <Panel>
-          <SectionTitle icon={<TimerReset />} tone="bg-peri-300" title="Варианты продления" text="Родитель выбирает их в Telegram-боте" />
+          <SectionTitle icon={<TimerReset />} tone="bg-peri-300" title={t('Варианты продления')} text={t('Родитель выбирает их в Telegram-боте')} />
           <MinutesEditor value={draft.extensionOptions} onChange={(v) => setDraft({ ...draft, extensionOptions: v })} hourlyRate={draft.hourlyRate} />
         </Panel>
 
         <Panel className="lg:col-span-2">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <SectionTitle icon={<DatabaseZap />} tone="bg-cream-200" title="Демо-данные" text="Сбросить тестовую базу до исходного состояния (до подключения backend)" className="mb-0 flex-1" />
+            <SectionTitle icon={<DatabaseZap />} tone="bg-cream-200" title={t('Демо-данные')} text={t('Сбросить тестовую базу до исходного состояния (до подключения backend)')} className="mb-0 flex-1" />
             <Button variant="secondary" onClick={() => setResetOpen(true)}>
-              Сбросить демо-данные
+              
+              {t('Сбросить демо-данные')}
             </Button>
           </div>
         </Panel>
@@ -107,9 +111,9 @@ export function SettingsPage() {
       <ConfirmModal
         open={resetOpen}
         onClose={() => setResetOpen(false)}
-        title="Сбросить демо-данные?"
-        description="Все изменения в тестовой базе будут потеряны, страница перезагрузится."
-        confirmLabel="Сбросить"
+        title={t('Сбросить демо-данные?')}
+        description={t('Все изменения в тестовой базе будут потеряны, страница перезагрузится.')}
+        confirmLabel={t('Сбросить')}
         danger
         onConfirm={appSettingsApi.resetDemo}
       />
@@ -135,7 +139,7 @@ function MinutesEditor({ value, onChange, hourlyRate }: { value: number[]; onCha
               type="button"
               onClick={() => onChange(value.filter((x) => x !== m))}
               className="flex size-6 items-center justify-center rounded-full text-accent-400 transition hover:bg-accent-100 hover:text-accent-700"
-              aria-label={`Убрать ${formatDuration(m)}`}
+              aria-label={t('Убрать {0}', formatDuration(m))}
             >
               <X className="size-3.5" />
             </button>
@@ -150,11 +154,12 @@ function MinutesEditor({ value, onChange, hourlyRate }: { value: number[]; onCha
           value={adding}
           onChange={(e) => setAdding(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && add()}
-          placeholder="Минут, например 90"
+          placeholder={t('Минут, например 90')}
           className="h-10 w-48 rounded-full bg-cream-50 px-4 text-sm ring-1 ring-cream-200 focus:ring-2 focus:ring-ink-900 focus:outline-none"
         />
         <Button size="sm" variant="secondary" className="h-10 rounded-full" leftIcon={<Plus />} onClick={add}>
-          Добавить
+          
+          {t('Добавить')}
         </Button>
       </div>
     </div>

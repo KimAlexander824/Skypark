@@ -2,18 +2,19 @@ import type { ReactNode } from 'react'
 import { Check, Monitor, Moon, Sun } from 'lucide-react'
 import { cn } from '@/lib/format'
 import { originOf, useTheme, type ThemePreference } from '@/lib/theme'
+import { t, localized } from '@/i18n'
 
-const THEME_OPTIONS: { value: ThemePreference; label: string; hint: string; icon: ReactNode }[] = [
-  { value: 'light', label: 'Светлая', hint: 'Всегда светлый интерфейс', icon: <Sun /> },
-  { value: 'dark', label: 'Тёмная', hint: 'Бережёт глаза вечером', icon: <Moon /> },
-  { value: 'system', label: 'Как в системе', hint: 'Следует настройке устройства', icon: <Monitor /> },
-]
+const THEME_OPTIONS: { value: ThemePreference; label: string; hint: string; icon: ReactNode }[] = localized(() => ([
+  { value: 'light', label: t('Светлая'), hint: t('Всегда светлый интерфейс'), icon: <Sun /> },
+  { value: 'dark', label: t('Тёмная'), hint: t('Бережёт глаза вечером'), icon: <Moon /> },
+  { value: 'system', label: t('Как в системе'), hint: t('Следует настройке устройства'), icon: <Monitor /> },
+]))
 
 /** Выбор темы интерфейса карточками с мини-превью. Используется в настройках всех ролей. */
 export function ThemePicker() {
   const { preference, setTheme } = useTheme()
   return (
-    <div role="radiogroup" aria-label="Тема интерфейса" className="grid gap-3 sm:grid-cols-3">
+    <div role="radiogroup" aria-label={t('Тема интерфейса')} className="grid gap-3 sm:grid-cols-3">
       {THEME_OPTIONS.map((o) => {
         const active = preference === o.value
         return (

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import type { SeriesPoint } from '@/api/analytics'
 import { cn } from '@/lib/format'
+import { t } from '@/i18n'
 
 /*
  * Графики v3. Одна серия — нейтральные «пилюли», активная (наведённая или максимум) — оранжевая со штриховкой.
@@ -349,10 +350,10 @@ export function ComparisonBarChart({
         >
           <div className="text-[11px] font-semibold text-mist-500">
             {current[hover].label}
-            {hover === nowIndex && <span className="ml-1 text-accent-600">· сейчас</span>}
+            {hover === nowIndex && <span className="ml-1 text-accent-600">{t('· сейчас')}</span>}
           </div>
           {current[hover].future ? (
-            <div className="mt-0.5 text-[12.5px] font-bold text-mist-500">Ещё не наступило</div>
+            <div className="mt-0.5 text-[12.5px] font-bold text-mist-500">{t('Ещё не наступило')}</div>
           ) : (
             <div className="mt-0.5 flex items-center gap-1.5 text-[13px] font-extrabold text-ink-900">
               <span className="size-2 rounded-full bg-accent-500" />

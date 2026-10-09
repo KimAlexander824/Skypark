@@ -2,6 +2,7 @@ import type { Visit } from '@/types'
 import { isOngoing, visitTotalMinutes, visitTotalPrice } from '@/lib/time'
 import { db, delay } from './mock/db'
 import { syncVisits } from './visits'
+import { LOCALE } from '@/i18n'
 
 /** Период фильтра Dashboard (ТЗ §24): границы включительно, по локальному времени. */
 export interface DateRange {
@@ -169,7 +170,7 @@ export const analyticsApi = {
         previousVisitsSeries.push({ key: label, label, value: prevVisits.filter((v) => new Date(v.startAt).getHours() === h).length })
       }
     } else {
-      const fmt = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' })
+      const fmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short' })
       for (let d = startOfDay(range.from); d <= range.to; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)) {
         const k = dayKey(d)
         const list = visits.filter((v) => dayKey(new Date(v.startAt)) === k)

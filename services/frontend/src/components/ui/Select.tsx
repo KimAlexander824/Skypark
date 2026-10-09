@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/format'
 import { FieldShell } from './Field'
+import { t } from '@/i18n'
 
 export interface SelectOption {
   value: string
@@ -49,7 +50,7 @@ export function Select({
   hint,
   error,
   required,
-  placeholder = 'Выберите',
+  placeholder = t('Выберите'),
   disabled,
   size = 'md',
   className,
@@ -87,11 +88,15 @@ export function Select({
     if (!open) return
     place()
     const update = () => place()
+    // прокрутка страницы закрывает список (иначе он «прилипает» к краю экрана); прокрутка самого списка — нет
+    const onScroll = (e: Event) => {
+      if (!menuRef.current?.contains(e.target as Node)) setOpen(false)
+    }
     window.addEventListener('resize', update)
-    window.addEventListener('scroll', update, true)
+    window.addEventListener('scroll', onScroll, true)
     return () => {
       window.removeEventListener('resize', update)
-      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('scroll', onScroll, true)
     }
   }, [open, place])
 

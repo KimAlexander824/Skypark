@@ -12,6 +12,7 @@ import { homeFor, useAuth } from '@/features/auth/AuthProvider'
 import { isPhoneComplete, phoneLocalPart } from '@/lib/format'
 import { roleLabel } from '@/lib/statuses'
 import type { Role } from '@/types'
+import { t } from '@/i18n'
 
 const roleIcon: Record<Role, typeof UserRound> = { admin: ShieldCheck, staff: UserRound, nanny: HeartHandshake }
 
@@ -29,12 +30,12 @@ export function LoginPage() {
 
   const submit = async (p = phone, pw = password) => {
     setError(undefined)
-    if (!isPhoneComplete(p)) return setError('Введите номер телефона полностью')
-    if (!pw) return setError('Введите пароль')
+    if (!isPhoneComplete(p)) return setError(t('Введите номер телефона полностью'))
+    if (!pw) return setError(t('Введите пароль'))
     setLoading(true)
     try {
       const u = await login(p, pw)
-      toast.success(`Добро пожаловать, ${u.firstName}!`)
+      toast.success(t('Добро пожаловать, {0}!', u.firstName))
       const from = (location.state as { from?: string } | null)?.from
       navigate(from ?? homeFor(u.role), { replace: true })
     } catch (e) {
@@ -57,13 +58,13 @@ export function LoginPage() {
         <div className="w-full max-w-[400px] animate-slide-up">
           <Logo className="mb-12 lg:hidden" />
 
-          <h1 className="text-[32px] leading-tight font-extrabold tracking-tight text-ink-900">Вход в систему</h1>
-          <p className="mt-2 text-[15px] font-medium text-mist-500">Используйте номер телефона и пароль сотрудника</p>
+          <h1 className="text-[32px] leading-tight font-extrabold tracking-tight text-ink-900">{t('Вход в систему')}</h1>
+          <p className="mt-2 text-[15px] font-medium text-mist-500">{t('Используйте номер телефона и пароль сотрудника')}</p>
 
           <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-4" noValidate>
-            <PhoneInput label="Номер телефона" value={phone} onChange={setPhone} inputSize="lg" autoFocus />
+            <PhoneInput label={t('Номер телефона')} value={phone} onChange={setPhone} inputSize="lg" autoFocus />
             <Input
-              label="Пароль"
+              label={t('Пароль')}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -77,7 +78,7 @@ export function LoginPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                  aria-label={showPassword ? t('Скрыть пароль') : t('Показать пароль')}
                 >
                   {showPassword ? <EyeOff /> : <Eye />}
                 </Button>
@@ -91,7 +92,8 @@ export function LoginPage() {
             )}
 
             <Button type="submit" variant="contrast" size="lg" loading={loading} rightIcon={<ArrowRight />} className="mt-2">
-              Войти
+              
+              {t('Войти')}
             </Button>
           </form>
 
@@ -116,7 +118,8 @@ function DemoAccounts({ onPick, disabled }: { onPick: (phone: string) => void; d
     <div className="mt-10">
       <div className="flex items-center gap-3 text-xs font-semibold tracking-wide text-mist-400 uppercase">
         <span className="h-px flex-1 bg-mist-200" />
-        Демо-доступ
+        
+        {t('Демо-доступ')}
         <span className="h-px flex-1 bg-mist-200" />
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
@@ -156,11 +159,14 @@ function BrandPanel() {
 
       <div className="relative max-w-md">
         <h2 className="text-[40px] leading-[1.1] font-extrabold tracking-tight text-snow">
-          Каждый визит —<br />
-          под контролем.
+          
+          {t('Каждый визит —')}<br />
+          
+          {t('под контролем.')}
         </h2>
         <p className="mt-4 text-[17px] leading-relaxed text-snow/70">
-          Регистрация, няни, время и уведомления родителям в одной системе.
+          
+          {t('Регистрация, няни, время и уведомления родителям в одной системе.')}
         </p>
       </div>
 

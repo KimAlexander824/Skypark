@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from 'clsx'
+import { LANG, LOCALE, t } from '@/i18n'
 
 export const cn = (...inputs: ClassValue[]) => clsx(inputs)
 
@@ -25,7 +26,11 @@ export function isPhoneComplete(value: string): boolean {
   return phoneLocalPart(value).length === 9
 }
 
+/** Формы — по-русски: [1 ребёнок, 2 ребёнка, 5 детей]; переводятся через t(). */
 export function plural(n: number, forms: [string, string, string]): string {
+  // в узбекском слово после числа не меняется, в английском — две формы
+  if (LANG === 'uz') return forms[0]
+  if (LANG === 'en') return Math.abs(n) === 1 ? forms[0] : forms[2]
   const mod10 = n % 10
   const mod100 = n % 100
   if (mod10 === 1 && mod100 !== 11) return forms[0]
@@ -47,30 +52,46 @@ export function formatAge(birthDate: string): string {
     const b = new Date(birthDate)
     const now = new Date()
     const months = (now.getFullYear() - b.getFullYear()) * 12 + now.getMonth() - b.getMonth()
-    return `${months} ${plural(months, ['месяц', 'месяца', 'месяцев'])}`
+    return `${months} ${plural(months, [t('месяц'), t('месяца'), t('месяцев')])}`
   }
-  return `${age} ${plural(age, ['год', 'года', 'лет'])}`
+  // по-узбекски возраст — «yosh», а «yil» (год) — для стажа
+  if (LANG === 'uz') return `${age} yosh`
+  return `${age} ${plural(age, [t('год'), t('года'), t('лет')])}`
 }
 
-const dateFmt = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-const shortDateFmt = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-const timeFmt = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' })
+/** Форматтер Intl для текущего языка; пересоздаётся только при смене языка. */
+function intl<T>(make: (locale: string) => T): () => T {
+  let locale: string | undefined
+  let fmt: T
+  return () => {
+    if (locale !== LOCALE) {
+      locale = LOCALE
+      fmt = make(locale)
+    }
+    return fmt
+  }
+}
 
-export const formatDate = (iso: string) => dateFmt.format(new Date(iso))
-export const formatShortDate = (iso: string) => shortDateFmt.format(new Date(iso))
-export const formatTime = (iso: string) => timeFmt.format(new Date(iso))
+const dateFmt = intl((l) => new Intl.DateTimeFormat(l, { day: 'numeric', month: 'long', year: 'numeric' }))
+const shortDateFmt = intl((l) => new Intl.DateTimeFormat(l, { day: '2-digit', month: '2-digit', year: 'numeric' }))
+const timeFmt = intl((l) => new Intl.DateTimeFormat(l, { hour: '2-digit', minute: '2-digit' }))
+
+export const formatDate = (iso: string) => dateFmt().format(new Date(iso))
+export const formatShortDate = (iso: string) => shortDateFmt().format(new Date(iso))
+export const formatTime = (iso: string) => timeFmt().format(new Date(iso))
 
 export function formatMoney(amount: number): string {
-  return new Intl.NumberFormat('ru-RU').format(amount) + ' сум'
+  return new Intl.NumberFormat(LOCALE).format(amount) + ' ' + t('сум')
 }
 
 export function formatDuration(minutes: number): string {
   const m = Math.max(0, Math.round(minutes))
   const h = Math.floor(m / 60)
   const rest = m % 60
-  if (h === 0) return `${rest} мин`
-  if (rest === 0) return `${h} ч`
-  return `${h} ч ${rest} мин`
+  const [hh, mm] = [t('ч'), t('мин')]
+  if (h === 0) return `${rest} ${mm}`
+  if (rest === 0) return `${h} ${hh}`
+  return `${h} ${hh} ${rest} ${mm}`
 }
 
 export function initials(first?: string, last?: string): string {

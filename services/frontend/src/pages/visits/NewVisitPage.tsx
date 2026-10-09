@@ -31,6 +31,7 @@ import { nannyStatus } from '@/lib/statuses'
 import { addMinutes, useNow } from '@/lib/time'
 import { TelegramLogo } from '@/components/brand/TelegramLogo'
 import type { Discount, PromoCode } from '@/types'
+import { t } from '@/i18n'
 
 /** Что применено к цене: скидка или промокод (ТЗ §27, §28). */
 type Adjustment = { source: 'discount'; item: Discount } | { source: 'promo'; item: PromoCode }
@@ -82,10 +83,10 @@ export function NewVisitPage() {
         discountId: adjustment?.source === 'discount' ? adjustment.item.id : undefined,
         promoCode: adjustment?.source === 'promo' ? adjustment.item.code : undefined,
       })
-      toast.success('Посещение началось', { description: `${fullName(child)} · ${fullName(nanny)} · ${formatDuration(duration)}` })
+      toast.success(t('Посещение началось'), { description: `${fullName(child)} · ${fullName(nanny)} · ${formatDuration(duration)}` })
       // ТЗ §15 п.1, §44 — уведомление родителю
-      if (child.parent.telegram?.linked) toast.info('Родителю отправлено уведомление в Telegram', { icon: <TelegramLogo className="size-8" /> })
-      else toast.warning('Telegram родителя не привязан — уведомление не отправлено')
+      if (child.parent.telegram?.linked) toast.info(t('Родителю отправлено уведомление в Telegram'), { icon: <TelegramLogo className="size-8" /> })
+      else toast.warning(t('Telegram родителя не привязан — уведомление не отправлено'))
       navigate('/visits', { replace: true })
     } catch (e) {
       toast.error(errorMessage(e))
@@ -98,11 +99,11 @@ export function NewVisitPage() {
       <PageHeader
         back={
           <Link to="/visits" className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-900">
-            <ArrowLeft className="size-4" /> К посещениям
+            <ArrowLeft className="size-4" />  {t(' К посещениям')}
           </Link>
         }
-        title="Новое посещение"
-        description="Выберите ребёнка, свободную няню и продолжительность — таймер запустится сразу"
+        title={t('Новое посещение')}
+        description={t('Выберите ребёнка, свободную няню и продолжительность — таймер запустится сразу')}
       />
 
       {parkClosed && (
@@ -115,7 +116,7 @@ export function NewVisitPage() {
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-5">
           {/* 1. Ребёнок */}
-          <Section n={1} icon={<Baby />} title="Ребёнок" done={Boolean(child) && !childBusy}>
+          <Section n={1} icon={<Baby />} title={t('Ребёнок')} done={Boolean(child) && !childBusy}>
             {child ? (
               <SelectedChild
                 child={child}
@@ -139,11 +140,12 @@ export function NewVisitPage() {
           <Section
             n={2}
             icon={<HeartHandshake />}
-            title="Няня"
+            title={t('Няня')}
             done={Boolean(nanny)}
             action={
               <Button variant="ghost" size="sm" onClick={() => refetchNannies()} leftIcon={<RefreshCw className={cn(nanniesFetching && 'animate-spin')} />}>
-                Обновить
+                
+                {t('Обновить')}
               </Button>
             }
           >
@@ -163,7 +165,7 @@ export function NewVisitPage() {
           </Section>
 
           {/* 3. Продолжительность */}
-          <Section n={3} icon={<Clock3 />} title="Продолжительность" done={Boolean(duration) && !hoursError}>
+          <Section n={3} icon={<Clock3 />} title={t('Продолжительность')} done={Boolean(duration) && !hoursError}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {settings?.durations.map((d) => {
                 const blocked = checkWorkHours(new Date(now), d, settings)
@@ -186,7 +188,8 @@ export function NewVisitPage() {
                       {formatMoney(priceFor(d, settings))}
                     </span>
                     <span className={cn('tabular mt-3 text-xs font-medium', active ? 'text-snow/70' : 'text-ink-400')}>
-                      до {formatTime(addMinutes(now, d).toISOString())}
+                      
+                      {t('до ')} {formatTime(addMinutes(now, d).toISOString())}
                     </span>
                     {active && (
                       <span className="absolute top-3 right-3 flex size-5 items-center justify-center rounded-full bg-white text-ink-900">
@@ -273,13 +276,15 @@ function SelectedChild({ child, onChange }: { child: ChildListItem; onChange: ()
           </div>
         </div>
         <Button variant="secondary" size="sm" onClick={onChange}>
-          Изменить
+          
+          {t('Изменить')}
         </Button>
       </div>
       {child.activeVisit && (
         <p className="mt-3 flex items-center gap-2 rounded-xl bg-butter-200 px-3.5 py-2.5 text-sm font-medium text-warning-700 ring-1 ring-butter-300">
           <AlertTriangle className="size-4 shrink-0" />
-          Ребёнок уже находится на посещении до {formatTime(child.activeVisit.endAt)}
+          
+          {t('Ребёнок уже находится на посещении до ')} {formatTime(child.activeVisit.endAt)}
         </p>
       )}
     </div>
@@ -303,7 +308,7 @@ function ChildPicker({ items, onPick }: { items?: ChildListItem[]; onPick: (id: 
 
   return (
     <div>
-      <Input value={q} onChange={(e) => setQ(e.target.value)} leftIcon={<Search />} placeholder="Имя ребёнка или телефон родителя" autoFocus />
+      <Input value={q} onChange={(e) => setQ(e.target.value)} leftIcon={<Search />} placeholder={t('Имя ребёнка или телефон родителя')} autoFocus />
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {filtered?.map((c) => (
           <li key={c.id}>
@@ -318,7 +323,7 @@ function ChildPicker({ items, onPick }: { items?: ChildListItem[]; onPick: (id: 
                 <div className="truncate text-sm font-bold text-ink-900">{fullName(c)}</div>
                 <div className="tabular truncate text-xs text-ink-500">{formatPhone(c.parent.phone)}</div>
               </div>
-              {c.activeVisit && <Badge tone="success">В парке</Badge>}
+              {c.activeVisit && <Badge tone="success">{t('В парке')}</Badge>}
             </button>
           </li>
         ))}
@@ -327,10 +332,10 @@ function ChildPicker({ items, onPick }: { items?: ChildListItem[]; onPick: (id: 
         <EmptyState
           className="py-8"
           icon={<Search />}
-          title="Ребёнок не найден"
+          title={t('Ребёнок не найден')}
           action={
             <Link to="/children/new">
-              <Button size="sm">Зарегистрировать</Button>
+              <Button size="sm">{t('Зарегистрировать')}</Button>
             </Link>
           }
         />
@@ -365,7 +370,8 @@ function NannyOption({ nanny, selected, onSelect }: { nanny: NannyWithLoad; sele
         <div className="min-w-0 flex-1">
           <div className={cn('truncate text-sm font-bold', nanny.available ? 'text-ink-900' : 'text-ink-500')}>{fullName(nanny)}</div>
           <div className="text-xs whitespace-nowrap text-ink-500">
-            Опыт {nanny.experienceYears} {plural(nanny.experienceYears, ['год', 'года', 'лет'])}
+            
+            {t('Опыт ')} {nanny.experienceYears} {plural(nanny.experienceYears, [t('год'), t('года'), t('лет')])}
           </div>
           <Badge tone={st.tone} dot className="mt-1.5">
             {st.label}
@@ -380,9 +386,9 @@ function NannyOption({ nanny, selected, onSelect }: { nanny: NannyWithLoad; sele
 
       <div className="mt-4">
         <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="font-medium text-ink-500">Загрузка</span>
+          <span className="font-medium text-ink-500">{t('Загрузка')}</span>
           <span className="tabular font-bold text-ink-800">
-            {nanny.activeChildren} из {nanny.maxChildren} {plural(nanny.maxChildren, ['ребёнка', 'детей', 'детей'])}
+            {nanny.activeChildren}  {t(' из ')} {nanny.maxChildren} {plural(nanny.maxChildren, [t('ребёнка'), t('детей'), t('детей')])}
           </span>
         </div>
         <div className="flex gap-1">
@@ -435,31 +441,31 @@ function Summary({
     <aside>
       <Card className="sticky top-24 overflow-hidden">
         <div className="glass-accent relative px-5 pt-5 pb-6">
-          <div className="text-[13px] font-semibold text-snow/70">Итого к посещению</div>
+          <div className="text-[13px] font-semibold text-snow/70">{t('Итого к посещению')}</div>
           <div className="mt-1 flex items-baseline gap-2.5">
             <span className="tabular text-[32px] leading-none font-extrabold">{basePrice !== undefined ? formatMoney(basePrice - discount) : '—'}</span>
             {basePrice !== undefined && discount > 0 && <s className="tabular text-sm font-semibold text-snow/60">{formatMoney(basePrice)}</s>}
           </div>
           <div className="mt-4 flex items-center gap-4 text-sm">
             <div>
-              <div className="text-xs text-snow/60">Начало</div>
+              <div className="text-xs text-snow/60">{t('Начало')}</div>
               <div className="tabular font-bold">{formatTime(new Date(now).toISOString())}</div>
             </div>
             <span className="h-px flex-1 bg-white/30" />
             <Timer className="size-4 text-snow/70" />
             <span className="h-px flex-1 bg-white/30" />
             <div className="text-right">
-              <div className="text-xs text-snow/60">Окончание</div>
+              <div className="text-xs text-snow/60">{t('Окончание')}</div>
               <div className="tabular font-bold">{end ? formatTime(end) : '—'}</div>
             </div>
           </div>
         </div>
         <dl className="divide-y divide-cream-200 px-5 text-sm">
-          <Row label="Ребёнок" value={child ? fullName(child) : undefined} />
-          <Row label="Няня" value={nanny ? fullName(nanny) : undefined} />
-          <Row label="Продолжительность" value={duration ? formatDuration(duration) : undefined} />
+          <Row label={t('Ребёнок')} value={child ? fullName(child) : undefined} />
+          <Row label={t('Няня')} value={nanny ? fullName(nanny) : undefined} />
+          <Row label={t('Продолжительность')} value={duration ? formatDuration(duration) : undefined} />
           <Row
-            label="Уведомление"
+            label={t('Уведомление')}
             value={
               child ? (
                 child.parent.telegram?.linked ? (
@@ -467,7 +473,7 @@ function Summary({
                     <TelegramLogo /> Telegram
                   </span>
                 ) : (
-                  <span className="text-warning-700">Не привязан</span>
+                  <span className="text-warning-700">{t('Не привязан')}</span>
                 )
               ) : undefined
             }
@@ -476,10 +482,11 @@ function Summary({
         {discountSlot}
         <div className="p-5 pt-3">
           <Button size="lg" className="w-full" disabled={!ready} loading={loading} onClick={onSubmit} leftIcon={<Play />}>
-            Начать посещение
+            
+            {t('Начать посещение')}
           </Button>
           {!ready && (
-            <p className="mt-2.5 text-center text-xs text-ink-500">Выберите ребёнка, няню и продолжительность</p>
+            <p className="mt-2.5 text-center text-xs text-ink-500">{t('Выберите ребёнка, няню и продолжительность')}</p>
           )}
         </div>
       </Card>
@@ -491,7 +498,7 @@ function Row({ label, value }: { label: string; value?: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <dt className="text-ink-500">{label}</dt>
-      <dd className={cn('truncate text-right font-semibold', value ? 'text-ink-900' : 'text-ink-300')}>{value ?? 'не выбрано'}</dd>
+      <dd className={cn('truncate text-right font-semibold', value ? 'text-ink-900' : 'text-ink-300')}>{value ?? t('не выбрано')}</dd>
     </div>
   )
 }
@@ -530,7 +537,7 @@ function DiscountPicker({
   }
 
   if (value) {
-    const label = value.source === 'promo' ? `Промокод ${value.item.code}` : value.item.name
+    const label = value.source === 'promo' ? t('Промокод {0}', value.item.code) : value.item.name
     const size = value.item.kind === 'percent' ? `${value.item.value}%` : formatMoney(value.item.value)
     return (
       <div className="border-t border-cream-200 px-5 py-4">
@@ -546,14 +553,14 @@ function DiscountPicker({
           <button
             type="button"
             onClick={() => onChange(undefined)}
-            aria-label="Убрать скидку"
+            aria-label={t('Убрать скидку')}
             className="flex size-7 shrink-0 items-center justify-center rounded-full text-mist-500 transition hover:bg-white hover:text-ink-900"
           >
             <X className="size-4" />
           </button>
         </div>
         {value.source === 'discount' && value.item.conditions && (
-          <p className="mt-2 text-xs leading-snug font-medium text-ink-500">Условие: {value.item.conditions}</p>
+          <p className="mt-2 text-xs leading-snug font-medium text-ink-500">{t('Условие: ')} {value.item.conditions}</p>
         )}
       </div>
     )
@@ -561,11 +568,11 @@ function DiscountPicker({
 
   return (
     <div className="flex flex-col gap-2.5 border-t border-cream-200 px-5 py-4">
-      <div className="text-xs font-semibold text-ink-500">Скидка или промокод</div>
+      <div className="text-xs font-semibold text-ink-500">{t('Скидка или промокод')}</div>
       <Select
         size="sm"
         value=""
-        placeholder={discounts?.length === 0 ? 'Нет действующих скидок' : 'Выбрать скидку'}
+        placeholder={discounts?.length === 0 ? t('Нет действующих скидок') : t('Выбрать скидку')}
         disabled={!discounts?.length}
         onChange={(e) => {
           const d = discounts?.find((x) => x.id === e.target.value)
@@ -585,14 +592,15 @@ function DiscountPicker({
             setError(undefined)
           }}
           onKeyDown={(e) => e.key === 'Enter' && applyPromo()}
-          placeholder="Промокод"
+          placeholder={t('Промокод')}
           disabled={!parentId}
           containerClassName="flex-1"
           className="uppercase placeholder:normal-case"
           error={error}
         />
         <Button variant="secondary" onClick={applyPromo} loading={checking} disabled={!parentId || !code.trim()}>
-          Применить
+          
+          {t('Применить')}
         </Button>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { useDeclineExtension, useExtensionOptions, usePayExtension, useRequestEx
 import { cn, formatDuration, formatMoney, formatTime, fullName } from '@/lib/format'
 import { visitTiming } from '@/lib/time'
 import type { Extension } from '@/types'
+import { t } from '@/i18n'
 
 /**
  * Демо Telegram-бота для родителя (ТЗ §16–18, сценарии §37, §38).
@@ -45,8 +46,7 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
       from: 'bot',
       text: (
         <>
-          <b>{visit.child.firstName}</b>: время посещения заканчивается через {formatDuration(leftMin)} (в {formatTime(visit.endAt)}). Хотите
-          продлить посещение?
+          <b>{visit.child.firstName}</b>{t(': время посещения заканчивается через ')} {formatDuration(leftMin)}  {t(' (в ')} {formatTime(visit.endAt)}{t('). Хотите продлить посещение?')}
         </>
       ),
     },
@@ -67,16 +67,16 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
   }, [messages, step])
 
   const onExtend = () => {
-    say({ from: 'parent', text: 'Продлить' }, { from: 'bot', text: 'Выберите дополнительное время:' })
+    say({ from: 'parent', text: t('Продлить') }, { from: 'bot', text: t('Выберите дополнительное время:') })
     setStep('choose')
   }
 
   const onDecline = async () => {
     try {
       const v = await decline.mutateAsync(visit.id)
-      say({ from: 'parent', text: 'Не продлевать' }, { from: 'bot', text: `Хорошо, посещение завершится в ${formatTime(v.endAt)}.` })
+      say({ from: 'parent', text: t('Не продлевать') }, { from: 'bot', text: t('Хорошо, посещение завершится в {0}.', formatTime(v.endAt)) })
       setStep('declined')
-      toast.info('Родитель отказался от продления', { description: `${fullName(visit.child)} · окончание в ${formatTime(v.endAt)}` })
+      toast.info(t('Родитель отказался от продления'), { description: t('{0} · окончание в {1}', fullName(visit.child), formatTime(v.endAt)) })
     } catch (e) {
       toast.error(errorMessage(e))
     }
@@ -92,9 +92,11 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
           from: 'bot',
           text: (
             <>
-              Дополнительно: <b>{formatDuration(minutes)}</b>
+              
+              {t('Дополнительно: ')} <b>{formatDuration(minutes)}</b>
               <br />
-              Стоимость: <b>{formatMoney(created.price)}</b>
+              
+              {t('Стоимость: ')} <b>{formatMoney(created.price)}</b>
             </>
           ),
         },
@@ -110,7 +112,7 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
     try {
       const v = await pay.mutateAsync({ visitId: visit.id, extensionId: ext.id, outcome })
       if (outcome === 'failed') {
-        say({ from: 'bot', text: 'Ошибка оплаты. Деньги не списаны — выберите время и попробуйте ещё раз.' })
+        say({ from: 'bot', text: t('Ошибка оплаты. Деньги не списаны — выберите время и попробуйте ещё раз.') })
         setExt(undefined)
         setStep('choose')
         return
@@ -119,13 +121,14 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
         from: 'bot',
         text: (
           <>
-            Оплата успешно проведена. Посещение продлено до <b>{formatTime(v.endAt)}</b>.
+            
+            {t('Оплата успешно проведена. Посещение продлено до ')} <b>{formatTime(v.endAt)}</b>.
           </>
         ),
       })
       setStep('done')
-      toast.success('Продление выполнено', {
-        description: `${fullName(visit.child)} · +${formatDuration(ext.minutes)}, до ${formatTime(v.endAt)}`,
+      toast.success(t('Продление выполнено'), {
+        description: t('{0} · +{1}, до {2}', fullName(visit.child), formatDuration(ext.minutes), formatTime(v.endAt)),
       })
     } catch (e) {
       toast.error(errorMessage(e))
@@ -139,13 +142,14 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
         <div className="min-w-0 flex-1">
           <div className="truncate font-extrabold text-ink-900">Skypark</div>
           <div className="truncate text-xs font-medium text-mist-500">
-            бот · {fullName(visit.parent)} · <span className="font-semibold text-sun-600">демо</span>
+            
+            {t('бот · ')} {fullName(visit.parent)} · <span className="font-semibold text-sun-600">{t('демо')}</span>
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Закрыть"
+          aria-label={t('Закрыть')}
           className="flex size-8 items-center justify-center rounded-full bg-mist-100 text-mist-500 transition hover:bg-mist-200 hover:text-ink-900"
         >
           <X className="size-4" />
@@ -162,17 +166,19 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
         {step === 'offer' && (
           <Keyboard>
             <KeyButton onClick={onExtend} disabled={busy}>
-              Продлить
+              
+              {t('Продлить')}
             </KeyButton>
             <KeyButton onClick={onDecline} disabled={busy}>
-              Не продлевать
+              
+              {t('Не продлевать')}
             </KeyButton>
           </Keyboard>
         )}
 
         {step === 'choose' && (
           <Keyboard>
-            {options.isLoading && <div className="col-span-2 py-2 text-center text-xs font-medium text-mist-500">Загрузка…</div>}
+            {options.isLoading && <div className="col-span-2 py-2 text-center text-xs font-medium text-mist-500">{t('Загрузка…')}</div>}
             {options.data?.map((o) => (
               <KeyButton key={o.minutes} onClick={() => onChoose(o.minutes)} disabled={busy || Boolean(o.unavailableReason)} title={o.unavailableReason}>
                 +{formatDuration(o.minutes)} · {formatMoney(o.price)}
@@ -184,7 +190,8 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
               </div>
             )}
             <KeyButton onClick={onDecline} disabled={busy} wide>
-              Не продлевать
+              
+              {t('Не продлевать')}
             </KeyButton>
           </Keyboard>
         )}
@@ -192,17 +199,19 @@ function Chat({ visit, onClose }: { visit: VisitListItem; onClose: () => void })
         {step === 'pay' && (
           <Keyboard>
             <KeyButton onClick={() => onPay('paid')} disabled={busy} wide>
-              {pay.isPending ? 'Оплата…' : 'Оплатить онлайн'}
+              {pay.isPending ? t('Оплата…') : t('Оплатить онлайн')}
             </KeyButton>
             <KeyButton onClick={() => onPay('failed')} disabled={busy} wide muted>
-              Демо: оплата не прошла
+              
+              {t('Демо: оплата не прошла')}
             </KeyButton>
           </Keyboard>
         )}
       </div>
 
       <div className="border-t border-white/80 px-5 py-3 text-center text-[11.5px] leading-snug font-medium text-mist-500">
-        Так родитель ответит в Telegram-боте. Пока бота нет, ответ можно отправить отсюда.
+        
+        {t('Так родитель ответит в Telegram-боте. Пока бота нет, ответ можно отправить отсюда.')}
       </div>
     </div>
   )

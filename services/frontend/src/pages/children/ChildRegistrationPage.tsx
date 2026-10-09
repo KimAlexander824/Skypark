@@ -30,13 +30,14 @@ import { cn, formatAge, formatDate, formatPhone, fullName, isPhoneComplete, phon
 import type { Child, Gender, Parent } from '@/types'
 import { DatePicker, toIso } from '@/components/ui/DatePicker'
 import { TelegramLogo } from '@/components/brand/TelegramLogo'
+import { t, localized } from '@/i18n'
 
-const STEPS = [
-  { title: 'Родитель', description: 'Поиск по телефону' },
-  { title: 'Ребёнок', description: 'Основные данные' },
-  { title: 'Фотография', description: 'Для распознавания' },
-  { title: 'Проверка', description: 'Создание карточки' },
-]
+const STEPS = localized(() => ([
+  { title: t('Родитель'), description: t('Поиск по телефону') },
+  { title: t('Ребёнок'), description: t('Основные данные') },
+  { title: t('Фотография'), description: t('Для распознавания') },
+  { title: t('Проверка'), description: t('Создание карточки') },
+]))
 
 type ParentState =
   | { kind: 'unknown' }
@@ -49,25 +50,25 @@ type ChildErrors = Partial<Record<keyof NewChildInput, string>>
 
 function validateChild(c: NewChildInput): ChildErrors {
   const e: ChildErrors = {}
-  if (!c.firstName.trim()) e.firstName = 'Укажите имя'
-  if (!c.lastName.trim()) e.lastName = 'Укажите фамилию'
-  if (!c.birthDate) e.birthDate = 'Укажите дату рождения'
+  if (!c.firstName.trim()) e.firstName = t('Укажите имя')
+  if (!c.lastName.trim()) e.lastName = t('Укажите фамилию')
+  if (!c.birthDate) e.birthDate = t('Укажите дату рождения')
   else {
     const d = new Date(c.birthDate)
     const now = new Date()
-    if (d > now) e.birthDate = 'Дата не может быть в будущем'
-    else if (now.getFullYear() - d.getFullYear() > 18) e.birthDate = 'Проверьте год рождения'
+    if (d > now) e.birthDate = t('Дата не может быть в будущем')
+    else if (now.getFullYear() - d.getFullYear() > 18) e.birthDate = t('Проверьте год рождения')
   }
   return e
 }
 
-const photoErrorText: Record<FaceErrorCode, string> = {
-  no_face: 'Лицо не найдено. Сфотографируйте ребёнка анфас при хорошем свете',
-  multiple_faces: 'В кадре несколько лиц. Сфотографируйте только ребёнка',
-  low_quality: 'Лицо слишком маленькое. Подойдите ближе',
-  bad_image: 'Не удалось прочитать фото. Сфотографируйте ещё раз',
-  unavailable: 'Сервис распознавания недоступен. Фото можно добавить позже',
-}
+const photoErrorText: Record<FaceErrorCode, string> = localized(() => ({
+  no_face: t('Лицо не найдено. Сфотографируйте ребёнка анфас при хорошем свете'),
+  multiple_faces: t('В кадре несколько лиц. Сфотографируйте только ребёнка'),
+  low_quality: t('Лицо слишком маленькое. Подойдите ближе'),
+  bad_image: t('Не удалось прочитать фото. Сфотографируйте ещё раз'),
+  unavailable: t('Сервис распознавания недоступен. Фото можно добавить позже'),
+}))
 
 export function ChildRegistrationPage() {
   const user = useCurrentUser()
@@ -101,7 +102,7 @@ export function ChildRegistrationPage() {
 
   const goChild = () => {
     if (parent.kind === 'new' && !parent.data.firstName.trim()) {
-      setParentErrors({ firstName: 'Укажите имя родителя' })
+      setParentErrors({ firstName: t('Укажите имя родителя') })
       return
     }
     setParentErrors({})
@@ -128,7 +129,7 @@ export function ChildRegistrationPage() {
   const submit = async (override?: Child) => {
     try {
       if (photo && faceMode === 'service' && !override) {
-        setSaving('Проверяем, нет ли ребёнка в базе…')
+        setSaving(t('Проверяем, нет ли ребёнка в базе…'))
         const found = await faceApi.identify(photo)
         if (found.status === 'match' || found.status === 'ambiguous') {
           const id = found.status === 'match' ? found.childId : found.candidates[0].childId
@@ -143,7 +144,7 @@ export function ChildRegistrationPage() {
         }
       }
 
-      setSaving('Создаём карточку…')
+      setSaving(t('Создаём карточку…'))
       const created = await register.mutateAsync({
         parent: parent.kind === 'existing' ? { existingId: parent.parent.id } : { new: (parent as { data: NewParentInput }).data },
         child: { ...child, firstName: child.firstName.trim(), lastName: child.lastName.trim(), photoUrl: photo },
@@ -152,19 +153,19 @@ export function ChildRegistrationPage() {
       })
 
       if (photo) {
-        setSaving('Сохраняем лицо для распознавания…')
+        setSaving(t('Сохраняем лицо для распознавания…'))
         const enrolled = await faceApi.enroll(created.id, photo, 'registration')
         if (!enrolled.ok) {
           await childrenApi.setFaceProfile(created.id, false)
-          toast.warning('Карточка создана, но лицо не сохранено', {
+          toast.warning(t('Карточка создана, но лицо не сохранено'), {
             description: enrolled.message ?? photoErrorText[enrolled.error],
           })
         } else if (enrolled.ignoredFaces > 0) {
-          toast.info('В кадре были другие лица', { description: 'Проверьте в карточке, что сохранено лицо нужного ребёнка' })
+          toast.info(t('В кадре были другие лица'), { description: t('Проверьте в карточке, что сохранено лицо нужного ребёнка') })
         }
       }
 
-      toast.success('Карточка ребёнка создана', { description: fullName(created) })
+      toast.success(t('Карточка ребёнка создана'), { description: fullName(created) })
       navigate(`/children/${created.id}`, { replace: true, state: { justCreated: true } })
     } catch (e) {
       toast.error(errorMessage(e))
@@ -178,11 +179,11 @@ export function ChildRegistrationPage() {
       <PageHeader
         back={
           <Link to="/children" className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-900">
-            <ArrowLeft className="size-4" /> К списку детей
+            <ArrowLeft className="size-4" />  {t(' К списку детей')}
           </Link>
         }
-        title="Регистрация ребёнка"
-        description="Первое посещение: карточка ребёнка, родитель и фото для распознавания"
+        title={t('Регистрация ребёнка')}
+        description={t('Первое посещение: карточка ребёнка, родитель и фото для распознавания')}
       />
 
       <Card className="mb-5 px-5 py-4">
@@ -192,7 +193,7 @@ export function ChildRegistrationPage() {
       <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
         <Card className="p-5 sm:p-7">
           {step === 0 && (
-            <StepSection icon={<UserRound />} title="Родитель" text="Введите номер телефона — система проверит, есть ли родитель в базе.">
+            <StepSection icon={<UserRound />} title={t('Родитель')} text={t('Введите номер телефона — система проверит, есть ли родитель в базе.')}>
               <div className="flex gap-2">
                 <PhoneInput
                   value={phone}
@@ -213,7 +214,8 @@ export function ChildRegistrationPage() {
                   loading={lookup.isPending}
                   leftIcon={<Search />}
                 >
-                  Проверить
+                  
+                  {t('Проверить')}
                 </Button>
               </div>
 
@@ -228,37 +230,38 @@ export function ChildRegistrationPage() {
                       <UserPlus />
                     </IconTile>
                     <div className="text-sm">
-                      <div className="font-bold text-ink-900">Новый родитель</div>
-                      <div className="text-ink-600">Номер {formatPhone(phone)} не найден — создадим новую запись</div>
+                      <div className="font-bold text-ink-900">{t('Новый родитель')}</div>
+                      <div className="text-ink-600">{t('Номер ')} {formatPhone(phone)}  {t(' не найден — создадим новую запись')}</div>
                     </div>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Input
-                      label="Имя родителя"
+                      label={t('Имя родителя')}
                       required
                       autoFocus
                       value={parent.data.firstName}
                       error={parentErrors.firstName}
                       onChange={(e) => setParent({ kind: 'new', data: { ...parent.data, firstName: e.target.value } })}
-                      placeholder="Например, Азиза"
+                      placeholder={t('Например, Азиза')}
                     />
                     <Input
-                      label="Фамилия"
+                      label={t('Фамилия')}
                       value={parent.data.lastName ?? ''}
                       onChange={(e) => setParent({ kind: 'new', data: { ...parent.data, lastName: e.target.value } })}
-                      placeholder="Необязательно"
+                      placeholder={t('Необязательно')}
                     />
                     <Textarea
-                      label="Дополнительно"
+                      label={t('Дополнительно')}
                       containerClassName="sm:col-span-2"
                       value={parent.data.note ?? ''}
                       onChange={(e) => setParent({ kind: 'new', data: { ...parent.data, note: e.target.value } })}
-                      placeholder="Второй контакт, комментарий для сотрудников…"
+                      placeholder={t('Второй контакт, комментарий для сотрудников…')}
                     />
                   </div>
                   <StepFooter>
                     <Button onClick={goChild} rightIcon={<ArrowRight />}>
-                      Далее
+                      
+                      {t('Далее')}
                     </Button>
                   </StepFooter>
                 </div>
@@ -267,10 +270,10 @@ export function ChildRegistrationPage() {
           )}
 
           {step === 1 && (
-            <StepSection icon={<CalendarDays />} title="Данные ребёнка" text="Обязательные поля отмечены звёздочкой.">
+            <StepSection icon={<CalendarDays />} title={t('Данные ребёнка')} text={t('Обязательные поля отмечены звёздочкой.')}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
-                  label="Имя"
+                  label={t('Имя')}
                   required
                   autoFocus
                   value={child.firstName}
@@ -278,14 +281,14 @@ export function ChildRegistrationPage() {
                   onChange={(e) => setChild({ ...child, firstName: e.target.value })}
                 />
                 <Input
-                  label="Фамилия"
+                  label={t('Фамилия')}
                   required
                   value={child.lastName}
                   error={childErrors.lastName}
                   onChange={(e) => setChild({ ...child, lastName: e.target.value })}
                 />
                 <DatePicker
-                  label="Дата рождения"
+                  label={t('Дата рождения')}
                   required
                   max={toIso(new Date())}
                   value={child.birthDate}
@@ -293,28 +296,29 @@ export function ChildRegistrationPage() {
                   hint={child.birthDate && !childErrors.birthDate ? formatAge(child.birthDate) : undefined}
                   onChange={(v) => setChild({ ...child, birthDate: v })}
                 />
-                <FieldShell label="Пол" required>
+                <FieldShell label={t('Пол')} required>
                   <Segmented<Gender>
                     value={child.gender}
                     onChange={(g) => setChild({ ...child, gender: g })}
                     className="h-11 w-full [&>button]:h-9"
                     options={[
-                      { value: 'female', label: 'Девочка' },
-                      { value: 'male', label: 'Мальчик' },
+                      { value: 'female', label: t('Девочка') },
+                      { value: 'male', label: t('Мальчик') },
                     ]}
                   />
                 </FieldShell>
                 <Textarea
-                  label="Дополнительно"
+                  label={t('Дополнительно')}
                   containerClassName="sm:col-span-2"
                   value={child.note ?? ''}
                   onChange={(e) => setChild({ ...child, note: e.target.value })}
-                  placeholder="Аллергии, особенности, важные заметки для няни"
+                  placeholder={t('Аллергии, особенности, важные заметки для няни')}
                 />
               </div>
               <StepFooter onBack={() => setStep(0)}>
                 <Button onClick={goPhoto} rightIcon={<ArrowRight />}>
-                  Далее
+                  
+                  {t('Далее')}
                 </Button>
               </StepFooter>
             </StepSection>
@@ -323,63 +327,66 @@ export function ChildRegistrationPage() {
           {step === 2 && (
             <StepSection
               icon={<Camera />}
-              title="Фотография"
-              text="Фото сохраняется в карточке и используется для распознавания при следующих посещениях."
+              title={t('Фотография')}
+              text={t('Фото сохраняется в карточке и используется для распознавания при следующих посещениях.')}
             >
               <CameraCapture value={photo} onChange={setPhoto} />
               {!photo && (
                 <p className="mt-3 flex items-start gap-2 text-[13px] text-ink-500">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning-500" />
-                  Без фотографии ребёнка можно будет найти только по номеру телефона родителя.
+                  
+                  {t('Без фотографии ребёнка можно будет найти только по номеру телефона родителя.')}
                 </p>
               )}
               <StepFooter onBack={() => setStep(1)}>
                 {!photo && (
                   <Button variant="ghost" onClick={() => setStep(3)}>
-                    Пропустить
+                    
+                    {t('Пропустить')}
                   </Button>
                 )}
                 <Button onClick={() => setStep(3)} disabled={!photo} rightIcon={<ArrowRight />}>
-                  Далее
+                  
+                  {t('Далее')}
                 </Button>
               </StepFooter>
             </StepSection>
           )}
 
           {step === 3 && (
-            <StepSection icon={<BadgeCheck />} title="Проверьте данные" text="После создания карточки можно сразу оформить посещение.">
+            <StepSection icon={<BadgeCheck />} title={t('Проверьте данные')} text={t('После создания карточки можно сразу оформить посещение.')}>
               <div className="overflow-hidden rounded-2xl ring-1 ring-cream-200">
                 <div className="flex items-center gap-4 bg-cream-100 p-5">
                   <Avatar src={photo} firstName={child.firstName} lastName={child.lastName} size="lg" />
                   <div>
                     <div className="text-lg font-extrabold text-ink-900">{fullName(child)}</div>
                     <div className="text-sm text-ink-600">
-                      {formatAge(child.birthDate)} · {child.gender === 'female' ? 'девочка' : 'мальчик'}
+                      {formatAge(child.birthDate)} · {child.gender === 'female' ? t('девочка') : t('мальчик')}
                     </div>
                   </div>
                 </div>
                 <dl className="divide-y divide-cream-200 text-sm">
-                  <SummaryRow label="Дата рождения" value={formatDate(child.birthDate)} />
+                  <SummaryRow label={t('Дата рождения')} value={formatDate(child.birthDate)} />
                   <SummaryRow
-                    label="Родитель"
+                    label={t('Родитель')}
                     value={
                       <span className="flex items-center gap-2">
                         {parentName}
-                        {parent.kind === 'new' ? <Badge tone="sun">новый</Badge> : <Badge tone="brand">в базе</Badge>}
+                        {parent.kind === 'new' ? <Badge tone="sun">{t('новый')}</Badge> : <Badge tone="brand">{t('в базе')}</Badge>}
                       </span>
                     }
                   />
-                  <SummaryRow label="Телефон" value={<span className="tabular">{formatPhone(phone)}</span>} />
+                  <SummaryRow label={t('Телефон')} value={<span className="tabular">{formatPhone(phone)}</span>} />
                   <SummaryRow
-                    label="Фото для распознавания"
-                    value={photo ? <Badge tone="success">Есть</Badge> : <Badge tone="warning">Нет фото</Badge>}
+                    label={t('Фото для распознавания')}
+                    value={photo ? <Badge tone="success">{t('Есть')}</Badge> : <Badge tone="warning">{t('Нет фото')}</Badge>}
                   />
-                  {child.note && <SummaryRow label="Заметка" value={child.note} />}
+                  {child.note && <SummaryRow label={t('Заметка')} value={child.note} />}
                 </dl>
               </div>
               <StepFooter onBack={() => setStep(2)}>
                 <Button size="lg" onClick={() => submit()} loading={Boolean(saving)} leftIcon={<PartyPopper />}>
-                  {saving ?? 'Создать карточку'}
+                  {saving ?? t('Создать карточку')}
                 </Button>
               </StepFooter>
             </StepSection>
@@ -398,6 +405,7 @@ export function ChildRegistrationPage() {
           submit(c)
         }}
       />
+
     </div>
   )
 }
@@ -430,23 +438,27 @@ function DuplicateModal({
           <div className="flex justify-center">
             <Avatar src={m.child.photoUrl} firstName={m.child.firstName} lastName={m.child.lastName} seed={m.child.id} size="lg" />
           </div>
-          <h2 className="mt-4 text-[19px] font-extrabold tracking-tight text-ink-900">Ребёнок уже зарегистрирован?</h2>
+          <h2 className="mt-4 text-[19px] font-extrabold tracking-tight text-ink-900">{t('Ребёнок уже зарегистрирован?')}</h2>
           <p className="mx-auto mt-1.5 max-w-[290px] text-[13.5px] leading-snug font-medium text-mist-500">
-            Лицо на фото совпало с карточкой <b className="text-ink-900">{fullName(m.child)}</b> (родитель {fullName(m.parent)}, {formatPhone(m.parent.phone)}).
+            
+            {t('Лицо на фото совпало с карточкой ')} <b className="text-ink-900">{fullName(m.child)}</b>  {t(' (родитель ')} {fullName(m.parent)}, {formatPhone(m.parent.phone)}).
           </p>
 
           <div className="mt-5 flex flex-col gap-2">
             <Button size="lg" variant="contrast" className="w-full" onClick={() => onOpen(m.child.id)}>
-              Открыть карточку
+              
+              {t('Открыть карточку')}
             </Button>
             <Button size="lg" variant="secondary" className="w-full" onClick={() => onRegisterAnyway(m.child)}>
-              Это другой ребёнок (близнец)
+              
+              {t('Это другой ребёнок (близнец)')}
             </Button>
             <button type="button" onClick={onClose} className="h-11 rounded-full text-sm font-bold text-mist-500 transition hover:text-ink-900">
-              Отмена
+              
+              {t('Отмена')}
             </button>
           </div>
-          <p className="mt-3 text-[11.5px] leading-snug font-medium text-mist-400">Регистрация другого ребёнка с совпавшим лицом сохранится в журнале действий.</p>
+          <p className="mt-3 text-[11.5px] leading-snug font-medium text-mist-400">{t('Регистрация другого ребёнка с совпавшим лицом сохранится в журнале действий.')}</p>
         </div>
       )}
     </Modal>
@@ -473,7 +485,8 @@ function StepFooter({ onBack, children }: { onBack?: () => void; children: React
     <div className="mt-7 flex items-center gap-2 border-t border-cream-200 pt-5">
       {onBack && (
         <Button variant="ghost" onClick={onBack} leftIcon={<ArrowLeft />}>
-          Назад
+          
+          {t('Назад')}
         </Button>
       )}
       <div className="ml-auto flex gap-2">{children}</div>
@@ -506,14 +519,15 @@ function ExistingParent({ parent, kids, onAddChild }: { parent: Parent; kids: Ch
             Telegram
           </Badge>
         ) : (
-          <Badge tone="neutral">Без Telegram</Badge>
+          <Badge tone="neutral">{t('Без Telegram')}</Badge>
         )}
       </div>
 
       {kids.length > 0 && (
         <>
           <p className="mt-6 mb-3 text-[13px] font-semibold text-ink-700">
-            Уже зарегистрированы — выберите, если ребёнок пришёл повторно:
+            
+            {t('Уже зарегистрированы — выберите, если ребёнок пришёл повторно:')}
           </p>
           <ul className="grid gap-2 sm:grid-cols-2">
             {kids.map((c) => (
@@ -537,7 +551,8 @@ function ExistingParent({ parent, kids, onAddChild }: { parent: Parent; kids: Ch
 
       <StepFooter>
         <Button onClick={onAddChild} leftIcon={<UserPlus />}>
-          Добавить нового ребёнка
+          
+          {t('Добавить нового ребёнка')}
         </Button>
       </StepFooter>
     </div>
@@ -558,17 +573,17 @@ function SummaryAside({
   photo?: string
 }) {
   const rows = [
-    { label: 'Родитель', value: parentName || (isPhoneComplete(phone) ? formatPhone(phone) : ''), done: step > 0 },
-    { label: 'Ребёнок', value: fullName(child).trim(), done: step > 1 },
-    { label: 'Фото', value: photo ? 'Сделано' : step > 2 ? 'Пропущено' : '', done: step > 2 },
+    { label: t('Родитель'), value: parentName || (isPhoneComplete(phone) ? formatPhone(phone) : ''), done: step > 0 },
+    { label: t('Ребёнок'), value: fullName(child).trim(), done: step > 1 },
+    { label: t('Фото'), value: photo ? t('Сделано') : step > 2 ? t('Пропущено') : '', done: step > 2 },
   ]
   return (
     <aside className="hidden lg:block">
       <Card className="sticky top-24 p-5">
-        <div className="text-[13px] font-bold tracking-wide text-ink-400 uppercase">Карточка</div>
+        <div className="text-[13px] font-bold tracking-wide text-ink-400 uppercase">{t('Карточка')}</div>
         <div className="mt-4 flex flex-col items-center text-center">
           <Avatar src={photo} firstName={child.firstName || '?'} lastName={child.lastName} size="xl" className={cn(!child.firstName && !photo && 'opacity-30')} />
-          <div className="mt-3 min-h-6 text-base font-extrabold text-ink-900">{fullName(child).trim() || 'Новый ребёнок'}</div>
+          <div className="mt-3 min-h-6 text-base font-extrabold text-ink-900">{fullName(child).trim() || t('Новый ребёнок')}</div>
           {child.birthDate && <div className="text-sm text-ink-500">{formatAge(child.birthDate)}</div>}
         </div>
         <ul className="mt-5 space-y-3 border-t border-cream-200 pt-4">

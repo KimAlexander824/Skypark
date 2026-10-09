@@ -11,6 +11,7 @@ import { cn, formatShortDate } from '@/lib/format'
 import { WEEKDAY_NAMES, closedTypes, exceptionTypeLabel, hoursFor, toIsoDate } from '@/lib/schedule'
 import type { ScheduleException, ScheduleExceptionType, WorkSchedule } from '@/types'
 import { DatePicker, TimePicker } from '@/components/ui/DatePicker'
+import { t } from '@/i18n'
 
 const KEY = ['admin', 'schedule']
 
@@ -28,7 +29,7 @@ export function SchedulePage() {
     if (data) setDraft(structuredClone(data))
   }, [data])
 
-  const save = useAdminMutation((s: WorkSchedule) => scheduleApi.save(s), { invalidate: [KEY, ['settings', 'visits']], success: 'График сохранён' })
+  const save = useAdminMutation((s: WorkSchedule) => scheduleApi.save(s), { invalidate: [KEY, ['settings', 'visits']], success: t('График сохранён') })
   const dirty = Boolean(data && draft && JSON.stringify(data) !== JSON.stringify(draft))
 
   if (isLoading || !draft)
@@ -52,17 +53,19 @@ export function SchedulePage() {
   return (
     <div className="animate-slide-up">
       <AdminHeader
-        title="Время работы"
-        description="Вне рабочего времени стандартные посещения создать нельзя"
+        title={t('Время работы')}
+        description={t('Вне рабочего времени стандартные посещения создать нельзя')}
         actions={
           <>
             {dirty && (
               <Button variant="ghost" leftIcon={<Undo2 />} onClick={() => setDraft(structuredClone(data))}>
-                Отменить
+                
+                {t('Отменить')}
               </Button>
             )}
             <Button leftIcon={<Save />} disabled={!dirty} loading={save.isPending} onClick={() => save.mutate(draft)}>
-              Сохранить
+              
+              {t('Сохранить')}
             </Button>
           </>
         }
@@ -74,8 +77,8 @@ export function SchedulePage() {
           {today.open ? <Clock3 className="size-6" /> : <CalendarOff className="size-6" />}
         </span>
         <div>
-          <div className="text-[13px] font-semibold text-ink-900/65">Сегодня, {WEEKDAY_NAMES[(new Date().getDay() + 6) % 7].toLowerCase()}</div>
-          <div className="tabular text-2xl font-extrabold text-ink-900">{today.open ? `${today.from} — ${today.to}` : 'Закрыто'}</div>
+          <div className="text-[13px] font-semibold text-ink-900/65">{t('Сегодня, ')} {WEEKDAY_NAMES[(new Date().getDay() + 6) % 7].toLowerCase()}</div>
+          <div className="tabular text-2xl font-extrabold text-ink-900">{today.open ? `${today.from} — ${today.to}` : t('Закрыто')}</div>
           {today.exception && <div className="text-xs font-bold text-ink-900/70">{exceptionTypeLabel[today.exception.type]}{today.exception.comment ? ` · ${today.exception.comment}` : ''}</div>}
         </div>
       </section>
@@ -83,7 +86,7 @@ export function SchedulePage() {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         {/* Неделя */}
         <Panel>
-          <h2 className="mb-3 text-[17px] font-extrabold text-ink-900">Обычная неделя</h2>
+          <h2 className="mb-3 text-[17px] font-extrabold text-ink-900">{t('Обычная неделя')}</h2>
           <ul className="space-y-1.5">
             {draft.week.map((d, i) => (
               <li key={d.day} className={cn('flex flex-wrap items-center gap-3 rounded-2xl p-2.5 pl-3.5', d.open ? 'bg-cream-100' : 'bg-cream-100/50')}>
@@ -96,7 +99,7 @@ export function SchedulePage() {
                     <TimeInput value={d.to} onChange={(v) => setDay(i, { to: v })} />
                   </div>
                 ) : (
-                  <span className="ml-auto pr-2 text-[13px] font-semibold text-ink-400">Выходной</span>
+                  <span className="ml-auto pr-2 text-[13px] font-semibold text-ink-400">{t('Выходной')}</span>
                 )}
               </li>
             ))}
@@ -106,7 +109,8 @@ export function SchedulePage() {
             onClick={() => setDraft((d) => d && { ...d, week: d.week.map((w) => ({ ...w, from: d.week[0].from, to: d.week[0].to })) })}
             className="mt-3 text-[13px] font-bold text-ink-600 underline-offset-4 hover:text-ink-900 hover:underline"
           >
-            Применить часы понедельника ко всем дням
+            
+            {t('Применить часы понедельника ко всем дням')}
           </button>
         </Panel>
 
@@ -114,15 +118,16 @@ export function SchedulePage() {
         <Panel>
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <h2 className="text-[17px] font-extrabold text-ink-900">Особые дни</h2>
-              <p className="text-xs text-ink-500">Выходные, праздники, временное закрытие и изменение графика</p>
+              <h2 className="text-[17px] font-extrabold text-ink-900">{t('Особые дни')}</h2>
+              <p className="text-xs text-ink-500">{t('Выходные, праздники, временное закрытие и изменение графика')}</p>
             </div>
             <Button size="sm" variant="secondary" leftIcon={<Plus />} onClick={addEx}>
-              Добавить
+              
+              {t('Добавить')}
             </Button>
           </div>
           {draft.exceptions.length === 0 ? (
-            <EmptyBlock icon={<CalendarClock />} title="Особых дней нет" text="Добавьте праздник или временное закрытие." />
+            <EmptyBlock icon={<CalendarClock />} title={t('Особых дней нет')} text={t('Добавьте праздник или временное закрытие.')} />
           ) : (
             <ul className="space-y-2">
               {[...draft.exceptions]
@@ -134,21 +139,21 @@ export function SchedulePage() {
                     <li key={e.id} className={cn('rounded-2xl bg-cream-100 p-3', past && 'opacity-60')}>
                       <div className="flex flex-wrap items-end gap-2">
                         <Select
-                          label="Тип"
+                          label={t('Тип')}
                           value={e.type}
                           onChange={(ev) => setEx(e.id, { type: ev.target.value as ScheduleExceptionType, from: e.from ?? '10:00', to: e.to ?? '18:00' })}
                           options={(Object.keys(exceptionTypeLabel) as ScheduleExceptionType[]).map((t) => ({ value: t, label: exceptionTypeLabel[t], icon: <OptionDot className={exceptionDot[t]} /> }))}
                           containerClassName="min-w-52 flex-1"
                         />
-                        <DatePicker label="С" value={e.dateFrom} onChange={(v) => v && setEx(e.id, { dateFrom: v })} containerClassName="w-44" />
-                        <DatePicker label="По" min={e.dateFrom} value={e.dateTo} onChange={(v) => v && setEx(e.id, { dateTo: v })} containerClassName="w-44" />
-                        <IconAction label="Удалить" danger onClick={() => setDraft((d) => d && { ...d, exceptions: d.exceptions.filter((x) => x.id !== e.id) })}>
+                        <DatePicker label={t('С')} value={e.dateFrom} onChange={(v) => v && setEx(e.id, { dateFrom: v })} containerClassName="w-44" />
+                        <DatePicker label={t('По')} min={e.dateFrom} value={e.dateTo} onChange={(v) => v && setEx(e.id, { dateTo: v })} containerClassName="w-44" />
+                        <IconAction label={t('Удалить')} danger onClick={() => setDraft((d) => d && { ...d, exceptions: d.exceptions.filter((x) => x.id !== e.id) })}>
                           <Trash2 />
                         </IconAction>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         {closed ? (
-                          <Pill tone="blush">Закрыто весь день</Pill>
+                          <Pill tone="blush">{t('Закрыто весь день')}</Pill>
                         ) : (
                           <div className="flex items-center gap-1.5">
                             <TimeInput value={e.from ?? '10:00'} onChange={(v) => setEx(e.id, { from: v })} />
@@ -159,10 +164,10 @@ export function SchedulePage() {
                         <input
                           value={e.comment ?? ''}
                           onChange={(ev) => setEx(e.id, { comment: ev.target.value })}
-                          placeholder="Комментарий"
+                          placeholder={t('Комментарий')}
                           className="h-9 min-w-40 flex-1 rounded-full bg-cream-50 px-3.5 text-[13px] ring-1 ring-cream-200 focus:ring-2 focus:ring-ink-900 focus:outline-none"
                         />
-                        {past && <span className="text-[11px] font-bold text-ink-500">прошло · {formatShortDate(e.dateTo)}</span>}
+                        {past && <span className="text-[11px] font-bold text-ink-500">{t('прошло · ')} {formatShortDate(e.dateTo)}</span>}
                       </div>
                     </li>
                   )

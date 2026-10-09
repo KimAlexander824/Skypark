@@ -5,6 +5,7 @@ import { ApiError } from './errors'
 import { audit } from './journal'
 import { db, delay, persist, uid } from './mock/db'
 import { syncVisits } from './visits'
+import { t } from '@/i18n'
 
 export interface ChildListItem extends Child {
   parent: Parent
@@ -111,7 +112,7 @@ export const childrenApi = {
     await delay()
     syncVisits()
     const child = db.children.find((c) => c.id === id)
-    if (!child) throw new ApiError('not_found', 'Карточка ребёнка не найдена')
+    if (!child) throw new ApiError('not_found', t('Карточка ребёнка не найдена'))
     const parent = db.parents.find((p) => p.id === child.parentId)!
     const visits = db.visits
       .filter((v) => v.childId === id)
@@ -134,7 +135,7 @@ export const childrenApi = {
     } else {
       const phone = normalizePhone(input.parent.new.phone)
       if (db.parents.some((p) => p.phone === phone)) {
-        throw new ApiError('conflict', 'Родитель с таким номером уже существует')
+        throw new ApiError('conflict', t('Родитель с таким номером уже существует'))
       }
       const parent: Parent = {
         id: uid('p'),
@@ -159,7 +160,7 @@ export const childrenApi = {
       action: 'child_registered',
       actorId: input.createdBy,
       subject: `${child.firstName} ${child.lastName}`,
-      details: input.faceMatchOverride ? `Лицо совпало с «${input.faceMatchOverride}» — подтверждено, что это другой ребёнок` : undefined,
+      details: input.faceMatchOverride ? t('Лицо совпало с «{0}» — подтверждено, что это другой ребёнок', input.faceMatchOverride) : undefined,
       link: `/children/${child.id}`,
     })
     persist()
@@ -167,10 +168,12 @@ export const childrenApi = {
   },
 
   /** Есть ли у ребёнка сохранённый профиль лица (после успешной/неудачной записи в сервис распознавания). */
-  async setFaceProfile(id: ID, hasFaceProfile: boolean): Promise<void> {
+  /** `photoUrl` — новое фото карточки (когда лицо добавили позже, из карточки ребёнка). */
+  async setFaceProfile(id: ID, hasFaceProfile: boolean, photoUrl?: string): Promise<void> {
     const child = db.children.find((c) => c.id === id)
-    if (!child) throw new ApiError('not_found', 'Ребёнок не найден')
+    if (!child) throw new ApiError('not_found', t('Ребёнок не найден'))
     child.hasFaceProfile = hasFaceProfile
+    if (photoUrl) child.photoUrl = photoUrl
     persist()
   },
 }
