@@ -4,6 +4,7 @@ import { exceptionTypeLabel, hoursFor } from '@/lib/schedule'
 import { ApiError } from './errors'
 import { audit, childLabel, notify, PARENT_ACTOR, SYSTEM_ACTOR } from './journal'
 import { db, delay, persist, uid } from './mock/db'
+import { t, LOCALE } from '@/i18n'
 
 /* ---------- Настройки посещений (ТЗ §17, §26) ---------- */
 
@@ -23,7 +24,7 @@ function currentVisitSettings(): VisitSettings {
     hourlyRate: db.settings.hourlyRate,
     durations: db.settings.durations,
     workHours: today.open && today.from && today.to ? { open: today.from, close: today.to } : null,
-    closedReason: today.exception ? exceptionTypeLabel[today.exception.type] : today.open ? undefined : 'Выходной день',
+    closedReason: today.exception ? exceptionTypeLabel[today.exception.type] : today.open ? undefined : t('Выходной день'),
   }
 }
 
@@ -35,7 +36,7 @@ export const settingsApi = {
 }
 
 const fullNameOf = (p: { firstName: string; lastName?: string }) => [p.firstName, p.lastName].filter(Boolean).join(' ')
-const hhmm = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })
 
 export const priceFor = (minutes: number, s: VisitSettings) => Math.round((s.hourlyRate * minutes) / 60)
 
@@ -61,16 +62,16 @@ export type PromoCheck = { valid: true; promo: PromoCode } | { valid: false; rea
 function checkPromo(code: string, parentId: ID): PromoCheck {
   const p = db.promoCodes.find((x) => x.code === code.trim().toUpperCase())
   const today = localDay()
-  if (!p) return { valid: false, reason: 'Промокод не найден' }
-  if (p.status !== 'active') return { valid: false, reason: 'Промокод отключён' }
-  if (today < p.dateFrom) return { valid: false, reason: 'Срок действия ещё не начался' }
-  if (today > p.dateTo) return { valid: false, reason: 'Срок действия истёк' }
-  if (p.usedCount >= p.usageLimit) return { valid: false, reason: 'Лимит использований исчерпан' }
+  if (!p) return { valid: false, reason: t('Промокод не найден') }
+  if (p.status !== 'active') return { valid: false, reason: t('Промокод отключён') }
+  if (today < p.dateFrom) return { valid: false, reason: t('Срок действия ещё не начался') }
+  if (today > p.dateTo) return { valid: false, reason: t('Срок действия истёк') }
+  if (p.usedCount >= p.usageLimit) return { valid: false, reason: t('Лимит использований исчерпан') }
   const childIds = new Set(db.children.filter((c) => c.parentId === parentId).map((c) => c.id))
   const usedByParent = db.visits.filter(
     (v) => childIds.has(v.childId) && v.discount?.source === 'promo' && v.discount.id === p.id && v.status !== 'cancelled',
   ).length
-  if (usedByParent >= p.perParentLimit) return { valid: false, reason: 'Родитель уже использовал этот промокод' }
+  if (usedByParent >= p.perParentLimit) return { valid: false, reason: t('Родитель уже использовал этот промокод') }
   return { valid: true, promo: p }
 }
 
@@ -114,7 +115,7 @@ export function syncVisits(now = Date.now()) {
     ) {
       v.status = 'awaiting_extension'
       // ТЗ §16 — предложение продлить
-      notify(v, 'ending_soon', ['parent'], `${childLabel(v.childId)}: до окончания посещения 15 минут. Продлить?`)
+      notify(v, 'ending_soon', ['parent'], t('{0}: до окончания посещения 15 минут. Продлить?', childLabel(v.childId)))
       changed = true
     }
   }
@@ -127,12 +128,12 @@ function finishedEvents(v: Visit) {
   audit({
     action: 'visit_finished',
     actorId: v.endedBy,
-    actorLabel: v.endedBy ? undefined : SYSTEM_ACTOR,
+    actorLabel: v.endedBy ? undefined : SYSTEM_ACTOR(),
     subject: name,
-    details: v.endedBy ? 'Досрочно' : 'По окончании времени',
+    details: v.endedBy ? t('Досрочно') : t('По окончании времени'),
     link: `/children/${v.childId}`,
   })
-  notify(v, 'visit_finished', ['parent', 'staff'], `${name}: посещение завершено`)
+  notify(v, 'visit_finished', ['parent', 'staff'], t('{0}: посещение завершено', name))
 }
 
 /** Статус посещения, когда вопрос о продлении закрыт. */
@@ -154,7 +155,7 @@ function withLoad(n: Nanny): NannyWithLoad {
   const full = activeChildren >= n.maxChildren
   const status: NannyStatus = n.status === 'off' || n.status === 'break' ? n.status : full ? 'busy' : 'free'
   const reason =
-    n.status === 'off' ? 'Не работает' : n.status === 'break' ? 'На перерыве' : full ? 'Нет свободных мест' : undefined
+    n.status === 'off' ? t('Не работает') : n.status === 'break' ? t('На перерыве') : full ? t('Нет свободных мест') : undefined
   return { ...n, status, activeChildren, available: !reason, unavailableReason: reason }
 }
 
@@ -182,7 +183,7 @@ export const nannyWorkspaceApi = {
     await delay(250)
     syncVisits()
     const nanny = db.nannies.find((n) => n.employeeId === employeeId)
-    if (!nanny) throw new ApiError('not_found', 'Профиль няни не найден')
+    if (!nanny) throw new ApiError('not_found', t('Профиль няни не найден'))
     const own = db.visits.filter((v) => v.nannyId === nanny.id)
     const today = new Date().toDateString()
     return {
@@ -234,12 +235,12 @@ const toItem = (v: Visit): VisitListItem => {
 
 /** Проверка рабочего времени (ТЗ §26). Возвращает текст ошибки или null. */
 export function checkWorkHours(start: Date, durationMin: number, s: VisitSettings): string | null {
-  if (!s.workHours) return `Скайпарк сегодня закрыт${s.closedReason ? `: ${s.closedReason.toLowerCase()}` : ''}`
+  if (!s.workHours) return t('Скайпарк сегодня закрыт{0}', s.closedReason ? `: ${s.closedReason.toLowerCase()}` : '')
   const startMin = start.getHours() * 60 + start.getMinutes()
   const open = hhmmToMinutes(s.workHours.open)
   const close = hhmmToMinutes(s.workHours.close)
-  if (startMin < open || startMin >= close) return `Скайпарк закрыт. Время работы: ${s.workHours.open} — ${s.workHours.close}`
-  if (startMin + durationMin > close) return `Посещение должно закончиться до ${s.workHours.close}`
+  if (startMin < open || startMin >= close) return t('Скайпарк закрыт. Время работы: {0} — {1}', s.workHours.open, s.workHours.close)
+  if (startMin + durationMin > close) return t('Посещение должно закончиться до {0}', s.workHours.close)
   return null
 }
 
@@ -261,15 +262,15 @@ export const visitsApi = {
     await delay(500)
     syncVisits()
     const child = db.children.find((c) => c.id === input.childId)
-    if (!child) throw new ApiError('not_found', 'Ребёнок не найден')
+    if (!child) throw new ApiError('not_found', t('Ребёнок не найден'))
     if (db.visits.some((v) => v.childId === child.id && isOngoing(v)))
-      throw new ApiError('conflict', 'Ребёнок уже находится на посещении')
+      throw new ApiError('conflict', t('Ребёнок уже находится на посещении'))
     const nanny = db.nannies.find((n) => n.id === input.nannyId)
-    if (!nanny) throw new ApiError('not_found', 'Няня не найдена')
+    if (!nanny) throw new ApiError('not_found', t('Няня не найдена'))
     const load = withLoad(nanny)
-    if (!load.available) throw new ApiError('conflict', `Няня недоступна: ${load.unavailableReason?.toLowerCase()}`)
+    if (!load.available) throw new ApiError('conflict', t('Няня недоступна: {0}', load.unavailableReason?.toLowerCase()))
     const settings = currentVisitSettings()
-    if (!settings.durations.includes(input.durationMin)) throw new ApiError('validation', 'Выбранное время недоступно')
+    if (!settings.durations.includes(input.durationMin)) throw new ApiError('validation', t('Выбранное время недоступно'))
 
     const start = new Date()
     const hoursError = checkWorkHours(start, input.durationMin, settings)
@@ -278,10 +279,10 @@ export const visitsApi = {
     const basePrice = priceFor(input.durationMin, settings)
     let discount: VisitDiscount | undefined
     let promo: PromoCode | undefined
-    if (input.discountId && input.promoCode) throw new ApiError('validation', 'Можно применить только скидку или только промокод')
+    if (input.discountId && input.promoCode) throw new ApiError('validation', t('Можно применить только скидку или только промокод'))
     if (input.discountId) {
       const d = db.discounts.find((x) => x.id === input.discountId)
-      if (!d || !isDiscountActive(d)) throw new ApiError('validation', 'Скидка недоступна')
+      if (!d || !isDiscountActive(d)) throw new ApiError('validation', t('Скидка недоступна'))
       discount = { source: 'discount', id: d.id, label: d.name, kind: d.kind, value: d.value, amount: discountAmount(d.kind, d.value, basePrice), appliedBy: input.createdBy }
     }
     if (input.promoCode) {
@@ -313,7 +314,7 @@ export const visitsApi = {
       action: 'visit_created',
       actorId: input.createdBy,
       subject: name,
-      details: `Няня: ${fullNameOf(nanny)} · ${input.durationMin} мин`,
+      details: t('Няня: {0} · {1} мин', fullNameOf(nanny), input.durationMin),
       link,
     })
     if (discount)
@@ -321,10 +322,10 @@ export const visitsApi = {
         action: 'discount_applied',
         actorId: input.createdBy,
         subject: name,
-        details: `${discount.source === 'promo' ? 'Промокод' : 'Скидка'} «${discount.label}»: −${discount.amount.toLocaleString('ru-RU')} сум`,
+        details: t('{0} «{1}»: −{2} сум', discount.source === 'promo' ? t('Промокод') : t('Скидка'), discount.label, discount.amount.toLocaleString(LOCALE)),
         link,
       })
-    notify(visit, 'visit_started', ['parent'], `${name}: посещение началось, окончание в ${hhmm(visit.endAt)}`)
+    notify(visit, 'visit_started', ['parent'], t('{0}: посещение началось, окончание в {1}', name, hhmm(visit.endAt)))
     persist()
     return visit
   },
@@ -333,8 +334,8 @@ export const visitsApi = {
   async finish(id: ID, by: ID): Promise<Visit> {
     await delay(400)
     const v = db.visits.find((x) => x.id === id)
-    if (!v) throw new ApiError('not_found', 'Посещение не найдено')
-    if (!isOngoing(v)) throw new ApiError('conflict', 'Посещение уже завершено')
+    if (!v) throw new ApiError('not_found', t('Посещение не найдено'))
+    if (!isOngoing(v)) throw new ApiError('conflict', t('Посещение уже завершено'))
     v.status = 'completed'
     v.endedAt = new Date().toISOString()
     v.endedBy = by
@@ -362,16 +363,16 @@ export interface ExtensionOption {
 
 function findOngoing(id: ID): Visit {
   const v = db.visits.find((x) => x.id === id)
-  if (!v) throw new ApiError('not_found', 'Посещение не найдено')
-  if (!isOngoing(v)) throw new ApiError('conflict', 'Посещение уже завершено')
+  if (!v) throw new ApiError('not_found', t('Посещение не найдено'))
+  if (!isOngoing(v)) throw new ApiError('conflict', t('Посещение уже завершено'))
   return v
 }
 
 function extensionFitError(endAt: string, minutes: number, s: VisitSettings): string | undefined {
-  if (!s.workHours) return 'Скайпарк сегодня закрыт'
+  if (!s.workHours) return t('Скайпарк сегодня закрыт')
   const end = new Date(endAt)
   const endMin = end.getHours() * 60 + end.getMinutes()
-  if (endMin + minutes > hhmmToMinutes(s.workHours.close)) return `Скайпарк работает до ${s.workHours.close}`
+  if (endMin + minutes > hhmmToMinutes(s.workHours.close)) return t('Скайпарк работает до {0}', s.workHours.close)
   return undefined
 }
 
@@ -394,11 +395,11 @@ export const extensionsApi = {
     await delay(400)
     syncVisits()
     const v = findOngoing(visitId)
-    if (v.status !== 'awaiting_extension') throw new ApiError('conflict', 'Продление сейчас недоступно')
-    if (!db.settings.extensionOptions.includes(minutes)) throw new ApiError('validation', 'Выбранное время недоступно')
+    if (v.status !== 'awaiting_extension') throw new ApiError('conflict', t('Продление сейчас недоступно'))
+    if (!db.settings.extensionOptions.includes(minutes)) throw new ApiError('validation', t('Выбранное время недоступно'))
     const s = currentVisitSettings()
     const fit = extensionFitError(v.endAt, minutes, s)
-    if (fit) throw new ApiError('validation', `Выбранное время недоступно: ${fit}`)
+    if (fit) throw new ApiError('validation', t('Выбранное время недоступно: {0}', fit))
     cancelPendingExtensions(v)
     const ext: Extension = {
       id: uid('x'),
@@ -419,20 +420,20 @@ export const extensionsApi = {
     syncVisits()
     const v = findOngoing(visitId)
     const ext = v.extensions.find((e) => e.id === extensionId)
-    if (!ext || ext.paymentStatus !== 'pending') throw new ApiError('conflict', 'Платёж уже обработан или отменён')
+    if (!ext || ext.paymentStatus !== 'pending') throw new ApiError('conflict', t('Платёж уже обработан или отменён'))
     const name = childLabel(v.childId)
     if (outcome === 'failed') {
       ext.paymentStatus = 'failed'
-      notify(v, 'payment_failed', ['parent'], `${name}: ошибка оплаты продления`)
+      notify(v, 'payment_failed', ['parent'], t('{0}: ошибка оплаты продления', name))
       persist()
       return v
     }
     ext.paymentStatus = 'paid'
     v.endAt = new Date(new Date(v.endAt).getTime() + ext.minutes * 60_000).toISOString()
     v.status = 'extended'
-    audit({ action: 'visit_extended', actorLabel: PARENT_ACTOR, subject: name, details: `+${ext.minutes} мин, до ${hhmm(v.endAt)}`, link: `/children/${v.childId}` })
-    notify(v, 'payment_paid', ['parent'], `${name}: оплата продления проведена`)
-    notify(v, 'extended', ['parent', 'staff'], `${name}: посещение продлено на ${ext.minutes} мин, до ${hhmm(v.endAt)}`)
+    audit({ action: 'visit_extended', actorLabel: PARENT_ACTOR(), subject: name, details: t('+{0} мин, до {1}', ext.minutes, hhmm(v.endAt)), link: `/children/${v.childId}` })
+    notify(v, 'payment_paid', ['parent'], t('{0}: оплата продления проведена', name))
+    notify(v, 'extended', ['parent', 'staff'], t('{0}: посещение продлено на {1} мин, до {2}', name, ext.minutes, hhmm(v.endAt)))
     persist()
     return v
   },
@@ -442,13 +443,13 @@ export const extensionsApi = {
     await delay(400)
     syncVisits()
     const v = findOngoing(visitId)
-    if (v.status !== 'awaiting_extension') throw new ApiError('conflict', 'Продление сейчас недоступно')
+    if (v.status !== 'awaiting_extension') throw new ApiError('conflict', t('Продление сейчас недоступно'))
     cancelPendingExtensions(v)
     v.extensionDeclined = { at: new Date().toISOString(), endAt: v.endAt }
     v.status = runningStatus(v)
     const name = childLabel(v.childId)
-    audit({ action: 'extension_declined', actorLabel: PARENT_ACTOR, subject: name, details: `Окончание в ${hhmm(v.endAt)}`, link: `/children/${v.childId}` })
-    notify(v, 'extension_declined', ['parent', 'staff'], `${name}: продление не требуется, посещение завершится в ${hhmm(v.endAt)}`)
+    audit({ action: 'extension_declined', actorLabel: PARENT_ACTOR(), subject: name, details: t('Окончание в {0}', hhmm(v.endAt)), link: `/children/${v.childId}` })
+    notify(v, 'extension_declined', ['parent', 'staff'], t('{0}: продление не требуется, посещение завершится в {1}', name, hhmm(v.endAt)))
     persist()
     return v
   },

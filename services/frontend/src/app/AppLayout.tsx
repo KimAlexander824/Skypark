@@ -7,6 +7,7 @@ import { useUnreadNotifications } from '@/features/notifications/queries'
 import { cn, fullName } from '@/lib/format'
 import { roleLabel } from '@/lib/statuses'
 import { isItemActive, navigationFor, type NavGroup, type NavItem } from './navigation'
+import { t } from '@/i18n'
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -40,7 +41,7 @@ export function AppLayout() {
             <button
               onClick={() => setMobileOpen(false)}
               className="absolute top-7 right-7 z-10 flex size-8 items-center justify-center rounded-full text-mist-500 hover:bg-mist-100 hover:text-ink-900"
-              aria-label="Закрыть меню"
+              aria-label={t('Закрыть меню')}
             >
               <X className="size-4" />
             </button>
@@ -177,7 +178,7 @@ function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-3 pt-1 pb-4">
         {flat.length > 0 && (
           <>
-            <div className="mb-1.5 px-3 text-[11px] font-semibold tracking-wide text-mist-400 uppercase">Главное</div>
+            <div className="mb-1.5 px-3 text-[11px] font-semibold tracking-wide text-mist-400 uppercase">{t('Главное')}</div>
             <ul className="mb-4 flex flex-col gap-0.5">
               {flat.flatMap((g) => g.items).map((item) => (
                 <li key={item.to}>
@@ -190,7 +191,7 @@ function Sidebar() {
 
         {collapsible.length > 0 && (
           <>
-            <div className="mb-1.5 px-3 text-[11px] font-semibold tracking-wide text-mist-400 uppercase">Разделы</div>
+            <div className="mb-1.5 px-3 text-[11px] font-semibold tracking-wide text-mist-400 uppercase">{t('Разделы')}</div>
             <div className="flex flex-col gap-0.5">
               {collapsible.map((g) => (
                 <NavGroupSection key={g.id} group={g} open={open === g.id} onToggle={() => toggle(g.id)} />
@@ -214,8 +215,8 @@ function Sidebar() {
             <button
               onClick={logout}
               className="flex size-8 items-center justify-center rounded-full text-mist-500 transition hover:bg-white hover:text-rose-500"
-              aria-label="Выйти"
-              title="Выйти"
+              aria-label={t('Выйти')}
+              title={t('Выйти')}
             >
               <LogOut className="size-4" />
             </button>
@@ -231,7 +232,7 @@ function Sidebar() {
 function Topbar({ onMenu }: { onMenu: () => void }) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 bg-mist-100/55 px-4 backdrop-blur-2xl backdrop-saturate-150 sm:px-6 lg:hidden">
-      <button onClick={onMenu} className="glass flex size-10 items-center justify-center rounded-full text-ink-900" aria-label="Открыть меню">
+      <button onClick={onMenu} className="glass flex size-10 items-center justify-center rounded-full text-ink-900" aria-label={t('Открыть меню')}>
         <Menu className="size-[18px]" />
       </button>
       <Logo />

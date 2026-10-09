@@ -12,6 +12,7 @@ import { cn, formatMoney, formatShortDate } from '@/lib/format'
 import { toIsoDate } from '@/lib/schedule'
 import type { Discount, DiscountKind } from '@/types'
 import { DatePicker } from '@/components/ui/DatePicker'
+import { t } from '@/i18n'
 
 const KEY = ['admin', 'discounts']
 
@@ -28,25 +29,26 @@ export function DiscountsPage() {
   const [removing, setRemoving] = useState<Discount>()
 
   const toggle = useAdminMutation((d: Discount) => discountsApi.setStatus(d.id, d.status === 'active' ? 'inactive' : 'active'), { invalidate: [KEY] })
-  const remove = useAdminMutation((d: Discount) => discountsApi.remove(d.id), { invalidate: [KEY], success: 'Скидка удалена' })
+  const remove = useAdminMutation((d: Discount) => discountsApi.remove(d.id), { invalidate: [KEY], success: t('Скидка удалена') })
 
   return (
     <div className="animate-slide-up">
       <AdminHeader
-        title="Скидки"
-        description="Скидки в процентах или фиксированной суммой с периодом действия"
+        title={t('Скидки')}
+        description={t('Скидки в процентах или фиксированной суммой с периодом действия')}
         actions={
           <Button leftIcon={<Plus />} onClick={() => setEditing('new')}>
-            Новая скидка
+            
+            {t('Новая скидка')}
           </Button>
         }
       />
 
       <StatsRow>
-        <PastelStat tone="butter" icon={<BadgePercent />} label="Всего скидок" value={data?.length} />
-        <PastelStat tone="olive" icon={<BadgePercent />} label="Активных" value={data?.filter((d) => d.status === 'active').length} />
-        <PastelStat tone="blush" icon={<Percent />} label="Процентных" value={data?.filter((d) => d.kind === 'percent').length} />
-        <PastelStat tone="peri" icon={<Wallet />} label="Фиксированных" value={data?.filter((d) => d.kind === 'fixed').length} />
+        <PastelStat tone="butter" icon={<BadgePercent />} label={t('Всего скидок')} value={data?.length} />
+        <PastelStat tone="olive" icon={<BadgePercent />} label={t('Активных')} value={data?.filter((d) => d.status === 'active').length} />
+        <PastelStat tone="blush" icon={<Percent />} label={t('Процентных')} value={data?.filter((d) => d.kind === 'percent').length} />
+        <PastelStat tone="peri" icon={<Wallet />} label={t('Фиксированных')} value={data?.filter((d) => d.kind === 'fixed').length} />
       </StatsRow>
 
       <Panel>
@@ -57,7 +59,7 @@ export function DiscountsPage() {
             ))}
           </div>
         ) : !data?.length ? (
-          <EmptyBlock icon={<BadgePercent />} title="Скидок пока нет" action={<Button onClick={() => setEditing('new')}>Создать скидку</Button>} />
+          <EmptyBlock icon={<BadgePercent />} title={t('Скидок пока нет')} action={<Button onClick={() => setEditing('new')}>{t('Создать скидку')}</Button>} />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
             {data.map((d) => {
@@ -68,23 +70,23 @@ export function DiscountsPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className={cn('tabular text-[36px] leading-none font-extrabold tracking-tight', valueTone)}>{discountValue(d.kind, d.value)}</div>
                     <div className="flex gap-0.5">
-                      <IconAction label="Редактировать" onClick={() => setEditing(d)}>
+                      <IconAction label={t('Редактировать')} onClick={() => setEditing(d)}>
                         <Pencil />
                       </IconAction>
-                      <IconAction label="Удалить" onClick={() => setRemoving(d)} danger>
+                      <IconAction label={t('Удалить')} onClick={() => setRemoving(d)} danger>
                         <Trash2 />
                       </IconAction>
                     </div>
                   </div>
                   <h3 className="mt-3 text-[17px] font-extrabold text-ink-900">{d.name}</h3>
-                  <p className="mt-1 text-[13px] leading-snug text-ink-900/70">{d.conditions || 'Без дополнительных условий'}</p>
+                  <p className="mt-1 text-[13px] leading-snug text-ink-900/70">{d.conditions || t('Без дополнительных условий')}</p>
                   <div className="mt-auto flex items-center justify-between gap-2 pt-4">
                     <Pill tone={active ? 'dark' : 'muted'}>
                       <CalendarRange />
                       {formatShortDate(d.dateFrom)} — {formatShortDate(d.dateTo)}
                     </Pill>
                     <div className="flex items-center gap-2">
-                      {active && !isCurrent(d) && <span className="text-[11px] font-bold text-ink-900/60">вне периода</span>}
+                      {active && !isCurrent(d) && <span className="text-[11px] font-bold text-ink-900/60">{t('вне периода')}</span>}
                       <Switch checked={active} onChange={() => toggle.mutate(d)} />
                     </div>
                   </div>
@@ -99,9 +101,9 @@ export function DiscountsPage() {
       <ConfirmModal
         open={Boolean(removing)}
         onClose={() => setRemoving(undefined)}
-        title="Удалить скидку?"
-        description={removing && `«${removing.name}» будет удалена без возможности восстановления.`}
-        confirmLabel="Удалить"
+        title={t('Удалить скидку?')}
+        description={removing && t('«{0}» будет удалена без возможности восстановления.', removing.name)}
+        confirmLabel={t('Удалить')}
         danger
         loading={remove.isPending}
         onConfirm={() => removing && remove.mutate(removing, { onSuccess: () => setRemoving(undefined) })}
@@ -121,19 +123,19 @@ export function DiscountFields<T extends { kind: DiscountKind; value: number; da
   return (
     <>
       <div className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-semibold text-ink-700">Тип скидки</span>
+        <span className="text-[13px] font-semibold text-ink-700">{t('Тип скидки')}</span>
         <Segmented<DiscountKind>
           value={form.kind}
           onChange={(k) => set('kind', k as T['kind'])}
           className="h-11 w-full [&>button]:h-9"
           options={[
-            { value: 'percent', label: 'Процент' },
-            { value: 'fixed', label: 'Сумма' },
+            { value: 'percent', label: t('Процент') },
+            { value: 'fixed', label: t('Сумма') },
           ]}
         />
       </div>
       <Input
-        label={form.kind === 'percent' ? 'Размер, %' : 'Размер, сум'}
+        label={form.kind === 'percent' ? t('Размер, %') : t('Размер, сум')}
         required
         type="number"
         min={1}
@@ -142,8 +144,8 @@ export function DiscountFields<T extends { kind: DiscountKind; value: number; da
         value={form.value || ''}
         onChange={(e) => set('value', Number(e.target.value) as T['value'])}
       />
-      <DatePicker label="Действует с" required value={form.dateFrom} onChange={(v) => set('dateFrom', v as T['dateFrom'])} />
-      <DatePicker label="Действует по" required min={form.dateFrom} value={form.dateTo} onChange={(v) => set('dateTo', v as T['dateTo'])} />
+      <DatePicker label={t('Действует с')} required value={form.dateFrom} onChange={(v) => set('dateFrom', v as T['dateFrom'])} />
+      <DatePicker label={t('Действует по')} required min={form.dateFrom} value={form.dateTo} onChange={(v) => set('dateTo', v as T['dateTo'])} />
     </>
   )
 }
@@ -159,36 +161,38 @@ function DiscountForm({ discount, onClose }: { discount?: Discount; onClose: () 
   const set = <K extends keyof DiscountInput>(k: K, v: DiscountInput[K]) => setForm((f) => ({ ...f, [k]: v }))
   const save = useAdminMutation((f: DiscountInput) => discountsApi.save(f, user.id, discount?.id), {
     invalidate: [KEY],
-    success: discount ? 'Скидка сохранена' : 'Скидка создана',
+    success: discount ? t('Скидка сохранена') : t('Скидка создана'),
   })
 
   return (
     <Modal
       open
       onClose={onClose}
-      title={discount ? 'Редактировать скидку' : 'Новая скидка'}
+      title={discount ? t('Редактировать скидку') : t('Новая скидка')}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            
+            {t('Отмена')}
           </Button>
           <Button loading={save.isPending} onClick={() => save.mutate(form, { onSuccess: onClose })}>
-            Сохранить
+            
+            {t('Сохранить')}
           </Button>
         </>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Название" required value={form.name} onChange={(e) => set('name', e.target.value)} containerClassName="sm:col-span-2" autoFocus />
+        <Input label={t('Название')} required value={form.name} onChange={(e) => set('name', e.target.value)} containerClassName="sm:col-span-2" autoFocus />
         <DiscountFields form={form} set={set} />
         <Textarea
-          label="Условия применения"
+          label={t('Условия применения')}
           containerClassName="sm:col-span-2"
           value={form.conditions}
           onChange={(e) => set('conditions', e.target.value)}
-          placeholder="Например: будние дни, начало посещения до 14:00"
+          placeholder={t('Например: будние дни, начало посещения до 14:00')}
         />
-        <Switch checked={form.status === 'active'} onChange={(v) => set('status', v ? 'active' : 'inactive')} label="Скидка активна" />
+        <Switch checked={form.status === 'active'} onChange={(v) => set('status', v ? 'active' : 'inactive')} label={t('Скидка активна')} />
       </div>
     </Modal>
   )

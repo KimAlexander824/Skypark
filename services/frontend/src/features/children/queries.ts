@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { childrenApi, parentsApi, type ChildrenQuery, type RegisterChildInput } from '@/api/children'
+import { faceApi, type EnrollResult } from '@/api/face'
 import type { ID } from '@/types'
 
 export const childrenKeys = {
@@ -20,5 +21,21 @@ export function useRegisterChild() {
   return useMutation({
     mutationFn: (input: RegisterChildInput) => childrenApi.register(input),
     onSuccess: () => qc.invalidateQueries({ queryKey: childrenKeys.all }),
+  })
+}
+
+/**
+ * Добавить фото для распознавания позже — если при регистрации лицо не сохранилось
+ * (сервис отклонил фото) или фото пропустили. Порядок как при регистрации: enroll(registration) → отметка в карточке.
+ */
+export function useAddFacePhoto(childId: ID) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (photo: string): Promise<EnrollResult> => {
+      const enrolled = await faceApi.enroll(childId, photo, 'registration')
+      if (enrolled.ok) await childrenApi.setFaceProfile(childId, true, photo)
+      return enrolled
+    },
+    onSuccess: (r) => r.ok && qc.invalidateQueries({ queryKey: childrenKeys.all }),
   })
 }

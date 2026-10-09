@@ -11,6 +11,7 @@ import { ConfirmModal, Modal, Segmented } from '@/components/ui/Overlay'
 import { cn, formatDate, formatPhone, formatShortDate, formatTime, fullName, phoneLocalPart, plural } from '@/lib/format'
 import { roleLabel } from '@/lib/statuses'
 import type { Employee, Role } from '@/types'
+import { t } from '@/i18n'
 
 const KEY = ['admin', 'employees']
 type Filter = 'all' | Role | 'blocked'
@@ -29,7 +30,7 @@ export function EmployeesPage() {
 
   const setStatus = useAdminMutation((e: Employee) => employeesApi.setStatus(e.id, e.status === 'active' ? 'blocked' : 'active'), {
     invalidate: [KEY, ['admin', 'nannies']],
-    success: (e) => (e.status === 'active' ? 'Сотрудник заблокирован' : 'Сотрудник разблокирован'),
+    success: (e) => (e.status === 'active' ? t('Сотрудник заблокирован') : t('Сотрудник разблокирован')),
   })
 
   const rows = useMemo(() => {
@@ -45,7 +46,7 @@ export function EmployeesPage() {
   const columns: Column<Employee>[] = [
     {
       key: 'name',
-      header: 'Сотрудник',
+      header: t('Сотрудник'),
       cell: (e) => (
         <div className="flex items-center gap-3">
           <Avatar src={e.photoUrl} firstName={e.firstName} lastName={e.lastName} seed={e.id} size="sm" />
@@ -56,22 +57,22 @@ export function EmployeesPage() {
         </div>
       ),
     },
-    { key: 'phone', header: 'Телефон', cell: (e) => <span className="tabular text-ink-700">{formatPhone(e.phone)}</span> },
-    { key: 'role', header: 'Роль', cell: (e) => <Pill tone={roleTone[e.role]}>{roleLabel[e.role]}</Pill> },
+    { key: 'phone', header: t('Телефон'), cell: (e) => <span className="tabular text-ink-700">{formatPhone(e.phone)}</span> },
+    { key: 'role', header: t('Роль'), cell: (e) => <Pill tone={roleTone[e.role]}>{roleLabel[e.role]}</Pill> },
     {
       key: 'exp',
-      header: 'Опыт',
+      header: t('Опыт'),
       cell: (e) => (
         <span className="tabular font-semibold text-ink-800">
-          {e.experienceYears} {plural(e.experienceYears, ['год', 'года', 'лет'])}
+          {e.experienceYears} {plural(e.experienceYears, [t('год'), t('года'), t('лет')])}
         </span>
       ),
     },
-    { key: 'created', header: 'Создан', cell: (e) => <span className="tabular text-ink-600">{formatShortDate(e.createdAt)}</span> },
+    { key: 'created', header: t('Создан'), cell: (e) => <span className="tabular text-ink-600">{formatShortDate(e.createdAt)}</span> },
     {
       key: 'status',
-      header: 'Статус',
-      cell: (e) => (e.status === 'active' ? <Pill tone="olive">Активен</Pill> : <Pill tone="danger">Заблокирован</Pill>),
+      header: t('Статус'),
+      cell: (e) => (e.status === 'active' ? <Pill tone="olive">{t('Активен')}</Pill> : <Pill tone="danger">{t('Заблокирован')}</Pill>),
     },
     {
       key: 'actions',
@@ -79,13 +80,13 @@ export function EmployeesPage() {
       align: 'right',
       cell: (e) => (
         <div className="flex justify-end gap-0.5">
-          <IconAction label="История работы" onClick={() => setHistoryOf(e)}>
+          <IconAction label={t('История работы')} onClick={() => setHistoryOf(e)}>
             <History />
           </IconAction>
-          <IconAction label="Редактировать" onClick={() => setEditing(e)}>
+          <IconAction label={t('Редактировать')} onClick={() => setEditing(e)}>
             <Pencil />
           </IconAction>
-          <IconAction label={e.status === 'active' ? 'Заблокировать' : 'Разблокировать'} onClick={() => setBlocking(e)} danger={e.status === 'active'}>
+          <IconAction label={e.status === 'active' ? t('Заблокировать') : t('Разблокировать')} onClick={() => setBlocking(e)} danger={e.status === 'active'}>
             {e.status === 'active' ? <Ban /> : <UserCheck />}
           </IconAction>
         </div>
@@ -96,37 +97,38 @@ export function EmployeesPage() {
   return (
     <div className="animate-slide-up">
       <AdminHeader
-        title="Сотрудники"
-        description="Учётные записи, роли и история работы"
+        title={t('Сотрудники')}
+        description={t('Учётные записи, роли и история работы')}
         actions={
           <Button leftIcon={<Plus />} onClick={() => setEditing('new')}>
-            Новый сотрудник
+            
+            {t('Новый сотрудник')}
           </Button>
         }
       />
 
       <StatsRow>
-        <PastelStat tone="butter" icon={<UsersRound />} label="Всего сотрудников" value={count('all')} />
-        <PastelStat tone="olive" icon={<UserCog />} label="Сотрудников ресепшн" value={count('staff')} />
-        <PastelStat tone="blush" icon={<UsersRound />} label="Нянь в команде" value={count('nanny')} />
-        <PastelStat tone="peri" icon={<ShieldCheck />} label="Администраторов" value={count('admin')} />
+        <PastelStat tone="butter" icon={<UsersRound />} label={t('Всего сотрудников')} value={count('all')} />
+        <PastelStat tone="olive" icon={<UserCog />} label={t('Сотрудников ресепшн')} value={count('staff')} />
+        <PastelStat tone="blush" icon={<UsersRound />} label={t('Нянь в команде')} value={count('nanny')} />
+        <PastelStat tone="peri" icon={<ShieldCheck />} label={t('Администраторов')} value={count('admin')} />
       </StatsRow>
 
       <Panel
         toolbar={
           <>
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Имя, должность или телефон" leftIcon={<Search />} containerClassName="flex-1 md:max-w-sm" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Имя, должность или телефон')} leftIcon={<Search />} containerClassName="flex-1 md:max-w-sm" />
             <Segmented
               value={filter}
               onChange={setFilter}
               size="sm"
               className="bg-cream-200/70 md:ml-auto"
               options={[
-                { value: 'all', label: 'Все' },
-                { value: 'staff', label: 'Ресепшн' },
-                { value: 'nanny', label: 'Няни' },
-                { value: 'admin', label: 'Админы' },
-                { value: 'blocked', label: 'Заблок.' },
+                { value: 'all', label: t('Все') },
+                { value: 'staff', label: t('Ресепшн') },
+                { value: 'nanny', label: t('Няни') },
+                { value: 'admin', label: t('Админы') },
+                { value: 'blocked', label: t('Заблок.') },
               ]}
             />
           </>
@@ -138,7 +140,7 @@ export function EmployeesPage() {
           loading={isLoading}
           rowKey={(e) => e.id}
           onRowClick={(e) => setEditing(e)}
-          empty={<EmptyBlock icon={<Search />} title="Никого не найдено" text="Измените фильтр или строку поиска." />}
+          empty={<EmptyBlock icon={<Search />} title={t('Никого не найдено')} text={t('Измените фильтр или строку поиска.')} />}
         />
       </Panel>
 
@@ -147,13 +149,13 @@ export function EmployeesPage() {
       <ConfirmModal
         open={Boolean(blocking)}
         onClose={() => setBlocking(undefined)}
-        title={blocking?.status === 'active' ? 'Заблокировать сотрудника?' : 'Разблокировать сотрудника?'}
+        title={blocking?.status === 'active' ? t('Заблокировать сотрудника?') : t('Разблокировать сотрудника?')}
         description={
           blocking?.status === 'active'
-            ? `${blocking && fullName(blocking)} не сможет войти в систему.${blocking?.role === 'nanny' ? ' Няня станет недоступна для назначения.' : ''}`
-            : `${blocking && fullName(blocking)} снова сможет войти в систему.`
+            ? t('{0} не сможет войти в систему.{1}', blocking && fullName(blocking), blocking?.role === 'nanny' ? t(' Няня станет недоступна для назначения.') : '')
+            : t('{0} снова сможет войти в систему.', blocking && fullName(blocking))
         }
-        confirmLabel={blocking?.status === 'active' ? 'Заблокировать' : 'Разблокировать'}
+        confirmLabel={blocking?.status === 'active' ? t('Заблокировать') : t('Разблокировать')}
         danger={blocking?.status === 'active'}
         loading={setStatus.isPending}
         onConfirm={() => blocking && setStatus.mutate(blocking, { onSuccess: () => setBlocking(undefined) })}
@@ -172,7 +174,7 @@ function EmployeeForm({ employee, onClose }: { employee?: Employee; onClose: () 
   )
   const save = useAdminMutation((f: EmployeeInput) => (employee ? employeesApi.update(employee.id, f) : employeesApi.create(f)), {
     invalidate: [KEY, ['admin', 'nannies'], ['nannies']],
-    success: employee ? 'Изменения сохранены' : 'Сотрудник создан',
+    success: employee ? t('Изменения сохранены') : t('Сотрудник создан'),
   })
   const set = <K extends keyof EmployeeInput>(k: K, v: EmployeeInput[K]) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -180,32 +182,33 @@ function EmployeeForm({ employee, onClose }: { employee?: Employee; onClose: () 
     <Modal
       open
       onClose={onClose}
-      title={employee ? 'Редактировать сотрудника' : 'Новый сотрудник'}
-      description={employee ? `Создан ${formatDate(employee.createdAt)}` : 'Временный пароль для входа: 123456'}
+      title={employee ? t('Редактировать сотрудника') : t('Новый сотрудник')}
+      description={employee ? t('Создан {0}', formatDate(employee.createdAt)) : t('Временный пароль для входа: 123456')}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            
+            {t('Отмена')}
           </Button>
           <Button loading={save.isPending} onClick={() => save.mutate(form, { onSuccess: onClose })}>
-            {employee ? 'Сохранить' : 'Создать'}
+            {employee ? t('Сохранить') : t('Создать')}
           </Button>
         </>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Имя" required value={form.firstName} onChange={(e) => set('firstName', e.target.value)} autoFocus />
-        <Input label="Фамилия" required value={form.lastName} onChange={(e) => set('lastName', e.target.value)} />
-        <PhoneInput label="Телефон" required value={form.phone} onChange={(v) => set('phone', v)} />
-        <Input label="Должность" value={form.position} onChange={(e) => set('position', e.target.value)} placeholder="Например, администратор ресепшн" />
+        <Input label={t('Имя')} required value={form.firstName} onChange={(e) => set('firstName', e.target.value)} autoFocus />
+        <Input label={t('Фамилия')} required value={form.lastName} onChange={(e) => set('lastName', e.target.value)} />
+        <PhoneInput label={t('Телефон')} required value={form.phone} onChange={(v) => set('phone', v)} />
+        <Input label={t('Должность')} value={form.position} onChange={(e) => set('position', e.target.value)} placeholder={t('Например, администратор ресепшн')} />
         <Select
-          label="Роль"
+          label={t('Роль')}
           value={form.role}
           onChange={(e) => set('role', e.target.value as Role)}
           options={(['staff', 'nanny', 'admin'] as Role[]).map((r) => ({ value: r, label: roleLabel[r], icon: <OptionDot className={roleDot[r]} /> }))}
-          hint={form.role === 'nanny' ? 'Профиль няни создастся автоматически' : undefined}
+          hint={form.role === 'nanny' ? t('Профиль няни создастся автоматически') : undefined}
         />
-        <NumberInput label="Опыт работы, лет" min={0} max={60} value={form.experienceYears} onValueChange={(v) => set('experienceYears', v)} />
+        <NumberInput label={t('Опыт работы, лет')} min={0} max={60} value={form.experienceYears} onValueChange={(v) => set('experienceYears', v)} />
       </div>
     </Modal>
   )
@@ -218,7 +221,7 @@ function HistoryModal({ employee, onClose }: { employee?: Employee; onClose: () 
     enabled: Boolean(employee),
   })
   return (
-    <Modal open={Boolean(employee)} onClose={onClose} title="История работы" description={employee && `${fullName(employee)} · ${roleLabel[employee.role]}`}>
+    <Modal open={Boolean(employee)} onClose={onClose} title={t('История работы')} description={employee && `${fullName(employee)} · ${roleLabel[employee.role]}`}>
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -226,7 +229,7 @@ function HistoryModal({ employee, onClose }: { employee?: Employee; onClose: () 
           ))}
         </div>
       ) : !data?.length ? (
-        <p className="rounded-2xl bg-cream-100 p-6 text-center text-sm text-ink-500">Действий пока нет</p>
+        <p className="rounded-2xl bg-cream-100 p-6 text-center text-sm text-ink-500">{t('Действий пока нет')}</p>
       ) : (
         <ol className="relative space-y-1 border-l border-cream-300 pl-4">
           {data.map((h) => (
@@ -236,7 +239,7 @@ function HistoryModal({ employee, onClose }: { employee?: Employee; onClose: () 
                 <span className="font-bold text-ink-900">{h.action}</span> <span className="text-ink-600">· {h.subject}</span>
               </div>
               <div className="tabular text-xs text-ink-400">
-                {formatShortDate(h.at)} в {formatTime(h.at)}
+                {formatShortDate(h.at)}  {t(' в ')} {formatTime(h.at)}
               </div>
             </li>
           ))}

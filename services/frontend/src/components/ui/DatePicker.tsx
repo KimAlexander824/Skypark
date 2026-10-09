@@ -5,10 +5,11 @@ import { cn } from '@/lib/format'
 import { FieldShell } from './Field'
 import { Select } from './Select'
 import { usePopover } from './usePopover'
+import { t, localized } from '@/i18n'
 
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
-const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+const WEEKDAYS = localized(() => ([t('Пн'), t('Вт'), t('Ср'), t('Чт'), t('Пт'), t('Сб'), t('Вс')]))
+const MONTHS = localized(() => ([t('Январь'), t('Февраль'), t('Март'), t('Апрель'), t('Май'), t('Июнь'), t('Июль'), t('Август'), t('Сентябрь'), t('Октябрь'), t('Ноябрь'), t('Декабрь')]))
+const MONTHS_SHORT = localized(() => ([t('янв'), t('фев'), t('мар'), t('апр'), t('май'), t('июн'), t('июл'), t('авг'), t('сен'), t('окт'), t('ноя'), t('дек')]))
 
 const pad = (n: number) => String(n).padStart(2, '0')
 export const toIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -50,7 +51,7 @@ export function DatePicker({
   hint,
   error,
   required,
-  placeholder = 'Выберите дату',
+  placeholder = t('Выберите дату'),
   min,
   max,
   clearable,
@@ -153,7 +154,7 @@ export function DatePicker({
             type="button"
             onClick={() => onChange('')}
             className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-mist-400 transition hover:bg-mist-100 hover:text-ink-900"
-            aria-label="Очистить дату"
+            aria-label={t('Очистить дату')}
           >
             <X className="size-3.5" />
           </button>
@@ -166,13 +167,13 @@ export function DatePicker({
           <div
             ref={panelRef}
             role="dialog"
-            aria-label="Выбор даты"
+            aria-label={t('Выбор даты')}
             onKeyDown={onKeyDown}
             className="glass-strong fixed z-[60] animate-pop-in rounded-3xl p-3"
             style={{ left: pos.left, top: pos.top, width: pos.width }}
           >
             <div className="mb-2 flex items-center justify-between">
-              <NavButton label="Назад" onClick={() => shift(-1)}>
+              <NavButton label={t('Назад')} onClick={() => shift(-1)}>
                 <ArrowLeft className="size-4" />
               </NavButton>
               <button
@@ -182,7 +183,7 @@ export function DatePicker({
               >
                 {title}
               </button>
-              <NavButton label="Вперёд" onClick={() => shift(1)}>
+              <NavButton label={t('Вперёд')} onClick={() => shift(1)}>
                 <ArrowRight className="size-4" />
               </NavButton>
             </div>
@@ -277,7 +278,8 @@ export function DatePicker({
                 onClick={() => pick(today)}
                 className="glass-accent rounded-full px-3.5 py-1.5 text-xs font-bold transition hover:brightness-105 disabled:opacity-40"
               >
-                Сегодня
+                
+                {t('Сегодня')}
               </button>
               {value && (
                 <button
@@ -288,7 +290,8 @@ export function DatePicker({
                   }}
                   className="rounded-full px-3 py-1.5 text-xs font-bold text-mist-500 transition hover:bg-white hover:text-ink-900"
                 >
-                  Очистить
+                  
+                  {t('Очистить')}
                 </button>
               )}
             </div>

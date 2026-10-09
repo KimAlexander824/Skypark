@@ -1,14 +1,15 @@
 import type { ScheduleException, ScheduleExceptionType, WorkSchedule } from '@/types'
+import { t, localized } from '@/i18n'
 
-export const WEEKDAY_NAMES = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
-export const WEEKDAY_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+export const WEEKDAY_NAMES = localized(() => ([t('Понедельник'), t('Вторник'), t('Среда'), t('Четверг'), t('Пятница'), t('Суббота'), t('Воскресенье')]))
+export const WEEKDAY_SHORT = localized(() => ([t('Пн'), t('Вт'), t('Ср'), t('Чт'), t('Пт'), t('Сб'), t('Вс')]))
 
-export const exceptionTypeLabel: Record<ScheduleExceptionType, string> = {
-  day_off: 'Выходной день',
-  holiday: 'Праздничный день',
-  closure: 'Временное закрытие',
-  custom_hours: 'Изменение графика',
-}
+export const exceptionTypeLabel: Record<ScheduleExceptionType, string> = localized(() => ({
+  day_off: t('Выходной день'),
+  holiday: t('Праздничный день'),
+  closure: t('Временное закрытие'),
+  custom_hours: t('Изменение графика'),
+}))
 
 /** Типы, при которых Скайпарк закрыт весь день. */
 export const closedTypes: ScheduleExceptionType[] = ['day_off', 'closure']

@@ -21,6 +21,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { Role } from '@/types'
+import { t, localized } from '@/i18n'
 
 export interface NavItem {
   to: string
@@ -42,76 +43,76 @@ export interface NavGroup {
 }
 
 // Права доступа по ТЗ §33, разделы админ-панели по ТЗ §20
-export const navigation: NavGroup[] = [
+export const navigation: NavGroup[] = localized(() => ([
   {
     id: 'overview',
-    title: 'Обзор',
+    title: t('Обзор'),
     icon: LayoutDashboard,
     flat: true,
     items: [{ to: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'], end: true }],
   },
   {
     id: 'nanny',
-    title: 'Няня',
+    title: t('Няня'),
     icon: HeartHandshake,
     flat: true,
-    items: [{ to: '/nanny', label: 'Мои дети', icon: HeartHandshake, roles: ['nanny'] }],
+    items: [{ to: '/nanny', label: t('Мои дети'), icon: HeartHandshake, roles: ['nanny'] }],
   },
   {
     id: 'reception',
-    title: 'Ресепшн',
+    title: t('Ресепшн'),
     icon: ScanFace,
     items: [
-      { to: '/reception', label: 'Приём ребёнка', icon: ScanFace, roles: ['staff', 'admin'] },
-      { to: '/children', label: 'Дети', icon: Baby, roles: ['staff', 'admin'] },
-      { to: '/visits', label: 'Посещения', icon: ClipboardList, roles: ['staff', 'admin'] },
+      { to: '/reception', label: t('Приём ребёнка'), icon: ScanFace, roles: ['staff', 'admin'] },
+      { to: '/children', label: t('Дети'), icon: Baby, roles: ['staff', 'admin'] },
+      { to: '/visits', label: t('Посещения'), icon: ClipboardList, roles: ['staff', 'admin'] },
     ],
   },
   {
     id: 'notifications',
-    title: 'Уведомления',
+    title: t('Уведомления'),
     icon: Bell,
     flat: true,
-    items: [{ to: '/notifications', label: 'Уведомления', icon: Bell, roles: ['staff', 'admin'], badge: 'unreadNotifications' }],
+    items: [{ to: '/notifications', label: t('Уведомления'), icon: Bell, roles: ['staff', 'admin'], badge: 'unreadNotifications' }],
   },
   {
     id: 'people',
-    title: 'Люди',
+    title: t('Люди'),
     icon: Contact,
     items: [
-      { to: '/admin/parents', label: 'Родители', icon: UsersRound, roles: ['admin'] },
-      { to: '/admin/nannies', label: 'Няни', icon: HeartHandshake, roles: ['admin'] },
-      { to: '/admin/employees', label: 'Сотрудники', icon: UserCog, roles: ['admin'] },
+      { to: '/admin/parents', label: t('Родители'), icon: UsersRound, roles: ['admin'] },
+      { to: '/admin/nannies', label: t('Няни'), icon: HeartHandshake, roles: ['admin'] },
+      { to: '/admin/employees', label: t('Сотрудники'), icon: UserCog, roles: ['admin'] },
     ],
   },
   {
     id: 'finance',
-    title: 'Финансы',
+    title: t('Финансы'),
     icon: Wallet,
     items: [
-      { to: '/admin/payments', label: 'Оплаты', icon: CreditCard, roles: ['admin'] },
-      { to: '/admin/discounts', label: 'Скидки', icon: BadgePercent, roles: ['admin'] },
-      { to: '/admin/promocodes', label: 'Промокоды', icon: TicketPercent, roles: ['admin'] },
+      { to: '/admin/payments', label: t('Оплаты'), icon: CreditCard, roles: ['admin'] },
+      { to: '/admin/discounts', label: t('Скидки'), icon: BadgePercent, roles: ['admin'] },
+      { to: '/admin/promocodes', label: t('Промокоды'), icon: TicketPercent, roles: ['admin'] },
     ],
   },
   {
     id: 'content',
-    title: 'Контент',
+    title: t('Контент'),
     icon: Megaphone,
-    items: [{ to: '/admin/news', label: 'Новости', icon: Newspaper, roles: ['admin'] }],
+    items: [{ to: '/admin/news', label: t('Новости'), icon: Newspaper, roles: ['admin'] }],
   },
   {
     id: 'system',
-    title: 'Система',
+    title: t('Система'),
     icon: Settings2,
     items: [
-      { to: '/admin/schedule', label: 'Время работы', icon: CalendarClock, roles: ['admin'] },
-      { to: '/admin/audit', label: 'Журнал действий', icon: History, roles: ['admin'] },
-      { to: '/admin/settings', label: 'Настройки', icon: Settings, roles: ['admin'] },
-      { to: '/settings', label: 'Настройки', icon: Settings, roles: ['staff', 'nanny'] },
+      { to: '/admin/schedule', label: t('Время работы'), icon: CalendarClock, roles: ['admin'] },
+      { to: '/admin/audit', label: t('Журнал действий'), icon: History, roles: ['admin'] },
+      { to: '/admin/settings', label: t('Настройки'), icon: Settings, roles: ['admin'] },
+      { to: '/settings', label: t('Настройки'), icon: Settings, roles: ['staff', 'nanny'] },
     ],
   },
-]
+]))
 
 export const navigationFor = (role: Role): NavGroup[] =>
   navigation

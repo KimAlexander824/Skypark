@@ -36,42 +36,42 @@ const addMin = (iso: string, min: number) => new Date(new Date(iso).getTime() + 
 
 function seed(): MockDB {
   const employees: Employee[] = [
-    { id: 'e1', firstName: 'Дилноза', lastName: 'Рахимова', phone: '998901112233', position: 'Администратор', role: 'admin', experienceYears: 6, status: 'active', createdAt: daysAgo(400) },
-    { id: 'e2', firstName: 'Жасур', lastName: 'Каримов', phone: '998902223344', position: 'Администратор ресепшн', role: 'staff', experienceYears: 3, status: 'active', createdAt: daysAgo(210) },
-    { id: 'e3', firstName: 'Мадина', lastName: 'Юсупова', phone: '998903334455', position: 'Няня', role: 'nanny', experienceYears: 4, status: 'active', createdAt: daysAgo(180) },
-    { id: 'e4', firstName: 'Гульнора', lastName: 'Ахмедова', phone: '998904445566', position: 'Няня', role: 'nanny', experienceYears: 7, status: 'active', createdAt: daysAgo(320) },
-    { id: 'e5', firstName: 'Ольга', lastName: 'Ким', phone: '998905556677', position: 'Няня', role: 'nanny', experienceYears: 2, status: 'active', createdAt: daysAgo(90) },
-    { id: 'e6', firstName: 'Сабина', lastName: 'Турсунова', phone: '998906667788', position: 'Няня', role: 'nanny', experienceYears: 5, status: 'active', createdAt: daysAgo(260) },
-    { id: 'e7', firstName: 'Нигора', lastName: 'Исмоилова', phone: '998907778899', position: 'Няня', role: 'nanny', experienceYears: 1, status: 'active', createdAt: daysAgo(40) },
+    { id: 'e1', firstName: 'Abdulloh', lastName: 'Rahimov', phone: '998901112233', position: 'Администратор', role: 'admin', experienceYears: 6, status: 'active', createdAt: daysAgo(400) },
+    { id: 'e2', firstName: 'Jasur', lastName: 'Karimov', phone: '998902223344', position: 'Администратор ресепшн', role: 'staff', experienceYears: 3, status: 'active', createdAt: daysAgo(210) },
+    { id: 'e3', firstName: 'Madina', lastName: 'Yusupova', phone: '998903334455', position: 'Няня', role: 'nanny', experienceYears: 4, status: 'active', createdAt: daysAgo(180) },
+    { id: 'e4', firstName: 'Gulnora', lastName: 'Ahmedova', phone: '998904445566', position: 'Няня', role: 'nanny', experienceYears: 7, status: 'active', createdAt: daysAgo(320) },
+    { id: 'e5', firstName: 'Olga', lastName: 'Kim', phone: '998905556677', position: 'Няня', role: 'nanny', experienceYears: 2, status: 'active', createdAt: daysAgo(90) },
+    { id: 'e6', firstName: 'Sabina', lastName: 'Tursunova', phone: '998906667788', position: 'Няня', role: 'nanny', experienceYears: 5, status: 'active', createdAt: daysAgo(260) },
+    { id: 'e7', firstName: 'Nigora', lastName: 'Ismoilova', phone: '998907778899', position: 'Няня', role: 'nanny', experienceYears: 1, status: 'active', createdAt: daysAgo(40) },
   ]
 
   const nannies: Nanny[] = [
-    { id: 'n1', employeeId: 'e3', firstName: 'Мадина', lastName: 'Юсупова', phone: '998903334455', experienceYears: 4, startedAt: daysAgo(180), status: 'busy', workHours: '10:00 — 18:00', activeChildren: 2, maxChildren: 4 },
-    { id: 'n2', employeeId: 'e4', firstName: 'Гульнора', lastName: 'Ахмедова', phone: '998904445566', experienceYears: 7, startedAt: daysAgo(320), status: 'free', workHours: '10:00 — 18:00', activeChildren: 1, maxChildren: 4 },
-    { id: 'n3', employeeId: 'e5', firstName: 'Ольга', lastName: 'Ким', phone: '998905556677', experienceYears: 2, startedAt: daysAgo(90), status: 'free', workHours: '14:00 — 22:00', activeChildren: 0, maxChildren: 3 },
-    { id: 'n4', employeeId: 'e6', firstName: 'Сабина', lastName: 'Турсунова', phone: '998906667788', experienceYears: 5, startedAt: daysAgo(260), status: 'break', workHours: '12:00 — 20:00', activeChildren: 0, maxChildren: 4 },
-    { id: 'n5', employeeId: 'e7', firstName: 'Нигора', lastName: 'Исмоилова', phone: '998907778899', experienceYears: 1, startedAt: daysAgo(40), status: 'off', workHours: '14:00 — 22:00', activeChildren: 0, maxChildren: 3 },
+    { id: 'n1', employeeId: 'e3', firstName: 'Madina', lastName: 'Yusupova', phone: '998903334455', experienceYears: 4, startedAt: daysAgo(180), status: 'busy', workHours: '10:00 — 18:00', activeChildren: 2, maxChildren: 4 },
+    { id: 'n2', employeeId: 'e4', firstName: 'Gulnora', lastName: 'Ahmedova', phone: '998904445566', experienceYears: 7, startedAt: daysAgo(320), status: 'free', workHours: '10:00 — 18:00', activeChildren: 1, maxChildren: 4 },
+    { id: 'n3', employeeId: 'e5', firstName: 'Olga', lastName: 'Kim', phone: '998905556677', experienceYears: 2, startedAt: daysAgo(90), status: 'free', workHours: '14:00 — 22:00', activeChildren: 0, maxChildren: 3 },
+    { id: 'n4', employeeId: 'e6', firstName: 'Sabina', lastName: 'Tursunova', phone: '998906667788', experienceYears: 5, startedAt: daysAgo(260), status: 'break', workHours: '12:00 — 20:00', activeChildren: 0, maxChildren: 4 },
+    { id: 'n5', employeeId: 'e7', firstName: 'Nigora', lastName: 'Ismoilova', phone: '998907778899', experienceYears: 1, startedAt: daysAgo(40), status: 'off', workHours: '14:00 — 22:00', activeChildren: 0, maxChildren: 3 },
   ]
 
   const parents: Parent[] = [
-    { id: 'p1', firstName: 'Иван', lastName: 'Иванов', phone: '998901234567', telegram: { linked: true, username: 'ivan_ivanov', linkedAt: daysAgo(60) }, createdAt: daysAgo(60) },
-    { id: 'p2', firstName: 'Азиза', lastName: 'Насырова', phone: '998935557711', telegram: { linked: true, username: 'aziza_n', linkedAt: daysAgo(30) }, createdAt: daysAgo(30) },
-    { id: 'p3', firstName: 'Тимур', lastName: 'Алиев', phone: '998977001122', telegram: { linked: false }, createdAt: daysAgo(14) },
-    { id: 'p4', firstName: 'Камола', lastName: 'Шарипова', phone: '998998887766', telegram: { linked: true, username: 'kamola_sh', linkedAt: daysAgo(100) }, createdAt: daysAgo(100) },
-    { id: 'p5', firstName: 'Сергей', lastName: 'Пак', phone: '998946543210', telegram: { linked: false }, createdAt: daysAgo(5) },
-    { id: 'p6', firstName: 'Феруза', lastName: 'Мирзаева', phone: '998909998877', telegram: { linked: true, username: 'feruza_m', linkedAt: daysAgo(2) }, createdAt: daysAgo(2) },
+    { id: 'p1', firstName: 'Ivan', lastName: 'Ivanov', phone: '998901234567', telegram: { linked: true, username: 'ivan_ivanov', linkedAt: daysAgo(60) }, createdAt: daysAgo(60) },
+    { id: 'p2', firstName: 'Aziza', lastName: 'Nasirova', phone: '998935557711', telegram: { linked: true, username: 'aziza_n', linkedAt: daysAgo(30) }, createdAt: daysAgo(30) },
+    { id: 'p3', firstName: 'Timur', lastName: 'Aliyev', phone: '998977001122', telegram: { linked: false }, createdAt: daysAgo(14) },
+    { id: 'p4', firstName: 'Kamola', lastName: 'Sharipova', phone: '998998887766', telegram: { linked: true, username: 'kamola_sh', linkedAt: daysAgo(100) }, createdAt: daysAgo(100) },
+    { id: 'p5', firstName: 'Sergey', lastName: 'Pak', phone: '998946543210', telegram: { linked: false }, createdAt: daysAgo(5) },
+    { id: 'p6', firstName: 'Feruza', lastName: 'Mirzayeva', phone: '998909998877', telegram: { linked: true, username: 'feruza_m', linkedAt: daysAgo(2) }, createdAt: daysAgo(2) },
   ]
 
   const children: Child[] = [
-    { id: 'c1', parentId: 'p1', firstName: 'Анна', lastName: 'Иванова', birthDate: '2019-04-12', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(60), createdBy: 'e2' },
-    { id: 'c2', parentId: 'p1', firstName: 'Максим', lastName: 'Иванов', birthDate: '2017-09-03', gender: 'male', note: 'Аллергия на орехи', hasFaceProfile: true, createdAt: daysAgo(60), createdBy: 'e2' },
-    { id: 'c3', parentId: 'p1', firstName: 'София', lastName: 'Иванова', birthDate: '2021-01-25', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(20), createdBy: 'e2' },
-    { id: 'c4', parentId: 'p2', firstName: 'Амир', lastName: 'Насыров', birthDate: '2018-06-18', gender: 'male', hasFaceProfile: true, createdAt: daysAgo(30), createdBy: 'e2' },
-    { id: 'c5', parentId: 'p3', firstName: 'Лейла', lastName: 'Алиева', birthDate: '2020-11-07', gender: 'female', hasFaceProfile: false, createdAt: daysAgo(14), createdBy: 'e1' },
-    { id: 'c6', parentId: 'p4', firstName: 'Самир', lastName: 'Шарипов', birthDate: '2016-03-30', gender: 'male', hasFaceProfile: true, createdAt: daysAgo(100), createdBy: 'e2' },
-    { id: 'c7', parentId: 'p4', firstName: 'Мадина', lastName: 'Шарипова', birthDate: '2019-08-14', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(100), createdBy: 'e2' },
-    { id: 'c8', parentId: 'p5', firstName: 'Даниэль', lastName: 'Пак', birthDate: '2018-12-01', gender: 'male', hasFaceProfile: true, createdAt: daysAgo(5), createdBy: 'e2' },
-    { id: 'c9', parentId: 'p6', firstName: 'Асаль', lastName: 'Мирзаева', birthDate: '2020-05-22', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(2), createdBy: 'e2' },
+    { id: 'c1', parentId: 'p1', firstName: 'Anna', lastName: 'Ivanova', birthDate: '2019-04-12', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(60), createdBy: 'e2' },
+    { id: 'c2', parentId: 'p1', firstName: 'Maksim', lastName: 'Ivanov', birthDate: '2017-09-03', gender: 'male', note: 'Аллергия на орехи', hasFaceProfile: true, createdAt: daysAgo(60), createdBy: 'e2' },
+    { id: 'c3', parentId: 'p1', firstName: 'Sofiya', lastName: 'Ivanova', birthDate: '2021-01-25', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(20), createdBy: 'e2' },
+    { id: 'c4', parentId: 'p2', firstName: 'Amir', lastName: 'Nasirov', birthDate: '2018-06-18', gender: 'male', hasFaceProfile: true, createdAt: daysAgo(30), createdBy: 'e2' },
+    { id: 'c5', parentId: 'p3', firstName: 'Leyla', lastName: 'Aliyeva', birthDate: '2020-11-07', gender: 'female', hasFaceProfile: false, createdAt: daysAgo(14), createdBy: 'e1' },
+    { id: 'c6', parentId: 'p4', firstName: 'Samir', lastName: 'Sharipov', birthDate: '2016-03-30', gender: 'male', hasFaceProfile: true, createdAt: daysAgo(100), createdBy: 'e2' },
+    { id: 'c7', parentId: 'p4', firstName: 'Madina', lastName: 'Sharipova', birthDate: '2019-08-14', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(100), createdBy: 'e2' },
+    { id: 'c8', parentId: 'p5', firstName: 'Daniel', lastName: 'Pak', birthDate: '2018-12-01', gender: 'male', hasFaceProfile: true, createdAt: daysAgo(5), createdBy: 'e2' },
+    { id: 'c9', parentId: 'p6', firstName: 'Asal', lastName: 'Mirzayeva', birthDate: '2020-05-22', gender: 'female', hasFaceProfile: true, createdAt: daysAgo(2), createdBy: 'e2' },
   ]
 
   const completed = (id: string, childId: string, nannyId: string, d: number, h: number, dur: number, extra = 0): Visit => {
@@ -238,6 +238,62 @@ function deriveAudit(d: Pick<MockDB, 'children' | 'visits' | 'nannies' | 'discou
   return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 1000)
 }
 
+/** Демо-имена переведены на латиницу — для баз, сохранённых раньше. */
+const LATIN_NAMES: Record<string, string> = {
+  Рахимова: 'Rahimov',
+  Жасур: 'Jasur',
+  Каримов: 'Karimov',
+  Мадина: 'Madina',
+  Юсупова: 'Yusupova',
+  Гульнора: 'Gulnora',
+  Ахмедова: 'Ahmedova',
+  Ольга: 'Olga',
+  Ким: 'Kim',
+  Сабина: 'Sabina',
+  Турсунова: 'Tursunova',
+  Нигора: 'Nigora',
+  Исмоилова: 'Ismoilova',
+  Иван: 'Ivan',
+  Иванов: 'Ivanov',
+  Азиза: 'Aziza',
+  Насырова: 'Nasirova',
+  Тимур: 'Timur',
+  Алиев: 'Aliyev',
+  Камола: 'Kamola',
+  Шарипова: 'Sharipova',
+  Сергей: 'Sergey',
+  Пак: 'Pak',
+  Феруза: 'Feruza',
+  Мирзаева: 'Mirzayeva',
+  Анна: 'Anna',
+  Иванова: 'Ivanova',
+  Максим: 'Maksim',
+  София: 'Sofiya',
+  Амир: 'Amir',
+  Насыров: 'Nasirov',
+  Лейла: 'Leyla',
+  Алиева: 'Aliyeva',
+  Самир: 'Samir',
+  Шарипов: 'Sharipov',
+  Даниэль: 'Daniel',
+  Асаль: 'Asal',
+}
+
+function latinizeNames(d: MockDB) {
+  const fix = (x: { firstName: string; lastName?: string }) => {
+    x.firstName = LATIN_NAMES[x.firstName] ?? x.firstName
+    if (x.lastName) x.lastName = LATIN_NAMES[x.lastName] ?? x.lastName
+  }
+  ;[...d.employees, ...d.nannies, ...d.parents, ...d.children].forEach(fix)
+  const re = new RegExp(`(?<![А-Яа-яЁё])(${Object.keys(LATIN_NAMES).join('|')})(?![А-Яа-яЁё])`, 'g')
+  const text = (v?: string) => v?.replace(re, (w) => LATIN_NAMES[w])
+  for (const a of d.audit) {
+    a.subject = text(a.subject) ?? a.subject
+    a.details = text(a.details)
+  }
+  for (const n of d.notifications) n.text = text(n.text) ?? n.text
+}
+
 function load(): MockDB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -246,6 +302,10 @@ function load(): MockDB {
       // базы, сохранённые до появления журнала и уведомлений
       parsed.audit ??= deriveAudit(parsed)
       parsed.notifications ??= []
+      // администратор e1 переименован — обновляем и уже сохранённую базу
+      const admin = parsed.employees?.find((e) => e.id === 'e1')
+      if (admin && (admin.firstName === 'Дилноза' || admin.firstName === 'Абдуллох')) admin.firstName = 'Abdulloh'
+      latinizeNames(parsed)
       return parsed
     }
   } catch {

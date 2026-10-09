@@ -12,6 +12,7 @@ import { useNannyWorkspace, visitKeys } from '@/features/visits/queries'
 import { cn, formatAge, formatDuration, formatTime, fullName, plural } from '@/lib/format'
 import { nannyStatus } from '@/lib/statuses'
 import { formatCountdown, useNow, visitTiming } from '@/lib/time'
+import { t as tr } from '@/i18n'
 
 type View = 'cards' | 'table'
 
@@ -20,11 +21,11 @@ const paidExtMinutes = (v: VisitListItem) => v.extensions.filter((e) => e.paymen
 /** ТЗ §13 — информация о продлении для няни. */
 function extensionInfo(v: VisitListItem): { text: string; tone: 'peri' | 'blush' | 'muted' } {
   const ext = paidExtMinutes(v)
-  if (v.extensions.some((e) => e.paymentStatus === 'pending')) return { text: 'Продление ждёт оплаты', tone: 'blush' }
-  if (v.status === 'awaiting_extension') return { text: 'Ждём решения родителя', tone: 'blush' }
-  if (v.extensionDeclined?.endAt === v.endAt) return { text: ext > 0 ? `Продлено +${formatDuration(ext)}, дальше без продления` : 'Родитель не продлевает', tone: 'muted' }
-  if (ext > 0) return { text: `Продлено +${formatDuration(ext)}`, tone: 'peri' }
-  return { text: 'Без продления', tone: 'muted' }
+  if (v.extensions.some((e) => e.paymentStatus === 'pending')) return { text: tr('Продление ждёт оплаты'), tone: 'blush' }
+  if (v.status === 'awaiting_extension') return { text: tr('Ждём решения родителя'), tone: 'blush' }
+  if (v.extensionDeclined?.endAt === v.endAt) return { text: ext > 0 ? tr('Продлено +{0}, дальше без продления', formatDuration(ext)) : tr('Родитель не продлевает'), tone: 'muted' }
+  if (ext > 0) return { text: tr('Продлено +{0}', formatDuration(ext)), tone: 'peri' }
+  return { text: tr('Без продления'), tone: 'muted' }
 }
 
 export function NannyPage() {
@@ -44,18 +45,18 @@ export function NannyPage() {
       const t = visitTiming(v, now)
       if (t.endingSoon && !notified.current.has(v.id)) {
         notified.current.add(v.id)
-        toast.warning(`${v.child.firstName}: осталось ${formatDuration(t.leftMin)}`, { description: 'Родитель получил предложение продлить' })
+        toast.warning(tr('{0}: осталось {1}', v.child.firstName, formatDuration(t.leftMin)), { description: tr('Родитель получил предложение продлить') })
       }
       if (t.over && !expired.current.has(v.id)) {
         expired.current.add(v.id)
         qc.invalidateQueries({ queryKey: visitKeys.all })
-        toast.info(`Время посещения закончилось: ${fullName(v.child)}`)
+        toast.info(tr('Время посещения закончилось: {0}', fullName(v.child)))
       }
     }
   }, [current, now, qc])
 
   const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер'
+  const greeting = hour < 12 ? tr('Доброе утро') : hour < 18 ? tr('Добрый день') : tr('Добрый вечер')
   const next = current[0]
   const extended = current.filter((v) => paidExtMinutes(v) > 0).length
 
@@ -72,11 +73,12 @@ export function NannyPage() {
               <p className="mt-1.5 text-sm text-ink-600">
                 {data ? (
                   <>
-                    Сейчас с вами <b className="text-ink-900">{current.length}</b> {plural(current.length, ['ребёнок', 'ребёнка', 'детей'])} из{' '}
-                    {data.nanny.maxChildren} мест · рабочие часы <span className="tabular">{data.nanny.workHours}</span>
+                    
+                    {tr('Сейчас с вами ')} <b className="text-ink-900">{current.length}</b> {plural(current.length, [tr('ребёнок'), tr('ребёнка'), tr('детей')])}  {tr(' из')}{' '}
+                    {data.nanny.maxChildren}  {tr(' мест · рабочие часы ')} <span className="tabular">{data.nanny.workHours}</span>
                   </>
                 ) : (
-                  'Загружаем ваших детей…'
+                  tr('Загружаем ваших детей…')
                 )}
               </p>
             </div>
@@ -101,7 +103,7 @@ export function NannyPage() {
             <PastelStat
               tone="butter"
               icon={<Baby />}
-              label="Детей сейчас"
+              label={tr('Детей сейчас')}
               value={
                 data ? (
                   <>
@@ -114,25 +116,25 @@ export function NannyPage() {
             <PastelStat
               tone="blush"
               icon={<AlarmClock />}
-              label={next ? `Ближайшее: ${next.child.firstName}` : 'Ближайшее окончание'}
+              label={next ? tr('Ближайшее: {0}', next.child.firstName) : tr('Ближайшее окончание')}
               value={data ? (next ? formatCountdown(visitTiming(next, now).leftMs) : '—') : undefined}
             />
-            <PastelStat tone="peri" icon={<TimerReset />} label="Продлено" value={data ? extended : undefined} />
-            <PastelStat tone="olive" icon={<CircleCheckBig />} label="Завершено сегодня" value={data ? data.completedToday.length : undefined} />
+            <PastelStat tone="peri" icon={<TimerReset />} label={tr('Продлено')} value={data ? extended : undefined} />
+            <PastelStat tone="olive" icon={<CircleCheckBig />} label={tr('Завершено сегодня')} value={data ? data.completedToday.length : undefined} />
           </div>
 
           {/* Мои дети */}
           <section className="glass rounded-3xl p-4 sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-[19px] font-extrabold text-ink-900">Мои дети</h2>
+              <h2 className="text-[19px] font-extrabold text-ink-900">{tr('Мои дети')}</h2>
               <Segmented
                 value={view}
                 onChange={setView}
                 size="sm"
                 className="bg-cream-200/70"
                 options={[
-                  { value: 'cards', label: 'Карточки', icon: <LayoutGrid /> },
-                  { value: 'table', label: 'Таблица', icon: <Rows3 /> },
+                  { value: 'cards', label: tr('Карточки'), icon: <LayoutGrid /> },
+                  { value: 'table', label: tr('Таблица'), icon: <Rows3 /> },
                 ]}
               />
             </div>
@@ -158,7 +160,7 @@ export function NannyPage() {
 
         {/* Правая колонка */}
         <aside className="flex flex-col gap-5">
-          <EndTimeline current={data?.current} completed={data?.completedToday} now={now} linkToChild={false} showAllLink={false} title="Мои окончания" />
+          <EndTimeline current={data?.current} completed={data?.completedToday} now={now} linkToChild={false} showAllLink={false} title={tr('Мои окончания')} />
           <CompletedToday visits={data?.completedToday} />
         </aside>
       </div>
@@ -194,14 +196,14 @@ function ChildCard({ visit, now }: { visit: VisitListItem; now: number }) {
         <div className="min-w-0 flex-1">
           <div className="truncate text-[16px] font-bold text-ink-900">{fullName(child)}</div>
           <div className="text-[13px] font-medium text-mist-500">
-            {formatAge(child.birthDate)} · {child.gender === 'female' ? 'девочка' : 'мальчик'}
+            {formatAge(child.birthDate)} · {child.gender === 'female' ? tr('девочка') : tr('мальчик')}
           </div>
         </div>
       </div>
 
       <div className="mt-4 flex items-end justify-between gap-3">
         <div>
-          <div className="text-[11.5px] font-semibold text-mist-500">осталось</div>
+          <div className="text-[11.5px] font-semibold text-mist-500">{tr('осталось')}</div>
           <div className="tabular text-[30px] leading-none font-extrabold tracking-tight text-ink-900">{formatCountdown(t.leftMs)}</div>
         </div>
         <div className="shrink-0 text-right text-[12px] font-semibold whitespace-nowrap text-mist-600">
@@ -211,7 +213,7 @@ function ChildCard({ visit, now }: { visit: VisitListItem; now: number }) {
               {formatTime(visit.startAt)} — {formatTime(visit.endAt)}
             </span>
           </div>
-          <div className="mt-0.5">прошло {formatDuration(t.elapsedMin)}</div>
+          <div className="mt-0.5">{tr('прошло ')} {formatDuration(t.elapsedMin)}</div>
         </div>
       </div>
 
@@ -248,11 +250,11 @@ function KidsTable({ visits, now }: { visits: VisitListItem[]; now: number }) {
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead>
           <tr className="text-xs text-ink-500">
-            <th className="pb-2 pl-2 font-semibold">Ребёнок</th>
-            <th className="pb-2 text-right font-semibold">Начало</th>
-            <th className="pb-2 text-right font-semibold">Окончание</th>
-            <th className="pb-2 text-right font-semibold">Осталось</th>
-            <th className="pb-2 pl-4 font-semibold">Продление</th>
+            <th className="pb-2 pl-2 font-semibold">{tr('Ребёнок')}</th>
+            <th className="pb-2 text-right font-semibold">{tr('Начало')}</th>
+            <th className="pb-2 text-right font-semibold">{tr('Окончание')}</th>
+            <th className="pb-2 text-right font-semibold">{tr('Осталось')}</th>
+            <th className="pb-2 pl-4 font-semibold">{tr('Продление')}</th>
           </tr>
         </thead>
         <tbody>
@@ -291,11 +293,11 @@ function KidsTable({ visits, now }: { visits: VisitListItem[]; now: number }) {
 function CompletedToday({ visits }: { visits?: VisitListItem[] }) {
   return (
     <section className="rounded-3xl bg-cream-50 p-4 ring-1 ring-cream-200">
-      <h2 className="mb-3 text-[17px] font-extrabold text-ink-900">Сегодня завершены</h2>
+      <h2 className="mb-3 text-[17px] font-extrabold text-ink-900">{tr('Сегодня завершены')}</h2>
       {!visits ? (
         <Skeleton className="h-14 rounded-2xl bg-cream-200" />
       ) : visits.length === 0 ? (
-        <p className="rounded-2xl bg-cream-100 p-4 text-center text-sm text-ink-500">Пока никого</p>
+        <p className="rounded-2xl bg-cream-100 p-4 text-center text-sm text-ink-500">{tr('Пока никого')}</p>
       ) : (
         <ul className="space-y-1.5">
           {visits.map((v) => (
@@ -325,8 +327,8 @@ function EmptyKids() {
       <span className="flex size-14 items-center justify-center rounded-2xl bg-white/60 text-ink-900">
         <Baby className="size-7" />
       </span>
-      <h3 className="mt-4 text-lg font-extrabold text-ink-900">Сейчас у вас нет детей</h3>
-      <p className="mt-1 max-w-xs text-sm text-ink-700">Как только сотрудник назначит вам ребёнка, он появится здесь с таймером.</p>
+      <h3 className="mt-4 text-lg font-extrabold text-ink-900">{tr('Сейчас у вас нет детей')}</h3>
+      <p className="mt-1 max-w-xs text-sm text-ink-700">{tr('Как только сотрудник назначит вам ребёнка, он появится здесь с таймером.')}</p>
     </div>
   )
 }

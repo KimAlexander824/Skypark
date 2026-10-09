@@ -1,5 +1,6 @@
 import type { Tone } from '@/components/ui/Display'
 import type { AuditAction, NannyStatus, NotificationEvent, PaymentStatus, Role, VisitStatus } from '@/types'
+import { t, localized } from '@/i18n'
 
 interface StatusMeta {
   label: string
@@ -7,58 +8,58 @@ interface StatusMeta {
 }
 
 // ТЗ §31
-export const visitStatus: Record<VisitStatus, StatusMeta> = {
-  created: { label: 'Создано', tone: 'neutral' },
-  active: { label: 'Активно', tone: 'success' },
-  awaiting_extension: { label: 'Ожидает продления', tone: 'sun' },
-  extended: { label: 'Продлено', tone: 'violet' },
-  completed: { label: 'Завершено', tone: 'brand' },
-  cancelled: { label: 'Отменено', tone: 'danger' },
-}
+export const visitStatus: Record<VisitStatus, StatusMeta> = localized(() => ({
+  created: { label: t('Создано'), tone: 'neutral' },
+  active: { label: t('Активно'), tone: 'success' },
+  awaiting_extension: { label: t('Ожидает продления'), tone: 'sun' },
+  extended: { label: t('Продлено'), tone: 'violet' },
+  completed: { label: t('Завершено'), tone: 'brand' },
+  cancelled: { label: t('Отменено'), tone: 'danger' },
+}))
 
 // ТЗ §32
-export const paymentStatus: Record<PaymentStatus, StatusMeta> = {
-  unpaid: { label: 'Не оплачено', tone: 'neutral' },
-  pending: { label: 'Ожидает оплаты', tone: 'warning' },
-  paid: { label: 'Оплачено', tone: 'success' },
-  failed: { label: 'Ошибка', tone: 'danger' },
-  cancelled: { label: 'Отменено', tone: 'neutral' },
-  refunded: { label: 'Возвращено', tone: 'info' },
-}
+export const paymentStatus: Record<PaymentStatus, StatusMeta> = localized(() => ({
+  unpaid: { label: t('Не оплачено'), tone: 'neutral' },
+  pending: { label: t('Ожидает оплаты'), tone: 'warning' },
+  paid: { label: t('Оплачено'), tone: 'success' },
+  failed: { label: t('Ошибка'), tone: 'danger' },
+  cancelled: { label: t('Отменено'), tone: 'neutral' },
+  refunded: { label: t('Возвращено'), tone: 'info' },
+}))
 
 // ТЗ §10
-export const nannyStatus: Record<NannyStatus, StatusMeta> = {
-  free: { label: 'Свободна', tone: 'success' },
-  busy: { label: 'Занята', tone: 'warning' },
-  break: { label: 'Перерыв', tone: 'info' },
-  off: { label: 'Не работает', tone: 'neutral' },
-}
+export const nannyStatus: Record<NannyStatus, StatusMeta> = localized(() => ({
+  free: { label: t('Свободна'), tone: 'success' },
+  busy: { label: t('Занята'), tone: 'warning' },
+  break: { label: t('Перерыв'), tone: 'info' },
+  off: { label: t('Не работает'), tone: 'neutral' },
+}))
 
-export const roleLabel: Record<Role, string> = {
-  admin: 'Администратор',
-  staff: 'Сотрудник',
-  nanny: 'Няня',
-}
+export const roleLabel: Record<Role, string> = localized(() => ({
+  admin: t('Администратор'),
+  staff: t('Сотрудник'),
+  nanny: t('Няня'),
+}))
 
 // ТЗ §41
-export const auditActionLabel: Record<AuditAction, string> = {
-  child_registered: 'Зарегистрировал ребёнка',
-  visit_created: 'Создал посещение и назначил няню',
-  visit_finished: 'Завершил посещение',
-  visit_extended: 'Продлил посещение',
-  extension_declined: 'Отказался от продления',
-  discount_applied: 'Применил скидку',
-  discount_saved: 'Скидка',
-  promo_saved: 'Промокод',
-}
+export const auditActionLabel: Record<AuditAction, string> = localized(() => ({
+  child_registered: t('Зарегистрировал ребёнка'),
+  visit_created: t('Создал посещение и назначил няню'),
+  visit_finished: t('Завершил посещение'),
+  visit_extended: t('Продлил посещение'),
+  extension_declined: t('Отказался от продления'),
+  discount_applied: t('Применил скидку'),
+  discount_saved: t('Скидка'),
+  promo_saved: t('Промокод'),
+}))
 
 // ТЗ §15, §30
-export const notificationEventLabel: Record<NotificationEvent, string> = {
-  visit_started: 'Посещение началось',
-  ending_soon: 'До окончания 15 минут',
-  extended: 'Продление выполнено',
-  extension_declined: 'Отказ от продления',
-  payment_paid: 'Оплата выполнена',
-  payment_failed: 'Ошибка оплаты',
-  visit_finished: 'Посещение завершено',
-}
+export const notificationEventLabel: Record<NotificationEvent, string> = localized(() => ({
+  visit_started: t('Посещение началось'),
+  ending_soon: t('До окончания 15 минут'),
+  extended: t('Продление выполнено'),
+  extension_declined: t('Отказ от продления'),
+  payment_paid: t('Оплата выполнена'),
+  payment_failed: t('Ошибка оплаты'),
+  visit_finished: t('Посещение завершено'),
+}))

@@ -37,13 +37,17 @@ export function usePopover(
   useLayoutEffect(() => {
     if (!open) return
     place()
+    // прокрутка страницы закрывает панель (иначе она «прилипает» к краю экрана); прокрутка внутри самой панели — нет
+    const onScroll = (e: Event) => {
+      if (!panelRef.current?.contains(e.target as Node)) setOpen(false)
+    }
     window.addEventListener('resize', place)
-    window.addEventListener('scroll', place, true)
+    window.addEventListener('scroll', onScroll, true)
     return () => {
       window.removeEventListener('resize', place)
-      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('scroll', onScroll, true)
     }
-  }, [open, place])
+  }, [open, place, panelRef])
 
   useEffect(() => {
     if (!open) return

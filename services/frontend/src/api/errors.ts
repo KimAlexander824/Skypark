@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 export type ApiErrorCode =
   | 'invalid_credentials'
   | 'user_blocked'
@@ -16,4 +17,4 @@ export class ApiError extends Error {
 }
 
 export const errorMessage = (e: unknown) =>
-  e instanceof Error ? e.message : 'Что-то пошло не так. Попробуйте ещё раз.'
+  e instanceof Error ? e.message : t('Что-то пошло не так. Попробуйте ещё раз.')

@@ -10,6 +10,7 @@ import { useChildren } from '@/features/children/queries'
 import { cn, formatAge, formatPhone, formatShortDate, fullName, plural } from '@/lib/format'
 import { DatePicker, toIso } from '@/components/ui/DatePicker'
 import { TelegramLogo } from '@/components/brand/TelegramLogo'
+import { t } from '@/i18n'
 
 type Filter = 'all' | 'active' | 'no_visits'
 
@@ -45,19 +46,20 @@ export function ChildrenListPage() {
   return (
     <div className="animate-slide-up">
       <PageHeader
-        title="Дети"
+        title={t('Дети')}
         description={
-          all ? `${all.length} ${plural(all.length, ['карточка', 'карточки', 'карточек'])} в базе` : 'Карточки детей и родителей'
+          all ? t('{0} {1} в базе', all.length, plural(all.length, [t('карточка'), t('карточки'), t('карточек')])) : t('Карточки детей и родителей')
         }
         actions={
           <>
             <Link to="/reception">
               <Button variant="secondary" leftIcon={<ScanFace />}>
-                Распознать
+                
+                {t('Распознать')}
               </Button>
             </Link>
             <Link to="/children/new">
-              <Button leftIcon={<Plus />}>Новый ребёнок</Button>
+              <Button leftIcon={<Plus />}>{t('Новый ребёнок')}</Button>
             </Link>
           </>
         }
@@ -68,7 +70,7 @@ export function ChildrenListPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по имени ребёнка, родителя или телефону"
+            placeholder={t('Поиск по имени ребёнка, родителя или телефону')}
             leftIcon={<Search />}
             containerClassName="flex-1 md:max-w-md"
           />
@@ -76,8 +78,8 @@ export function ChildrenListPage() {
             value={visitDate}
             onChange={setVisitDate}
             max={toIso(new Date())}
-            placeholder="Дата посещения"
-            aria-label="Дата посещения"
+            placeholder={t('Дата посещения')}
+            aria-label={t('Дата посещения')}
             clearable
             containerClassName="md:ml-auto md:w-52"
           />
@@ -85,9 +87,9 @@ export function ChildrenListPage() {
             value={filter}
             onChange={updateFilter}
             options={[
-              { value: 'all', label: 'Все' },
-              { value: 'active', label: 'Сейчас в парке' },
-              { value: 'no_visits', label: 'Без посещений' },
+              { value: 'all', label: t('Все') },
+              { value: 'active', label: t('Сейчас в парке') },
+              { value: 'no_visits', label: t('Без посещений') },
             ]}
           />
         </div>
@@ -98,16 +100,16 @@ export function ChildrenListPage() {
           search ? (
             <EmptyState
               icon={<SearchX />}
-              title="Ничего не найдено"
-              description={`По запросу «${search}» нет карточек. Проверьте номер или зарегистрируйте нового ребёнка.`}
+              title={t('Ничего не найдено')}
+              description={t('По запросу «{0}» нет карточек. Проверьте номер или зарегистрируйте нового ребёнка.', search)}
               action={
                 <Link to="/children/new">
-                  <Button leftIcon={<Plus />}>Зарегистрировать</Button>
+                  <Button leftIcon={<Plus />}>{t('Зарегистрировать')}</Button>
                 </Link>
               }
             />
           ) : (
-            <EmptyState icon={<Baby />} title="Здесь пока пусто" description="В этой категории нет детей." />
+            <EmptyState icon={<Baby />} title={t('Здесь пока пусто')} description={t('В этой категории нет детей.')} />
           )
         ) : (
           <ChildrenTable items={data} />
@@ -125,11 +127,11 @@ function ChildrenTable({ items }: { items: ChildListItem[] }) {
       <table className="hidden w-full text-left md:table">
         <thead>
           <tr className="text-xs font-semibold text-ink-500">
-            <th className="py-3 pr-3 pl-5 font-semibold">Ребёнок</th>
-            <th className="px-3 py-3 font-semibold">Родитель</th>
-            <th className="px-3 py-3 font-semibold">Посещений</th>
-            <th className="px-3 py-3 font-semibold">Последний визит</th>
-            <th className="px-3 py-3 font-semibold">Статус</th>
+            <th className="py-3 pr-3 pl-5 font-semibold">{t('Ребёнок')}</th>
+            <th className="px-3 py-3 font-semibold">{t('Родитель')}</th>
+            <th className="px-3 py-3 font-semibold">{t('Посещений')}</th>
+            <th className="px-3 py-3 font-semibold">{t('Последний визит')}</th>
+            <th className="px-3 py-3 font-semibold">{t('Статус')}</th>
             <th className="w-10" />
           </tr>
         </thead>
@@ -146,7 +148,7 @@ function ChildrenTable({ items }: { items: ChildListItem[] }) {
                   <div className="min-w-0">
                     <div className="truncate text-sm font-bold text-ink-900">{fullName(c)}</div>
                     <div className="text-[13px] text-ink-500">
-                      {formatAge(c.birthDate)} · {c.gender === 'female' ? 'девочка' : 'мальчик'}
+                      {formatAge(c.birthDate)} · {c.gender === 'female' ? t('девочка') : t('мальчик')}
                     </div>
                   </div>
                 </div>
@@ -155,7 +157,7 @@ function ChildrenTable({ items }: { items: ChildListItem[] }) {
                 <div className="text-sm font-semibold text-ink-800">{fullName(c.parent)}</div>
                 <div className="tabular flex items-center gap-1.5 text-[13px] text-ink-500">
                   {formatPhone(c.parent.phone)}
-                  {c.parent.telegram?.linked && <TelegramLogo className="size-3.5" title="Telegram привязан" />}
+                  {c.parent.telegram?.linked && <TelegramLogo className="size-3.5" title={t('Telegram привязан')} />}
                 </div>
               </td>
               <td className="tabular px-3 py-3 text-sm font-semibold text-ink-800">{c.visitsCount}</td>
@@ -200,11 +202,12 @@ function ChildStatusBadge({ item }: { item: ChildListItem }) {
   if (item.activeVisit)
     return (
       <Badge tone="success" dot pulse>
-        В парке
+        
+        {t('В парке')}
       </Badge>
     )
-  if (item.visitsCount === 0) return <Badge tone="sun">Новый</Badge>
-  return <Badge tone="neutral">Не в парке</Badge>
+  if (item.visitsCount === 0) return <Badge tone="sun">{t('Новый')}</Badge>
+  return <Badge tone="neutral">{t('Не в парке')}</Badge>
 }
 
 function ListSkeleton() {

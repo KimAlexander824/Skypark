@@ -32,6 +32,7 @@ import { PastelStat, StatsRow } from '@/components/admin/AdminKit'
 import { toneBg, visitTone } from '@/components/visits/EndTimeline'
 import { formatCountdown, useNow, visitTiming } from '@/lib/time'
 import { cn, formatAge, formatPhone, fullName, isPhoneComplete, plural } from '@/lib/format'
+import { t, localized } from '@/i18n'
 
 type Recognition = {
   result: FaceResult
@@ -40,22 +41,22 @@ type Recognition = {
   candidates?: { detail: ChildDetail; confidence: number }[]
 }
 
-const failureCopy: Record<Exclude<FaceResult['status'], 'match' | 'ambiguous'>, { title: string; text: string; icon: ReactNode }> = {
+const failureCopy: Record<Exclude<FaceResult['status'], 'match' | 'ambiguous'>, { title: string; text: string; icon: ReactNode }> = localized(() => ({
   not_found: {
-    title: 'Ребёнок не найден',
-    text: 'Зарегистрируйте нового ребёнка или выполните поиск по номеру телефона.',
+    title: t('Ребёнок не найден'),
+    text: t('Зарегистрируйте нового ребёнка или выполните поиск по номеру телефона.'),
     icon: <UserRoundX />,
   },
-  no_face: { title: 'Лицо не обнаружено', text: 'Убедитесь, что лицо ребёнка полностью в кадре.', icon: <ScanFace /> },
-  multiple_faces: { title: 'В кадре несколько лиц', text: 'Сфотографируйте только одного ребёнка.', icon: <Users /> },
-  low_quality: { title: 'Низкое качество фото', text: 'Подойдите ближе, добавьте света и держите камеру неподвижно.', icon: <ImageOff /> },
-  bad_image: { title: 'Не удалось прочитать фото', text: 'Сфотографируйте ещё раз или выберите другой файл.', icon: <FileWarning /> },
+  no_face: { title: t('Лицо не обнаружено'), text: t('Убедитесь, что лицо ребёнка полностью в кадре.'), icon: <ScanFace /> },
+  multiple_faces: { title: t('В кадре несколько лиц'), text: t('Сфотографируйте только одного ребёнка.'), icon: <Users /> },
+  low_quality: { title: t('Низкое качество фото'), text: t('Подойдите ближе, добавьте света и держите камеру неподвижно.'), icon: <ImageOff /> },
+  bad_image: { title: t('Не удалось прочитать фото'), text: t('Сфотографируйте ещё раз или выберите другой файл.'), icon: <FileWarning /> },
   unavailable: {
-    title: 'Распознавание недоступно',
-    text: 'Сервис распознавания не отвечает. Найдите ребёнка по номеру телефона родителя.',
+    title: t('Распознавание недоступно'),
+    text: t('Сервис распознавания не отвечает. Найдите ребёнка по номеру телефона родителя.'),
     icon: <CloudOff />,
   },
-}
+}))
 
 export function ReceptionPage() {
   const user = useCurrentUser()
@@ -87,16 +88,16 @@ export function ReceptionPage() {
     setCameraKey((k) => k + 1)
   }
 
-  const greeting = new Date().getHours() < 12 ? 'Доброе утро' : new Date().getHours() < 18 ? 'Добрый день' : 'Добрый вечер'
+  const greeting = new Date().getHours() < 12 ? t('Доброе утро') : new Date().getHours() < 18 ? t('Добрый день') : t('Добрый вечер')
 
   return (
     <div className="animate-slide-up">
       <PageHeader
         title={`${greeting}, ${user.firstName}`}
-        description="Сфотографируйте ребёнка или найдите карточку по номеру телефона родителя"
+        description={t('Сфотографируйте ребёнка или найдите карточку по номеру телефона родителя')}
         actions={
           <Link to="/children/new">
-            <Button leftIcon={<Plus />}>Новый ребёнок</Button>
+            <Button leftIcon={<Plus />}>{t('Новый ребёнок')}</Button>
           </Link>
         }
       />
@@ -107,9 +108,9 @@ export function ReceptionPage() {
         <Card>
           <CardHeader
             icon={<ScanFace />}
-            title="Распознавание по лицу"
-            description="Для повторного посещения"
-            action={faceMode === 'mock' ? <Badge tone="neutral">Демо</Badge> : undefined}
+            title={t('Распознавание по лицу')}
+            description={t('Для повторного посещения')}
+            action={faceMode === 'mock' ? <Badge tone="neutral">{t('Демо')}</Badge> : undefined}
           />
           <div className="grid gap-5 px-5 pb-5 md:grid-cols-[1fr_minmax(240px,0.8fr)] xl:grid-cols-1 2xl:grid-cols-[1fr_minmax(260px,0.8fr)]">
             <CameraCapture key={cameraKey} value={photo} onChange={onPhoto} scanning={recognize.isPending} />
@@ -156,8 +157,8 @@ function RecognitionPanel({
             <ScanFace className="size-7" />
           </span>
         </div>
-        <div className="font-bold text-ink-900">Ищем совпадение…</div>
-        <p className="mt-1 text-sm text-ink-500">Сравниваем с профилями зарегистрированных детей</p>
+        <div className="font-bold text-ink-900">{t('Ищем совпадение…')}</div>
+        <p className="mt-1 text-sm text-ink-500">{t('Сравниваем с профилями зарегистрированных детей')}</p>
       </PanelShell>
     )
 
@@ -167,9 +168,9 @@ function RecognitionPanel({
         <IconTile tone="neutral" size="lg">
           <Camera />
         </IconTile>
-        <div className="mt-4 font-bold text-ink-900">{hasPhoto ? 'Обработка фото' : 'Ожидаем фото'}</div>
+        <div className="mt-4 font-bold text-ink-900">{hasPhoto ? t('Обработка фото') : t('Ожидаем фото')}</div>
         <ol className="mt-3 space-y-2 text-left text-sm text-ink-600">
-          {['Поставьте ребёнка напротив камеры', 'Нажмите «Сфотографировать»', 'Проверьте найденную карточку'].map((t, i) => (
+          {[t('Поставьте ребёнка напротив камеры'), t('Нажмите «Сфотографировать»'), t('Проверьте найденную карточку')].map((t, i) => (
             <li key={t} className="flex items-center gap-2.5">
               <span className="tabular flex size-5 shrink-0 items-center justify-center rounded-full bg-cream-200 text-[11px] font-bold text-ink-600">
                 {i + 1}
@@ -187,7 +188,8 @@ function RecognitionPanel({
     return (
       <div className="relative isolate flex animate-pop-in flex-col overflow-hidden rounded-3xl bg-olive-300 p-5">
         <Badge tone="brand" className="self-start">
-          Совпадение {confidence}%
+          
+          {t('Совпадение ')} {confidence}%
         </Badge>
         <div className="mt-4 flex items-center gap-3.5">
           <Avatar src={child.photoUrl} firstName={child.firstName} lastName={child.lastName} seed={child.id} size="lg" className="bg-white/60" />
@@ -197,16 +199,18 @@ function RecognitionPanel({
           </div>
         </div>
         <div className="mt-4 rounded-2xl bg-white/50 p-3 text-sm">
-          <div className="text-xs font-semibold text-ink-900/60">Родитель</div>
+          <div className="text-xs font-semibold text-ink-900/60">{t('Родитель')}</div>
           <div className="mt-0.5 font-bold text-ink-900">{fullName(parent)}</div>
           <div className="tabular text-ink-900/70">{formatPhone(parent.phone)}</div>
         </div>
         <div className="mt-4 flex flex-col gap-2">
           <Button onClick={() => navigate(`/children/${child.id}`)} rightIcon={<ArrowRight />}>
-            Открыть карточку
+            
+            {t('Открыть карточку')}
           </Button>
           <Button variant="ghost" size="sm" onClick={onPhoneSearch}>
-            Это не тот ребёнок
+            
+            {t('Это не тот ребёнок')}
           </Button>
         </div>
       </div>
@@ -216,8 +220,8 @@ function RecognitionPanel({
   if (data.result.status === 'ambiguous' && data.candidates?.length) {
     return (
       <div className="relative isolate flex animate-pop-in flex-col overflow-hidden rounded-3xl bg-butter-200 p-5">
-        <div className="font-extrabold text-ink-900">Найдено несколько похожих детей</div>
-        <p className="mt-1 text-sm text-ink-900/70">Выберите нужного ребёнка</p>
+        <div className="font-extrabold text-ink-900">{t('Найдено несколько похожих детей')}</div>
+        <p className="mt-1 text-sm text-ink-900/70">{t('Выберите нужного ребёнка')}</p>
         <div className="mt-4 flex flex-col gap-2">
           {data.candidates.map(({ detail: { child, parent }, confidence }) => (
             <button
@@ -240,7 +244,8 @@ function RecognitionPanel({
         </div>
         <div className="mt-3 flex flex-col gap-2">
           <Button variant="ghost" size="sm" onClick={onRetake} leftIcon={<RefreshCw />}>
-            Сфотографировать снова
+            
+            {t('Сфотографировать снова')}
           </Button>
         </div>
       </div>
@@ -255,15 +260,18 @@ function RecognitionPanel({
       <p className="mt-1 text-sm text-ink-900/70">{copy.text}</p>
       <div className="mt-5 flex w-full flex-col gap-2">
         <Button variant="secondary" onClick={onRetake} leftIcon={<RefreshCw />}>
-          Сфотографировать снова
+          
+          {t('Сфотографировать снова')}
         </Button>
         <Button variant="soft" onClick={onPhoneSearch} leftIcon={<Phone />}>
-          Поиск по телефону
+          
+          {t('Поиск по телефону')}
         </Button>
         {data.result.status === 'not_found' && (
           <Link to="/children/new">
             <Button className="w-full" leftIcon={<Plus />}>
-              Зарегистрировать
+              
+              {t('Зарегистрировать')}
             </Button>
           </Link>
         )}
@@ -288,7 +296,7 @@ function PhoneSearch({ inputRef }: { inputRef: RefObject<HTMLInputElement | null
 
   return (
     <Card>
-      <CardHeader icon={<UserRoundSearch />} title="Поиск по телефону" description="Покажем всех детей родителя" />
+      <CardHeader icon={<UserRoundSearch />} title={t('Поиск по телефону')} description={t('Покажем всех детей родителя')} />
       <div className="px-5 pb-5">
         <div className="flex gap-2">
           <PhoneInput
@@ -308,7 +316,7 @@ function PhoneSearch({ inputRef }: { inputRef: RefObject<HTMLInputElement | null
             onClick={() => search()}
             disabled={!isPhoneComplete(phone)}
             loading={lookup.isPending}
-            aria-label="Найти"
+            aria-label={t('Найти')}
           >
             <Search />
           </Button>
@@ -316,11 +324,12 @@ function PhoneSearch({ inputRef }: { inputRef: RefObject<HTMLInputElement | null
 
         {lookup.data === null && (
           <div className="relative isolate mt-4 animate-pop-in overflow-hidden rounded-3xl bg-butter-300 p-4 text-center">
-            <div className="font-extrabold text-ink-900">Родитель не найден</div>
-            <p className="mt-1 text-sm text-ink-900/70">Номер {formatPhone(phone)} ещё не зарегистрирован</p>
+            <div className="font-extrabold text-ink-900">{t('Родитель не найден')}</div>
+            <p className="mt-1 text-sm text-ink-900/70">{t('Номер ')} {formatPhone(phone)}  {t(' ещё не зарегистрирован')}</p>
             <Link to={`/children/new?phone=${phone}`}>
               <Button size="sm" className="mt-3" leftIcon={<Plus />}>
-                Зарегистрировать ребёнка
+                
+                {t('Зарегистрировать ребёнка')}
               </Button>
             </Link>
           </div>
@@ -331,7 +340,8 @@ function PhoneSearch({ inputRef }: { inputRef: RefObject<HTMLInputElement | null
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="font-bold text-ink-900">{fullName(lookup.data.parent)}</span>
               <Link to={`/children/new?phone=${phone}`} className="glass rounded-full px-3 py-1 text-xs font-bold text-ink-900 hover:bg-white">
-                + ребёнок
+                
+                {t('+ ребёнок')}
               </Link>
             </div>
             <ul className="flex flex-col gap-1.5">
@@ -365,11 +375,12 @@ function InParkNow() {
     <Card>
       <CardHeader
         icon={<Users />}
-        title="Сейчас в парке"
-        description={data ? `${data.length} ${plural(data.length, ['ребёнок', 'ребёнка', 'детей'])}` : undefined}
+        title={t('Сейчас в парке')}
+        description={data ? `${data.length} ${plural(data.length, [t('ребёнок'), t('ребёнка'), t('детей')])}` : undefined}
         action={
           <Link to="/visits" className="glass rounded-full px-3 py-1 text-xs font-bold text-ink-900 hover:bg-white">
-            Все
+            
+            {t('Все')}
           </Link>
         }
       />
@@ -377,7 +388,7 @@ function InParkNow() {
         {!data ? (
           <Skeleton className="h-14 rounded-2xl" />
         ) : data.length === 0 ? (
-          <p className="rounded-2xl bg-cream-100 p-4 text-center text-sm text-ink-500">Детей в парке нет</p>
+          <p className="rounded-2xl bg-cream-100 p-4 text-center text-sm text-ink-500">{t('Детей в парке нет')}</p>
         ) : (
           <ul className="space-y-1.5">
             {data.slice(0, 5).map((v) => {
@@ -402,7 +413,7 @@ function InParkNow() {
             })}
           </ul>
         )}
-        {data && data.length > 5 && <p className="mt-2 text-center text-xs font-semibold text-ink-500">и ещё {data.length - 5}</p>}
+        {data && data.length > 5 && <p className="mt-2 text-center text-xs font-semibold text-ink-500">{t('и ещё ')} {data.length - 5}</p>}
       </div>
     </Card>
   )
@@ -417,13 +428,13 @@ function ReceptionStats() {
   const today = new Date().toDateString()
   return (
     <StatsRow>
-      <PastelStat tone="butter" icon={<Users />} label="Сейчас в парке" value={current?.length} />
-      <PastelStat tone="blush" icon={<AlarmClock />} label="Заканчиваются (≤15 мин)" value={current?.filter((v) => visitTiming(v, now).endingSoon).length} />
-      <PastelStat tone="olive" icon={<HeartHandshake />} label="Свободных нянь" value={nannies?.filter((n) => n.available).length} />
+      <PastelStat tone="butter" icon={<Users />} label={t('Сейчас в парке')} value={current?.length} />
+      <PastelStat tone="blush" icon={<AlarmClock />} label={t('Заканчиваются (≤15 мин)')} value={current?.filter((v) => visitTiming(v, now).endingSoon).length} />
+      <PastelStat tone="olive" icon={<HeartHandshake />} label={t('Свободных нянь')} value={nannies?.filter((n) => n.available).length} />
       <PastelStat
         tone="peri"
         icon={<CircleCheckBig />}
-        label="Завершено сегодня"
+        label={t('Завершено сегодня')}
         value={done?.filter((v) => v.status === 'completed' && v.endedAt && new Date(v.endedAt).toDateString() === today).length}
       />
     </StatsRow>

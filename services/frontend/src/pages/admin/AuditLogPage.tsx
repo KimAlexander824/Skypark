@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/Select'
 import { formatShortDate, formatTime } from '@/lib/format'
 import { auditActionLabel } from '@/lib/statuses'
 import type { AuditAction } from '@/types'
+import { t } from '@/i18n'
 
 // ТЗ §41 — история ключевых действий для контроля сотрудников
 
@@ -44,7 +45,7 @@ export function AuditLogPage() {
   const columns: Column<AuditItem>[] = [
     {
       key: 'at',
-      header: 'Когда',
+      header: t('Когда'),
       cell: (a) => (
         <div className="tabular">
           <div className="font-bold text-ink-900">{formatShortDate(a.at)}</div>
@@ -52,11 +53,11 @@ export function AuditLogPage() {
         </div>
       ),
     },
-    { key: 'actor', header: 'Кто', cell: (a) => <span className={a.actorId ? 'font-semibold text-ink-900' : 'text-ink-500'}>{a.actorName}</span> },
-    { key: 'action', header: 'Действие', cell: (a) => <Pill tone={actionTone[a.action]}>{actionText(a)}</Pill> },
+    { key: 'actor', header: t('Кто'), cell: (a) => <span className={a.actorId ? 'font-semibold text-ink-900' : 'text-ink-500'}>{a.actorName}</span> },
+    { key: 'action', header: t('Действие'), cell: (a) => <Pill tone={actionTone[a.action]}>{actionText(a)}</Pill> },
     {
       key: 'subject',
-      header: 'Объект',
+      header: t('Объект'),
       cell: (a) => (
         <div className="min-w-0">
           {a.link ? (
@@ -74,7 +75,7 @@ export function AuditLogPage() {
 
   return (
     <div className="animate-slide-up">
-      <AdminHeader title="Журнал действий" description="Кто и когда регистрировал детей, оформлял и завершал посещения, менял время и применял скидки" />
+      <AdminHeader title={t('Журнал действий')} description={t('Кто и когда регистрировал детей, оформлял и завершал посещения, менял время и применял скидки')} />
 
       <Panel
         toolbar={
@@ -82,18 +83,18 @@ export function AuditLogPage() {
             <Select
               value={actorId}
               onChange={(e) => setActorId(e.target.value)}
-              options={[{ value: '', label: 'Все сотрудники' }, ...(employees ?? []).map((e) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))]}
+              options={[{ value: '', label: t('Все сотрудники') }, ...(employees ?? []).map((e) => ({ value: e.id, label: `${e.firstName} ${e.lastName}` }))]}
               size="sm"
               containerClassName="w-full md:w-56"
             />
             <Select
               value={action}
               onChange={(e) => setAction(e.target.value as AuditAction | '')}
-              options={[{ value: '', label: 'Все действия' }, ...Object.entries(auditActionLabel).map(([value, label]) => ({ value, label }))]}
+              options={[{ value: '', label: t('Все действия') }, ...Object.entries(auditActionLabel).map(([value, label]) => ({ value, label }))]}
               size="sm"
               containerClassName="w-full md:w-64"
             />
-            <DatePicker value={date} onChange={setDate} placeholder="Любая дата" clearable size="sm" containerClassName="w-full md:ml-auto md:w-48" />
+            <DatePicker value={date} onChange={setDate} placeholder={t('Любая дата')} clearable size="sm" containerClassName="w-full md:ml-auto md:w-48" />
           </>
         }
       >
@@ -102,9 +103,9 @@ export function AuditLogPage() {
           rows={rows}
           loading={isLoading}
           rowKey={(a) => a.id}
-          empty={<EmptyBlock icon={<History />} title="Записей нет" text="Измените фильтры." />}
+          empty={<EmptyBlock icon={<History />} title={t('Записей нет')} text={t('Измените фильтры.')} />}
         />
-        {data && data.length > 300 && <p className="mt-3 text-center text-xs text-ink-500">Показаны последние 300 записей — уточните фильтры</p>}
+        {data && data.length > 300 && <p className="mt-3 text-center text-xs text-ink-500">{t('Показаны последние 300 записей — уточните фильтры')}</p>}
       </Panel>
     </div>
   )

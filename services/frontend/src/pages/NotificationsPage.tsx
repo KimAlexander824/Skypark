@@ -10,6 +10,7 @@ import { notificationKeys, useNotifications } from '@/features/notifications/que
 import { cn, formatShortDate, formatTime } from '@/lib/format'
 import { notificationEventLabel } from '@/lib/statuses'
 import type { NotificationEvent } from '@/types'
+import { t } from '@/i18n'
 
 // ТЗ §15, §30 — уведомления сотрудникам и родителям
 
@@ -46,19 +47,19 @@ export function NotificationsPage() {
 
   return (
     <div className="animate-slide-up">
-      <PageHeader title="Уведомления" description="События посещений: продления, отказы, завершения и сообщения родителям в Telegram" />
+      <PageHeader title={t('Уведомления')} description={t('События посещений: продления, отказы, завершения и сообщения родителям в Telegram')} />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Segmented
           value={tab}
           onChange={setTab}
           options={[
-            { value: 'staff', label: 'Сотрудникам' },
-            { value: 'parent', label: 'Родителям' },
+            { value: 'staff', label: t('Сотрудникам') },
+            { value: 'parent', label: t('Родителям') },
           ]}
         />
         {tab === 'parent' && notLinked > 0 && (
-          <span className="text-xs font-semibold text-warning-700">Не доставлено (Telegram не привязан): {notLinked}</span>
+          <span className="text-xs font-semibold text-warning-700">{t('Не доставлено (Telegram не привязан): ')} {notLinked}</span>
         )}
       </div>
 
@@ -72,8 +73,8 @@ export function NotificationsPage() {
         <Card>
           <EmptyState
             icon={<BellOff />}
-            title="Уведомлений пока нет"
-            description={tab === 'staff' ? 'Здесь появятся продления, отказы от продления и завершённые посещения.' : 'Здесь появятся сообщения, отправленные родителям.'}
+            title={t('Уведомлений пока нет')}
+            description={tab === 'staff' ? t('Здесь появятся продления, отказы от продления и завершённые посещения.') : t('Здесь появятся сообщения, отправленные родителям.')}
           />
         </Card>
       ) : (
@@ -95,7 +96,7 @@ function Row({ n, fresh }: { n: NotificationItem; fresh: boolean }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-bold text-ink-900">{notificationEventLabel[n.event]}</span>
-          {fresh && <span className="size-2 shrink-0 rounded-full bg-accent-500" aria-label="Новое" />}
+          {fresh && <span className="size-2 shrink-0 rounded-full bg-accent-500" aria-label={t('Новое')} />}
         </div>
         <div className="truncate text-[13px] text-ink-600">
           <Link to={`/children/${n.childId}`} className="font-semibold text-ink-800 hover:underline">
@@ -113,7 +114,7 @@ function Row({ n, fresh }: { n: NotificationItem; fresh: boolean }) {
           )}
         >
           <TelegramLogo className={cn('size-3.5', n.delivery !== 'sent' && 'opacity-50 grayscale')} />
-          {n.delivery === 'sent' ? 'Отправлено' : 'Не привязан'}
+          {n.delivery === 'sent' ? t('Отправлено') : t('Не привязан')}
         </span>
       )}
       <div className="tabular shrink-0 text-right text-xs text-ink-500">

@@ -1,5 +1,6 @@
 import type { AuditEntry, NotificationEvent, Visit } from '@/types'
 import { db, uid } from './mock/db'
+import { t } from '@/i18n'
 
 /*
  * Журнал действий (ТЗ §41) и уведомления (ТЗ §15, §30). На backend это будут отдельные
@@ -10,8 +11,8 @@ import { db, uid } from './mock/db'
 const AUDIT_LIMIT = 1000
 const NOTIFICATIONS_LIMIT = 300
 
-export const PARENT_ACTOR = 'Родитель (Telegram)'
-export const SYSTEM_ACTOR = 'Система'
+export const PARENT_ACTOR = () => t('Родитель (Telegram)')
+export const SYSTEM_ACTOR = () => t('Система')
 
 export function audit(entry: Omit<AuditEntry, 'id' | 'at'>) {
   db.audit.unshift({ id: uid('a'), at: new Date().toISOString(), ...entry })

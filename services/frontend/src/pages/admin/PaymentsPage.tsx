@@ -10,6 +10,7 @@ import { Segmented } from '@/components/ui/Overlay'
 import { formatDuration, formatMoney, formatShortDate, formatTime, fullName } from '@/lib/format'
 import { paymentStatus } from '@/lib/statuses'
 import type { PaymentStatus } from '@/types'
+import { t } from '@/i18n'
 
 // ТЗ §19 / §32
 const statusTone: Record<PaymentStatus, PastelTone | 'muted' | 'danger' | 'dark'> = {
@@ -67,7 +68,7 @@ export function PaymentsPage() {
   const columns: Column<PaymentRow>[] = [
     {
       key: 'date',
-      header: 'Дата',
+      header: t('Дата'),
       cell: (p) => (
         <div className="tabular">
           <div className="font-bold text-ink-900">{formatShortDate(p.at)}</div>
@@ -77,7 +78,7 @@ export function PaymentsPage() {
     },
     {
       key: 'child',
-      header: 'Ребёнок / родитель',
+      header: t('Ребёнок / родитель'),
       cell: (p) => (
         <div className="min-w-0">
           {p.child ? (
@@ -93,44 +94,44 @@ export function PaymentsPage() {
     },
     {
       key: 'kind',
-      header: 'Назначение',
+      header: t('Назначение'),
       cell: (p) =>
         p.kind === 'visit' ? (
-          <span className="font-semibold text-ink-800">Посещение · {formatDuration(p.minutes)}</span>
+          <span className="font-semibold text-ink-800">{t('Посещение · ')} {formatDuration(p.minutes)}</span>
         ) : (
           <span className="inline-flex items-center gap-1 font-semibold text-ink-800">
-            <TimerReset className="size-3.5" /> Продление · +{formatDuration(p.minutes)}
+            <TimerReset className="size-3.5" />  {t(' Продление · +')}{formatDuration(p.minutes)}
           </span>
         ),
     },
-    { key: 'amount', header: 'Сумма', align: 'right', cell: (p) => <span className="tabular font-extrabold text-ink-900">{formatMoney(p.amount)}</span> },
-    { key: 'status', header: 'Статус', align: 'right', cell: (p) => <Pill tone={statusTone[p.status]}>{paymentStatus[p.status].label}</Pill> },
+    { key: 'amount', header: t('Сумма'), align: 'right', cell: (p) => <span className="tabular font-extrabold text-ink-900">{formatMoney(p.amount)}</span> },
+    { key: 'status', header: t('Статус'), align: 'right', cell: (p) => <Pill tone={statusTone[p.status]}>{paymentStatus[p.status].label}</Pill> },
   ]
 
   return (
     <div className="animate-slide-up">
-      <AdminHeader title="Оплаты" description="Платежи за посещения и продления" />
+      <AdminHeader title={t('Оплаты')} description={t('Платежи за посещения и продления')} />
 
       <StatsRow>
-        <PastelStat tone="butter" icon={<Banknote />} label="Оплачено" value={sum((p) => p.status === 'paid') !== undefined ? formatMoney(sum((p) => p.status === 'paid')!) : undefined} />
-        <PastelStat tone="olive" icon={<CircleCheckBig />} label="Успешных платежей" value={cnt((p) => p.status === 'paid')} />
-        <PastelStat tone="blush" icon={<CircleX />} label="Ошибок оплаты" value={cnt((p) => p.status === 'failed')} />
-        <PastelStat tone="peri" icon={<Undo2 />} label="Возвращено" value={sum((p) => p.status === 'refunded') !== undefined ? formatMoney(sum((p) => p.status === 'refunded')!) : undefined} />
+        <PastelStat tone="butter" icon={<Banknote />} label={t('Оплачено')} value={sum((p) => p.status === 'paid') !== undefined ? formatMoney(sum((p) => p.status === 'paid')!) : undefined} />
+        <PastelStat tone="olive" icon={<CircleCheckBig />} label={t('Успешных платежей')} value={cnt((p) => p.status === 'paid')} />
+        <PastelStat tone="blush" icon={<CircleX />} label={t('Ошибок оплаты')} value={cnt((p) => p.status === 'failed')} />
+        <PastelStat tone="peri" icon={<Undo2 />} label={t('Возвращено')} value={sum((p) => p.status === 'refunded') !== undefined ? formatMoney(sum((p) => p.status === 'refunded')!) : undefined} />
       </StatsRow>
 
       <Panel
         toolbar={
           <>
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ребёнок, родитель или телефон" leftIcon={<Search />} containerClassName="flex-1 md:max-w-xs" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('Ребёнок, родитель или телефон')} leftIcon={<Search />} containerClassName="flex-1 md:max-w-xs" />
             <Segmented
               value={kind}
               onChange={setKind}
               size="sm"
               className="bg-cream-200/70"
               options={[
-                { value: 'all', label: 'Все' },
-                { value: 'visit', label: 'Посещения' },
-                { value: 'extension', label: 'Продления' },
+                { value: 'all', label: t('Все') },
+                { value: 'visit', label: t('Посещения') },
+                { value: 'extension', label: t('Продления') },
               ]}
             />
             <div className="flex gap-2 md:ml-auto">
@@ -138,7 +139,7 @@ export function PaymentsPage() {
                 value={status}
                 onChange={(e) => setStatus(e.target.value as PaymentStatus | 'all')}
                 options={[
-                  { value: 'all', label: 'Любой статус', icon: <OptionDot className="bg-cream-300" /> },
+                  { value: 'all', label: t('Любой статус'), icon: <OptionDot className="bg-cream-300" /> },
                   ...Object.entries(paymentStatus).map(([v, m]) => ({ value: v, label: m.label, icon: <OptionDot className={statusDot[v as PaymentStatus]} /> })),
                 ]}
                 size="sm"
@@ -148,10 +149,10 @@ export function PaymentsPage() {
                 value={period}
                 onChange={(e) => setPeriod(e.target.value as Period)}
                 options={[
-                  { value: '7', label: '7 дней' },
-                  { value: '30', label: '30 дней' },
-                  { value: '90', label: '90 дней' },
-                  { value: 'all', label: 'Всё время' },
+                  { value: '7', label: t('7 дней') },
+                  { value: '30', label: t('30 дней') },
+                  { value: '90', label: t('90 дней') },
+                  { value: 'all', label: t('Всё время') },
                 ]}
                 size="sm"
                 containerClassName="w-36"
@@ -165,9 +166,9 @@ export function PaymentsPage() {
           rows={rows}
           loading={isLoading}
           rowKey={(p) => p.id}
-          empty={<EmptyBlock icon={<Banknote />} title="Платежей нет" text="Измените фильтры или период." />}
+          empty={<EmptyBlock icon={<Banknote />} title={t('Платежей нет')} text={t('Измените фильтры или период.')} />}
         />
-        {rows && rows.length === 300 && <p className="mt-3 text-center text-xs text-ink-500">Показаны первые 300 платежей — уточните фильтры</p>}
+        {rows && rows.length === 300 && <p className="mt-3 text-center text-xs text-ink-500">{t('Показаны первые 300 платежей — уточните фильтры')}</p>}
       </Panel>
     </div>
   )

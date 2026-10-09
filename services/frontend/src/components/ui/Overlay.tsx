@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/format'
+import { t } from '@/i18n'
 
 const EXIT_MS = 240
 
@@ -97,7 +98,7 @@ export function Modal({
                 <button
                   onClick={onClose}
                   className="-mt-1 -mr-2 flex size-8 items-center justify-center rounded-full bg-mist-100 text-mist-500 transition hover:bg-mist-200 hover:text-ink-900"
-                  aria-label="Закрыть"
+                  aria-label={t('Закрыть')}
                 >
                   <X className="size-4" strokeWidth={2.5} />
                 </button>
@@ -192,7 +193,7 @@ export function ConfirmModal({
   onConfirm,
   title,
   description,
-  confirmLabel = 'Подтвердить',
+  confirmLabel = t('Подтвердить'),
   danger,
   loading,
 }: {
@@ -215,7 +216,8 @@ export function ConfirmModal({
       footer={
         <>
           <button onClick={onClose} className="h-11 rounded-full px-5 text-sm font-bold text-mist-600 hover:bg-white">
-            Отмена
+            
+            {t('Отмена')}
           </button>
           <button
             onClick={onConfirm}
@@ -225,7 +227,7 @@ export function ConfirmModal({
               danger ? 'bg-danger-500 hover:bg-danger-600' : 'glass-accent hover:brightness-105',
             )}
           >
-            {loading ? 'Подождите…' : confirmLabel}
+            {loading ? t('Подождите…') : confirmLabel}
           </button>
         </>
       }

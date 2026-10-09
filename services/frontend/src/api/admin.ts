@@ -23,6 +23,7 @@ import { ApiError } from './errors'
 import { audit } from './journal'
 import { db, delay, persist, resetMockDB, uid } from './mock/db'
 import { syncVisits } from './visits'
+import { t } from '@/i18n'
 
 const now = () => new Date().toISOString()
 
@@ -52,10 +53,10 @@ function historyOf(employeeId: ID): WorkHistoryItem[] {
 }
 
 function validateEmployee(input: EmployeeInput, exceptId?: ID) {
-  if (!input.firstName.trim() || !input.lastName.trim()) throw new ApiError('validation', 'Укажите имя и фамилию')
+  if (!input.firstName.trim() || !input.lastName.trim()) throw new ApiError('validation', t('Укажите имя и фамилию'))
   const phone = normalizePhone(input.phone)
-  if (phone.length !== 12) throw new ApiError('validation', 'Укажите номер телефона полностью')
-  if (db.employees.some((e) => e.phone === phone && e.id !== exceptId)) throw new ApiError('conflict', 'Сотрудник с таким номером уже есть')
+  if (phone.length !== 12) throw new ApiError('validation', t('Укажите номер телефона полностью'))
+  if (db.employees.some((e) => e.phone === phone && e.id !== exceptId)) throw new ApiError('conflict', t('Сотрудник с таким номером уже есть'))
   return phone
 }
 
@@ -84,7 +85,7 @@ export const employeesApi = {
   async update(id: ID, input: EmployeeInput): Promise<Employee> {
     await delay(400)
     const e = db.employees.find((x) => x.id === id)
-    if (!e) throw new ApiError('not_found', 'Сотрудник не найден')
+    if (!e) throw new ApiError('not_found', t('Сотрудник не найден'))
     const phone = validateEmployee(input, id)
     Object.assign(e, input, { phone })
     const n = db.nannies.find((x) => x.employeeId === id)
@@ -97,7 +98,7 @@ export const employeesApi = {
   async setStatus(id: ID, status: EmployeeStatus): Promise<void> {
     await delay(300)
     const e = db.employees.find((x) => x.id === id)
-    if (!e) throw new ApiError('not_found', 'Сотрудник не найден')
+    if (!e) throw new ApiError('not_found', t('Сотрудник не найден'))
     e.status = status
     const n = db.nannies.find((x) => x.employeeId === id)
     if (n && status === 'blocked') n.status = 'off'
@@ -179,13 +180,13 @@ export const nanniesAdminApi = {
 
   async create(input: NannyInput): Promise<Nanny> {
     await delay(400)
-    const phone = validateEmployee({ ...input, position: 'Няня', role: 'nanny' })
+    const phone = validateEmployee({ ...input, position: t('Няня'), role: 'nanny' })
     const e: Employee = {
       id: uid('e'),
       firstName: input.firstName,
       lastName: input.lastName,
       phone,
-      position: 'Няня',
+      position: t('Няня'),
       role: 'nanny',
       experienceYears: input.experienceYears,
       photoUrl: input.photoUrl,
@@ -203,8 +204,8 @@ export const nanniesAdminApi = {
   async update(id: ID, input: NannyInput): Promise<void> {
     await delay(400)
     const n = db.nannies.find((x) => x.id === id)
-    if (!n) throw new ApiError('not_found', 'Няня не найдена')
-    const phone = validateEmployee({ ...input, position: 'Няня', role: 'nanny' }, n.employeeId)
+    if (!n) throw new ApiError('not_found', t('Няня не найдена'))
+    const phone = validateEmployee({ ...input, position: t('Няня'), role: 'nanny' }, n.employeeId)
     Object.assign(n, input, { phone })
     const e = db.employees.find((x) => x.id === n.employeeId)
     if (e) Object.assign(e, { firstName: input.firstName, lastName: input.lastName, phone, experienceYears: input.experienceYears, photoUrl: input.photoUrl })
@@ -215,9 +216,9 @@ export const nanniesAdminApi = {
   async setEnabled(id: ID, enabled: boolean): Promise<void> {
     await delay(300)
     const n = db.nannies.find((x) => x.id === id)
-    if (!n) throw new ApiError('not_found', 'Няня не найдена')
+    if (!n) throw new ApiError('not_found', t('Няня не найдена'))
     if (!enabled && db.visits.some((v) => v.nannyId === id && isOngoing(v)))
-      throw new ApiError('conflict', 'У няни есть дети на посещении — сначала завершите их')
+      throw new ApiError('conflict', t('У няни есть дети на посещении — сначала завершите их'))
     n.status = enabled ? 'free' : 'off'
     persist()
   },
@@ -284,10 +285,10 @@ export const paymentsApi = {
 export type DiscountInput = Omit<Discount, 'id' | 'createdAt' | 'createdBy'>
 
 function validateDiscountLike(d: { kind: Discount['kind']; value: number; dateFrom: string; dateTo: string }) {
-  if (!(d.value > 0)) throw new ApiError('validation', 'Размер скидки должен быть больше нуля')
-  if (d.kind === 'percent' && d.value > 100) throw new ApiError('validation', 'Процент не может быть больше 100')
-  if (!d.dateFrom || !d.dateTo) throw new ApiError('validation', 'Укажите период действия')
-  if (d.dateFrom > d.dateTo) throw new ApiError('validation', 'Дата окончания раньше даты начала')
+  if (!(d.value > 0)) throw new ApiError('validation', t('Размер скидки должен быть больше нуля'))
+  if (d.kind === 'percent' && d.value > 100) throw new ApiError('validation', t('Процент не может быть больше 100'))
+  if (!d.dateFrom || !d.dateTo) throw new ApiError('validation', t('Укажите период действия'))
+  if (d.dateFrom > d.dateTo) throw new ApiError('validation', t('Дата окончания раньше даты начала'))
 }
 
 export const discountsApi = {
@@ -297,19 +298,19 @@ export const discountsApi = {
   },
   async save(input: DiscountInput, by: ID, id?: ID): Promise<Discount> {
     await delay(400)
-    if (!input.name.trim()) throw new ApiError('validation', 'Укажите название')
+    if (!input.name.trim()) throw new ApiError('validation', t('Укажите название'))
     validateDiscountLike(input)
     if (id) {
       const d = db.discounts.find((x) => x.id === id)
-      if (!d) throw new ApiError('not_found', 'Скидка не найдена')
+      if (!d) throw new ApiError('not_found', t('Скидка не найдена'))
       Object.assign(d, input)
-      audit({ action: 'discount_saved', actorId: by, subject: d.name, details: 'Изменена скидка' })
+      audit({ action: 'discount_saved', actorId: by, subject: d.name, details: t('Изменена скидка') })
       persist()
       return d
     }
     const d: Discount = { id: uid('d'), ...input, createdAt: now(), createdBy: by }
     db.discounts.push(d)
-    audit({ action: 'discount_saved', actorId: by, subject: d.name, details: 'Создана скидка' })
+    audit({ action: 'discount_saved', actorId: by, subject: d.name, details: t('Создана скидка') })
     persist()
     return d
   },
@@ -340,21 +341,21 @@ export const promoCodesApi = {
   async save(input: PromoInput, by: ID, id?: ID): Promise<PromoCode> {
     await delay(400)
     const code = input.code.trim().toUpperCase()
-    if (!/^[A-Z0-9_-]{3,20}$/.test(code)) throw new ApiError('validation', 'Код: 3–20 символов, латиница и цифры')
-    if (db.promoCodes.some((p) => p.code === code && p.id !== id)) throw new ApiError('conflict', 'Такой промокод уже существует')
+    if (!/^[A-Z0-9_-]{3,20}$/.test(code)) throw new ApiError('validation', t('Код: 3–20 символов, латиница и цифры'))
+    if (db.promoCodes.some((p) => p.code === code && p.id !== id)) throw new ApiError('conflict', t('Такой промокод уже существует'))
     validateDiscountLike(input)
-    if (!(input.usageLimit > 0) || !(input.perParentLimit > 0)) throw new ApiError('validation', 'Лимиты должны быть больше нуля')
+    if (!(input.usageLimit > 0) || !(input.perParentLimit > 0)) throw new ApiError('validation', t('Лимиты должны быть больше нуля'))
     if (id) {
       const p = db.promoCodes.find((x) => x.id === id)
-      if (!p) throw new ApiError('not_found', 'Промокод не найден')
+      if (!p) throw new ApiError('not_found', t('Промокод не найден'))
       Object.assign(p, input, { code })
-      audit({ action: 'promo_saved', actorId: by, subject: code, details: 'Изменён промокод' })
+      audit({ action: 'promo_saved', actorId: by, subject: code, details: t('Изменён промокод') })
       persist()
       return p
     }
     const p: PromoCode = { id: uid('pc'), ...input, code, usedCount: 0, createdAt: now(), createdBy: by }
     db.promoCodes.push(p)
-    audit({ action: 'promo_saved', actorId: by, subject: code, details: 'Создан промокод' })
+    audit({ action: 'promo_saved', actorId: by, subject: code, details: t('Создан промокод') })
     persist()
     return p
   },
@@ -374,11 +375,11 @@ export const promoCodesApi = {
     await delay(350)
     const p = db.promoCodes.find((x) => x.code === code.trim().toUpperCase())
     const today = new Date().toISOString().slice(0, 10)
-    if (!p) return { valid: false, reason: 'Промокод не найден' }
-    if (p.status !== 'active') return { valid: false, reason: 'Промокод отключён' }
-    if (today < p.dateFrom) return { valid: false, reason: 'Срок действия ещё не начался' }
-    if (today > p.dateTo) return { valid: false, reason: 'Срок действия истёк' }
-    if (p.usedCount >= p.usageLimit) return { valid: false, reason: 'Лимит использований исчерпан' }
+    if (!p) return { valid: false, reason: t('Промокод не найден') }
+    if (p.status !== 'active') return { valid: false, reason: t('Промокод отключён') }
+    if (today < p.dateFrom) return { valid: false, reason: t('Срок действия ещё не начался') }
+    if (today > p.dateTo) return { valid: false, reason: t('Срок действия истёк') }
+    if (p.usedCount >= p.usageLimit) return { valid: false, reason: t('Лимит использований исчерпан') }
     return { valid: true, promo: p }
   },
 }
@@ -394,11 +395,11 @@ export const newsApi = {
   },
   async save(input: NewsInput, id?: ID): Promise<News> {
     await delay(400)
-    if (!input.title.trim()) throw new ApiError('validation', 'Укажите заголовок')
-    if (!input.text.trim()) throw new ApiError('validation', 'Добавьте текст новости')
+    if (!input.title.trim()) throw new ApiError('validation', t('Укажите заголовок'))
+    if (!input.text.trim()) throw new ApiError('validation', t('Добавьте текст новости'))
     if (id) {
       const n = db.news.find((x) => x.id === id)
-      if (!n) throw new ApiError('not_found', 'Новость не найдена')
+      if (!n) throw new ApiError('not_found', t('Новость не найдена'))
       Object.assign(n, input)
       persist()
       return n
@@ -424,11 +425,11 @@ export const scheduleApi = {
   },
   async save(s: WorkSchedule): Promise<void> {
     await delay(400)
-    for (const d of s.week) if (d.open && d.from >= d.to) throw new ApiError('validation', 'Время закрытия должно быть позже открытия')
+    for (const d of s.week) if (d.open && d.from >= d.to) throw new ApiError('validation', t('Время закрытия должно быть позже открытия'))
     for (const e of s.exceptions) {
-      if (!e.dateFrom || !e.dateTo || e.dateFrom > e.dateTo) throw new ApiError('validation', 'Проверьте даты исключений')
+      if (!e.dateFrom || !e.dateTo || e.dateFrom > e.dateTo) throw new ApiError('validation', t('Проверьте даты исключений'))
       if ((e.type === 'holiday' || e.type === 'custom_hours') && (!e.from || !e.to || e.from >= e.to))
-        throw new ApiError('validation', 'Укажите часы работы для праздничного дня или изменённого графика')
+        throw new ApiError('validation', t('Укажите часы работы для праздничного дня или изменённого графика'))
     }
     db.schedule = structuredClone(s)
     persist()
@@ -442,9 +443,9 @@ export const appSettingsApi = {
   },
   async save(s: AppSettings): Promise<void> {
     await delay(400)
-    if (!(s.hourlyRate > 0)) throw new ApiError('validation', 'Стоимость часа должна быть больше нуля')
-    if (!s.durations.length) throw new ApiError('validation', 'Нужен хотя бы один вариант продолжительности')
-    if (!s.extensionOptions.length) throw new ApiError('validation', 'Нужен хотя бы один вариант продления')
+    if (!(s.hourlyRate > 0)) throw new ApiError('validation', t('Стоимость часа должна быть больше нуля'))
+    if (!s.durations.length) throw new ApiError('validation', t('Нужен хотя бы один вариант продолжительности'))
+    if (!s.extensionOptions.length) throw new ApiError('validation', t('Нужен хотя бы один вариант продления'))
     db.settings = { ...structuredClone(s), durations: [...new Set(s.durations)].sort((a, b) => a - b), extensionOptions: [...new Set(s.extensionOptions)].sort((a, b) => a - b) }
     persist()
   },
