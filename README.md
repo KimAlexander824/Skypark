@@ -6,7 +6,9 @@
 |---|---|---|
 | `services/recognition/` | ядро: распознавание лиц, база векторов (pgvector, шарды), воркеры очереди | Александр |
 | `services/backend/` | CRUD, бизнес-логика, API для фронтенда, админка | Акмаль |
+| `services/frontend/` | веб-интерфейс (Vite + React + TS + Tailwind) | Абдулло |
 | `docs/contracts/` | договорённости между сервисами (очереди, форматы) | все |
+| `docs/Скайпарк-TZ.md` | техническое задание | все |
 | `infra/` | общая инфраструктура (создание баз Postgres) | все |
 
 ```
@@ -23,6 +25,13 @@ docker compose up -d --build
 ```
 
 - Swagger сервиса распознавания: http://localhost:8001/docs
+- Фронтенд (нужен Node.js 20+):
+  ```bash
+  cd services/frontend
+  npm install
+  cp .env.example .env.local    # VITE_FACE_API=service — настоящий сервис распознавания
+  npm run dev                   # http://localhost:5173
+  ```
 - Больше воркеров распознавания: `docker compose up -d --scale recognition-worker=3`
 - Postgres (`localhost:5432`, пользователь `skypark`) содержит базы `recognition_1..3` (шарды),
   `backend`, тестовые базы. Они создаются при ПЕРВОМ запуске: чтобы пересоздать — `docker compose down -v`.
