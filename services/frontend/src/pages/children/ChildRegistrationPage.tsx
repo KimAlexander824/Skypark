@@ -91,10 +91,8 @@ export function ChildRegistrationPage() {
     setParent(res ? { kind: 'existing', ...res } : { kind: 'new', data: { phone: p, firstName: '' } })
   }
 
-  // номер мог прийти со страницы приёма
   useEffect(() => {
     if (isPhoneComplete(phone)) runLookup(phone)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const parentName = parent.kind === 'existing' ? fullName(parent.parent) : parent.kind === 'new' ? fullName(parent.data) : ''
@@ -106,7 +104,6 @@ export function ChildRegistrationPage() {
       return
     }
     setParentErrors({})
-    // фамилию ребёнка подставляем от родителя — её всегда можно поменять
     if (!child.lastName && parentLastName) setChild((c) => ({ ...c, lastName: parentLastName }))
     setStep(1)
   }
@@ -118,14 +115,8 @@ export function ChildRegistrationPage() {
   }
 
   const [saving, setSaving] = useState<string>()
-  /** Лицо совпало с уже зарегистрированным ребёнком — спрашиваем сотрудника (близнецы). */
   const [duplicate, setDuplicate] = useState<{ child: Child; parent: Parent }>()
 
-  /*
-   * Порядок по контракту распознавания (docs/contracts/recognition.md):
-   * 1) поиск по фото — не зарегистрирован ли ребёнок уже; 2) создать карточку;
-   * 3) запомнить лицо (source=registration); если не получилось — карточка остаётся «без фото».
-   */
   const submit = async (override?: Child) => {
     try {
       if (photo && faceMode === 'service' && !override) {
@@ -410,11 +401,6 @@ export function ChildRegistrationPage() {
   )
 }
 
-/**
- * Лицо на фото совпало с уже зарегистрированным ребёнком. Обычно это повторная регистрация —
- * открываем карточку. Но у близнецов лица могут совпасть: тогда сотрудник подтверждает,
- * что это другой ребёнок, и это фиксируется в журнале действий (ТЗ §41).
- */
 function DuplicateModal({
   match,
   onClose,
@@ -426,7 +412,6 @@ function DuplicateModal({
   onOpen: (childId: string) => void
   onRegisterAnyway: (child: Child) => void
 }) {
-  // помним последнее совпадение, чтобы содержимое не пропадало во время анимации закрытия
   const [last, setLast] = useState(match)
   if (match && match !== last) setLast(match)
   const m = match ?? last

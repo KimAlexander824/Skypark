@@ -25,7 +25,6 @@ export const authApi = {
     return user
   },
 
-  /** Учётные записи для быстрого входа в демо-режиме. */
   demoAccounts() {
     return (['admin', 'staff', 'nanny'] as const).map((role) => db.employees.find((e) => e.role === role)!)
   },

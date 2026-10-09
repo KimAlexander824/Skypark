@@ -5,8 +5,6 @@ import path from 'node:path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  // Сервис распознавания (services/recognition). Наружу он не открыт, поэтому
-  // в разработке ходим через прокси: так нет проблем с CORS, а токен не попадает в браузер.
   const recognitionUrl = env.RECOGNITION_URL || 'http://localhost:8001'
   const recognitionToken = env.RECOGNITION_TOKEN
 

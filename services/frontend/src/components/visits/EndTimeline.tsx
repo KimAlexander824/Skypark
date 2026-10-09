@@ -6,14 +6,12 @@ import { cn, formatDuration, formatTime, fullName, plural } from '@/lib/format'
 import { visitTiming } from '@/lib/time'
 import { t, LOCALE } from '@/i18n'
 
-/** Цвет посещения по срочности: продлено — peri, ≤15 мин — blush, остальное — butter. */
 export const visitTone = (v: VisitListItem, now: number) =>
   v.status === 'extended' ? 'peri' : visitTiming(v, now).endingSoon || v.status === 'awaiting_extension' ? 'blush' : 'butter'
 
 export const toneBg = { butter: 'bg-butter-300', blush: 'bg-blush-300', peri: 'bg-peri-300' } as const
 export const toneSoft = { butter: 'bg-butter-200', blush: 'bg-blush-200', peri: 'bg-peri-200' } as const
 
-/* ---------- Timeline окончаний ---------- */
 
 interface TimelineEntry {
   id: string
@@ -33,7 +31,6 @@ export function EndTimeline({
   current?: VisitListItem[]
   completed?: VisitListItem[]
   now: number
-  /** Ссылки на карточку ребёнка — только для ролей с доступом к карточкам. */
   linkToChild?: boolean
   showAllLink?: boolean
   title?: string

@@ -7,7 +7,6 @@ export const notificationKeys = {
   unread: ['notifications', 'unread'] as const,
 }
 
-/** Список и счётчик обновляются раз в 30 секунд — так подхватываются события по таймеру (15 минут, автозавершение). */
 export const useNotifications = () =>
   useQuery({ queryKey: notificationKeys.list, queryFn: notificationsApi.list, refetchInterval: 30_000, placeholderData: (p) => p })
 

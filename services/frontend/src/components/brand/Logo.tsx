@@ -2,7 +2,6 @@ import { cn } from '@/lib/format'
 
 export const APP_NAME = 'Skypark'
 
-/** Знак логотипа появится позже — пока выводим только название. */
 export function Logo({ className, inverted }: { className?: string; inverted?: boolean }) {
   return (
     <div className={cn('flex items-center', className)}>

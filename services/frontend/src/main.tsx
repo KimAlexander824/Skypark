@@ -15,10 +15,6 @@ const queryClient = new QueryClient({
   },
 })
 
-/**
- * Смена языка без перезагрузки: корень перерисовывает всё дерево, а данные с переведёнными
- * текстами (ошибки, причины недоступности и т. п.) запрашиваются заново.
- */
 function LangRoot() {
   const lang = useLang()
   const prev = useRef(lang)
@@ -27,7 +23,6 @@ function LangRoot() {
     prev.current = lang
     queryClient.invalidateQueries()
   }, [lang])
-  // дерево создаётся здесь, а не приходит через children, — иначе React не стал бы его перерисовывать
   return (
     <>
       <BrowserRouter>

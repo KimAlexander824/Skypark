@@ -1,7 +1,6 @@
 import { useId } from 'react'
 import { cn } from '@/lib/format'
 
-/** Официальный знак Telegram — для мест, где речь об интеграции с Telegram (уведомления, привязка). */
 export function TelegramLogo({ className, title = 'Telegram' }: { className?: string; title?: string }) {
   const id = useId()
   return (

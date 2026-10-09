@@ -8,10 +8,6 @@ const WEEKDAYS = localized(() => ([t('Пн'), t('Вт'), t('Ср'), t('Чт'), t
 const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString()
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
-/**
- * Календарь выбора периода (ТЗ §24 — «произвольный период»).
- * Первый клик выбирает день, второй — конец периода.
- */
 export function MiniCalendar({ value, onChange }: { value: DateRange; onChange: (r: DateRange) => void }) {
   const [month, setMonth] = useState(() => new Date(value.to.getFullYear(), value.to.getMonth(), 1))
   const [anchor, setAnchor] = useState<Date | null>(null)

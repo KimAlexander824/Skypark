@@ -3,7 +3,6 @@ import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react'
 import { cn } from '@/lib/format'
 import { t } from '@/i18n'
 
-/* Дизайн v3 — Apple / liquid glass. */
 
 export type GlassTone = 'accent' | 'rose' | 'grape' | 'mint' | 'sky'
 
@@ -23,7 +22,6 @@ export const toneFill: Record<GlassTone, string> = {
   sky: 'bg-sky-500',
 }
 
-/** Стеклянная карточка. */
 export function GlassCard({ className, strong, ...props }: HTMLAttributes<HTMLDivElement> & { strong?: boolean }) {
   return <section className={cn('min-w-0 rounded-3xl', strong ? 'glass-strong' : 'glass', className)} {...props} />
 }
@@ -40,7 +38,6 @@ export function GlassHeader({ title, subtitle, action, className }: { title: Rea
   )
 }
 
-/** Цветная «пилюля» с иконкой — как маркеры в референсе. */
 export function ToneIcon({ tone, children, size = 'md' }: { tone: GlassTone; children: ReactNode; size?: 'sm' | 'md' }) {
   return (
     <span
@@ -55,7 +52,6 @@ export function ToneIcon({ tone, children, size = 'md' }: { tone: GlassTone; chi
   )
 }
 
-/** Изменение относительно прошлого периода. */
 export function Delta({ current, previous, invert }: { current: number; previous: number; invert?: boolean }) {
   if (!previous && !current) return <DeltaPill kind="flat">0%</DeltaPill>
   if (!previous) return <DeltaPill kind="up">{t('новое')}</DeltaPill>
@@ -82,7 +78,6 @@ function DeltaPill({ kind, children }: { kind: 'up' | 'down' | 'flat'; children:
   )
 }
 
-/** KPI-карточка: подпись, иконка, крупное число, сравнение. */
 export function StatTile({
   label,
   value,
@@ -117,7 +112,6 @@ export function StatTile({
   )
 }
 
-/** iOS segmented control со скользящим «пузырём». */
 export function GlassSegmented<T extends string>({
   value,
   onChange,
@@ -167,7 +161,6 @@ export function GlassSegmented<T extends string>({
   )
 }
 
-/** Небольшая стеклянная кнопка (белая) и акцентная (оранжевая). */
 export function GlassButton({
   variant = 'glass',
   className,

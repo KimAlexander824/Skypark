@@ -2,7 +2,6 @@ import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import type { SeriesPoint } from '@/api/analytics'
 import { cn } from '@/lib/format'
 
-/* Однoсерийные графики: метки — графит, без легенды (название серии — в заголовке карточки). */
 
 function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null)
@@ -16,7 +15,6 @@ function useWidth<T extends HTMLElement>() {
   return [ref, width] as const
 }
 
-/** Подписи оси X: первая, средняя и последняя, чтобы не было наложений. */
 const tickIndexes = (n: number) => (n <= 1 ? [0] : n <= 4 ? [...Array(n).keys()] : [0, Math.floor((n - 1) / 2), n - 1])
 
 function Tooltip({ x, y, label, value, width }: { x: number; y: number; label: string; value: string; width: number }) {
@@ -73,7 +71,6 @@ export function BarChart({
                     className={cn('fill-ink-900 transition-opacity', dim && 'opacity-35')}
                   />
                 )}
-                {/* зона наведения больше самой метки */}
                 <rect x={i * slot} y={0} width={slot} height={plotH} fill="transparent" onMouseEnter={() => setHover(i)} />
               </g>
             )

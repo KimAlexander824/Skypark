@@ -12,8 +12,6 @@ import { notificationEventLabel } from '@/lib/statuses'
 import type { NotificationEvent } from '@/types'
 import { t } from '@/i18n'
 
-// ТЗ §15, §30 — уведомления сотрудникам и родителям
-
 type Tab = 'staff' | 'parent'
 
 const eventIcon: Record<NotificationEvent, { icon: ReactNode; tint: string }> = {
@@ -31,8 +29,6 @@ export function NotificationsPage() {
   const { data, isLoading } = useNotifications()
   const qc = useQueryClient()
 
-  // Открыли страницу — уведомления сотрудникам прочитаны. Точки «новое» остаются,
-  // пока страница открыта: помним, что было непрочитанным в момент открытия.
   const unreadOnOpen = useRef<Set<string>>(undefined)
   useEffect(() => {
     if (!data) return

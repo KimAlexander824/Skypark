@@ -3,7 +3,6 @@ import { cn } from '@/lib/format'
 import { originOf, useTheme } from '@/lib/theme'
 import { t } from '@/i18n'
 
-/** Быстрое переключение светлой/тёмной темы. Полный выбор (включая «Как в системе») — в Настройках. */
 export function ThemeToggle({ className }: { className?: string }) {
   const { resolved, setTheme } = useTheme()
   const dark = resolved === 'dark'

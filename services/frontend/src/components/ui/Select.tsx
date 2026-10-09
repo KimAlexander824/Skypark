@@ -8,14 +8,12 @@ import { t } from '@/i18n'
 export interface SelectOption {
   value: string
   label: string
-  /** Иконка или цветная точка слева от подписи. */
   icon?: ReactNode
   hint?: string
 }
 
 export interface SelectProps {
   value: string
-  /** Совместимо с прежним нативным select: onChange({ target: { value } }). */
   onChange: (e: { target: { value: string } }) => void
   options: SelectOption[]
   label?: string
@@ -28,7 +26,6 @@ export interface SelectProps {
   className?: string
   containerClassName?: string
   id?: string
-  /** Иконка в пастельном кружке слева (например, часы у выбора времени). */
   leading?: ReactNode
 }
 
@@ -41,7 +38,6 @@ interface MenuPos {
 
 const MENU_MAX_H = 280
 
-/** Выпадающий список в стиле Skypark: кремовая панель, выбранный пункт — графитовый. */
 export function Select({
   value,
   onChange,
@@ -77,7 +73,6 @@ export function Select({
     const vh = window.innerHeight
     const below = vh - r.bottom
     const placement = below < panelHeight + 16 && r.top > below ? 'top' : 'bottom'
-    // панель всегда остаётся внутри экрана
     const rawTop = placement === 'bottom' ? r.bottom + 6 : r.top - 6 - panelHeight
     const top = Math.max(8, Math.min(rawTop, vh - panelHeight - 8))
     const width = Math.max(r.width, 180)
@@ -88,7 +83,6 @@ export function Select({
     if (!open) return
     place()
     const update = () => place()
-    // прокрутка страницы закрывает список (иначе он «прилипает» к краю экрана); прокрутка самого списка — нет
     const onScroll = (e: Event) => {
       if (!menuRef.current?.contains(e.target as Node)) setOpen(false)
     }
@@ -100,7 +94,6 @@ export function Select({
     }
   }, [open, place])
 
-  // клик вне списка закрывает его
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => {
@@ -147,7 +140,6 @@ export function Select({
       e.preventDefault()
       choose(active)
     } else if (e.key === 'Escape' || e.key === 'Tab') {
-      // Escape не должен закрывать модалку, в которой лежит селект
       if (e.key === 'Escape') e.stopPropagation()
       setOpen(false)
     }
@@ -244,7 +236,6 @@ export function Select({
   )
 }
 
-/** Цветная точка для пунктов списка. */
 export function OptionDot({ className }: { className: string }) {
   return <span className={cn('size-2.5 rounded-full ring-2 ring-white/60', className)} />
 }

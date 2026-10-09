@@ -119,7 +119,6 @@ export function VisitsPage() {
 }
 
 
-/* ---------- Карточка текущего посещения ---------- */
 
 type CardTone = 'accent' | 'rose' | 'mint'
 
@@ -170,7 +169,6 @@ function VisitCard({ visit, now, onFinish, onParentReply }: { visit: VisitListIt
   const expiredRef = useRef(false)
   const tone: CardTone = visit.status === 'extended' ? 'mint' : t.endingSoon || visit.status === 'awaiting_extension' ? 'rose' : 'accent'
 
-  // ТЗ §12 — по окончании времени посещение завершается автоматически
   useEffect(() => {
     if (t.over && !expiredRef.current) {
       expiredRef.current = true
@@ -269,13 +267,10 @@ function Info({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
-/* ---------- Досрочное завершение ---------- */
 
-/** Подтверждение в стиле iOS-алерта: таймер-кольцо, ребёнок и няня, две кнопки во всю ширину. */
 function FinishModal({ visit, now, onClose }: { visit?: VisitListItem; now: number; onClose: () => void }) {
   const user = useCurrentUser()
   const finish = useFinishVisit()
-  // помним последнее посещение, чтобы содержимое не пропадало во время анимации закрытия
   const last = useRef<VisitListItem | undefined>(visit)
   if (visit) last.current = visit
   const v = visit ?? last.current
@@ -363,7 +358,6 @@ function FinishModal({ visit, now, onClose }: { visit?: VisitListItem; now: numb
   )
 }
 
-/* ---------- История ---------- */
 
 function HistoryTable({ items, loading }: { items?: VisitListItem[]; loading: boolean }) {
   if (loading)

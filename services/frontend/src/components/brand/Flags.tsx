@@ -1,7 +1,6 @@
 import { useId, type ReactNode } from 'react'
 import type { Lang } from '@/i18n'
 
-/** Круглые флаги для выбора языка. Эмодзи-флаги Windows не рисует, поэтому SVG. */
 function RoundFlag({ className, children }: { className?: string; children: (clip: string) => ReactNode }) {
   const id = useId()
   return (

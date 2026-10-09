@@ -1,24 +1,18 @@
 import type { AppNotification, AppSettings, AuditEntry, Child, Discount, Employee, Nanny, News, Parent, PromoCode, Visit, WorkSchedule } from '@/types'
 
-/**
- * Временное хранилище до подключения backend.
- * Данные живут в localStorage, чтобы переживать перезагрузку страницы.
- */
 export interface MockDB {
   parents: Parent[]
   children: Child[]
   employees: Employee[]
   nannies: Nanny[]
   visits: Visit[]
-  passwords: Record<string, string> // employeeId → пароль
+  passwords: Record<string, string>
   settings: AppSettings
   schedule: WorkSchedule
   discounts: Discount[]
   promoCodes: PromoCode[]
   news: News[]
-  /** ТЗ §41 — журнал действий, новые записи первыми */
   audit: AuditEntry[]
-  /** ТЗ §30 — уведомления родителям и сотрудникам, новые первыми */
   notifications: AppNotification[]
 }
 
@@ -109,7 +103,6 @@ function seed(): MockDB {
     { id: 'v103', childId: 'c6', nannyId: 'n3', startAt: minutesAgo(40), durationMin: 120, endAt: addMin(minutesAgo(40), 120), status: 'active', price: 100_000, paymentStatus: 'paid', extensions: [], createdBy: 'e2' },
     { id: 'v104', childId: 'c8', nannyId: 'n2', startAt: minutesAgo(70), durationMin: 180, endAt: addMin(minutesAgo(70), 180), status: 'extended', price: 150_000, paymentStatus: 'paid', extensions: [{ id: 'v104-x', visitId: 'v104', minutes: 60, price: 50_000, paymentStatus: 'paid', createdAt: minutesAgo(10) }], createdBy: 'e2' },
   )
-  // у v104 есть продление — окончание сдвигается
   visits[visits.length - 1].endAt = addMin(visits[visits.length - 1].startAt, 240)
 
   visits.push(...generateHistory(children, nannies))
@@ -155,7 +148,6 @@ function seed(): MockDB {
   return out
 }
 
-/** Детерминированный генератор, чтобы история была одинаковой при каждом сбросе. */
 function mulberry32(seed: number) {
   return () => {
     seed |= 0
@@ -166,7 +158,6 @@ function mulberry32(seed: number) {
   }
 }
 
-/** История посещений за 45 дней для аналитики (включая утро сегодняшнего дня). */
 function generateHistory(children: Child[], nannies: Nanny[]): Visit[] {
   const rnd = mulberry32(42)
   const pick = <T,>(arr: T[]) => arr[Math.floor(rnd() * arr.length)]
@@ -179,7 +170,6 @@ function generateHistory(children: Child[], nannies: Nanny[]): Visit[] {
     const count = d === 0 ? 3 : Math.floor((weekend ? 8 : 4) + rnd() * 5)
     for (let i = 0; i < count; i++) {
       const dur = pick(durations)
-      // сегодня — только утренние посещения, уже завершённые
       const hour = d === 0 ? 10 + Math.floor(rnd() * 2) : 10 + Math.floor(rnd() * (21 - Math.ceil(dur / 60) - 10))
       const startAt = daysAgo(d, hour, pick([0, 15, 30, 45]))
       const id = `h${d}-${i}`
@@ -193,7 +183,6 @@ function generateHistory(children: Child[], nannies: Nanny[]): Visit[] {
       const cancelled = rnd() < 0.03
       const endAt = addMin(startAt, dur + paidExt)
       if (d === 0 && new Date(endAt).getTime() > Date.now()) continue
-      // ребёнок должен быть зарегистрирован до посещения
       const eligible = children.filter((c) => c.createdAt <= startAt)
       if (!eligible.length) continue
       out.push({
@@ -216,7 +205,6 @@ function generateHistory(children: Child[], nannies: Nanny[]): Visit[] {
   return out
 }
 
-/** Журнал по уже существующим данным — для демо-базы и баз, созданных до появления журнала. */
 function deriveAudit(d: Pick<MockDB, 'children' | 'visits' | 'nannies' | 'discounts' | 'promoCodes'>): AuditEntry[] {
   const out: AuditEntry[] = []
   const name = (c?: Child) => (c ? `${c.firstName} ${c.lastName}` : '—')
@@ -238,7 +226,6 @@ function deriveAudit(d: Pick<MockDB, 'children' | 'visits' | 'nannies' | 'discou
   return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 1000)
 }
 
-/** Демо-имена переведены на латиницу — для баз, сохранённых раньше. */
 const LATIN_NAMES: Record<string, string> = {
   Рахимова: 'Rahimov',
   Жасур: 'Jasur',
@@ -299,17 +286,14 @@ function load(): MockDB {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as MockDB
-      // базы, сохранённые до появления журнала и уведомлений
       parsed.audit ??= deriveAudit(parsed)
       parsed.notifications ??= []
-      // администратор e1 переименован — обновляем и уже сохранённую базу
       const admin = parsed.employees?.find((e) => e.id === 'e1')
       if (admin && (admin.firstName === 'Дилноза' || admin.firstName === 'Абдуллох')) admin.firstName = 'Abdulloh'
       latinizeNames(parsed)
       return parsed
     }
   } catch {
-    // повреждённые данные — пересоздаём
   }
   const fresh = seed()
   save(fresh)
@@ -320,7 +304,6 @@ function save(db: MockDB) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db))
   } catch {
-    // хранилище недоступно — работаем в памяти
   }
 }
 
@@ -335,5 +318,4 @@ export function resetMockDB() {
 
 export const uid = (prefix: string) => `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 
-/** Имитация сетевой задержки. */
 export const delay = (ms = 350) => new Promise((r) => setTimeout(r, ms + Math.random() * 150))

@@ -3,7 +3,6 @@ import { LangFlag } from '@/components/brand/Flags'
 import { LANGS, setLang, t, useLang } from '@/i18n'
 import { cn } from '@/lib/format'
 
-/** Выбор языка карточками — в личных настройках сотрудника и няни. Язык меняется сразу, без перезагрузки. */
 export function LanguagePicker() {
   const lang = useLang()
   return (

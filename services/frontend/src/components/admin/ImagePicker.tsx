@@ -3,7 +3,6 @@ import { ImagePlus, X } from 'lucide-react'
 import { cn } from '@/lib/format'
 import { t } from '@/i18n'
 
-/** Сжимает изображение до maxSide и возвращает JPEG data URL. */
 export function compressImage(file: File, maxSide = 960): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()

@@ -46,7 +46,6 @@ export default function App() {
       >
         <Route index element={<HomeRedirect />} />
 
-        {/* Ресепшн — ТЗ §5–12 */}
         <Route path="reception" element={<RequireAuth roles={[...reception]}><ReceptionPage /></RequireAuth>} />
         <Route path="children" element={<RequireAuth roles={[...reception]}><ChildrenListPage /></RequireAuth>} />
         <Route path="children/new" element={<RequireAuth roles={[...reception]}><ChildRegistrationPage /></RequireAuth>} />
@@ -54,14 +53,11 @@ export default function App() {
         <Route path="visits" element={<RequireAuth roles={[...reception]}><VisitsPage /></RequireAuth>} />
         <Route path="visits/new" element={<RequireAuth roles={[...reception]}><NewVisitPage /></RequireAuth>} />
 
-        {/* Няня — ТЗ §13 */}
         <Route path="notifications" element={<RequireAuth roles={[...reception]}><NotificationsPage /></RequireAuth>} />
         <Route path="nanny" element={<RequireAuth roles={['nanny']}><NannyPage /></RequireAuth>} />
 
-        {/* Личные настройки сотрудника и няни */}
         <Route path="settings" element={<RequireAuth roles={['staff', 'nanny']}><PreferencesPage /></RequireAuth>} />
 
-        {/* Администрирование — ТЗ §20–29 */}
         <Route path="admin" element={<RequireAuth roles={[...admin]}><DashboardPage /></RequireAuth>} />
         <Route path="admin/parents" element={<RequireAuth roles={[...admin]}><ParentsPage /></RequireAuth>} />
         <Route path="admin/nannies" element={<RequireAuth roles={[...admin]}><NanniesAdminPage /></RequireAuth>} />

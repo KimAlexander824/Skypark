@@ -1,9 +1,3 @@
-/*
- * Фоновая иллюстрация для экрана входа: «дашборд» из KPI-карточек, столбцов, линии и кольца.
- * Только белый с разной прозрачностью — картинка намеренно приглушённая, чтобы текст поверх читался.
- * Цвета зашиты: панель входа всегда тёмная, независимо от темы интерфейса.
- */
-
 const bars = [38, 56, 44, 72, 60, 88, 66, 94, 78, 58, 82, 70]
 const line = [30, 42, 36, 58, 50, 64, 61, 78, 72, 86, 80, 92]
 
@@ -42,9 +36,7 @@ export function AnalyticsArt({ className }: { className?: string }) {
 
       <rect width="760" height="900" fill="url(#aa-grid)" />
 
-      {/* слегка наклонённая «панель» с графиками */}
       <g transform="translate(70 120) rotate(-8 310 330)" filter="url(#aa-soft)">
-        {/* KPI-карточки */}
         {[0, 1, 2].map((i) => (
           <g key={i} transform={`translate(${i * 184} 0)`}>
             <rect width="168" height="96" rx="22" fill="#fff" fillOpacity="0.06" stroke="#fff" strokeOpacity="0.12" />
@@ -55,7 +47,6 @@ export function AnalyticsArt({ className }: { className?: string }) {
           </g>
         ))}
 
-        {/* столбцы */}
         <g transform="translate(0 124)">
           <rect width="352" height="250" rx="26" fill="#fff" fillOpacity="0.05" stroke="#fff" strokeOpacity="0.12" />
           <rect x="24" y="24" width="120" height="10" rx="5" fill="#fff" fillOpacity="0.4" />
@@ -68,7 +59,6 @@ export function AnalyticsArt({ className }: { className?: string }) {
           ))}
         </g>
 
-        {/* кольцо */}
         <g transform="translate(368 124)">
           <rect width="184" height="250" rx="26" fill="#fff" fillOpacity="0.05" stroke="#fff" strokeOpacity="0.12" />
           <circle cx="92" cy="112" r="54" fill="none" stroke="#fff" strokeOpacity="0.1" strokeWidth="16" />
@@ -89,7 +79,6 @@ export function AnalyticsArt({ className }: { className?: string }) {
           <rect x="28" y="212" width="92" height="8" rx="4" fill="#fff" fillOpacity="0.14" />
         </g>
 
-        {/* линия с заливкой */}
         <g transform="translate(0 398)">
           <rect width="552" height="220" rx="26" fill="#fff" fillOpacity="0.05" stroke="#fff" strokeOpacity="0.12" />
           <rect x="24" y="24" width="140" height="10" rx="5" fill="#fff" fillOpacity="0.4" />

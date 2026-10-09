@@ -18,7 +18,6 @@ type View = 'cards' | 'table'
 
 const paidExtMinutes = (v: VisitListItem) => v.extensions.filter((e) => e.paymentStatus === 'paid').reduce((s, e) => s + e.minutes, 0)
 
-/** ТЗ §13 — информация о продлении для няни. */
 function extensionInfo(v: VisitListItem): { text: string; tone: 'peri' | 'blush' | 'muted' } {
   const ext = paidExtMinutes(v)
   if (v.extensions.some((e) => e.paymentStatus === 'pending')) return { text: tr('Продление ждёт оплаты'), tone: 'blush' }
@@ -39,7 +38,6 @@ export function NannyPage() {
 
   const current = data?.current ?? []
 
-  // ТЗ §16 — за 15 минут до конца предупреждаем няню; по окончании — обновляем список
   useEffect(() => {
     for (const v of current) {
       const t = visitTiming(v, now)
@@ -64,7 +62,6 @@ export function NannyPage() {
     <div className="animate-slide-up">
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0">
-          {/* Заголовок */}
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-[28px] leading-tight font-extrabold tracking-tight text-ink-900 sm:text-[32px]">
@@ -98,7 +95,6 @@ export function NannyPage() {
             )}
           </div>
 
-          {/* Показатели */}
           <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <PastelStat
               tone="butter"
@@ -123,7 +119,6 @@ export function NannyPage() {
             <PastelStat tone="olive" icon={<CircleCheckBig />} label={tr('Завершено сегодня')} value={data ? data.completedToday.length : undefined} />
           </div>
 
-          {/* Мои дети */}
           <section className="glass rounded-3xl p-4 sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-[19px] font-extrabold text-ink-900">{tr('Мои дети')}</h2>
@@ -158,7 +153,6 @@ export function NannyPage() {
           </section>
         </div>
 
-        {/* Правая колонка */}
         <aside className="flex flex-col gap-5">
           <EndTimeline current={data?.current} completed={data?.completedToday} now={now} linkToChild={false} showAllLink={false} title={tr('Мои окончания')} />
           <CompletedToday visits={data?.completedToday} />
@@ -168,7 +162,6 @@ export function NannyPage() {
   )
 }
 
-/* ---------- Компоненты ---------- */
 
 
 const cardTint = {
@@ -243,7 +236,6 @@ function ChildCard({ visit, now }: { visit: VisitListItem; now: number }) {
   )
 }
 
-/** Табличный вид — как в примере ТЗ §13. */
 function KidsTable({ visits, now }: { visits: VisitListItem[]; now: number }) {
   return (
     <div className="overflow-x-auto">

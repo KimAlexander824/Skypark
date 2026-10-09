@@ -11,13 +11,7 @@ import { visitTiming } from '@/lib/time'
 import type { Extension } from '@/types'
 import { t } from '@/i18n'
 
-/**
- * Демо Telegram-бота для родителя (ТЗ §16–18, сценарии §37, §38).
- * Пока бота нет, сотрудник может пройти сценарий за родителя: окно повторяет
- * сообщения и кнопки бота и вызывает те же методы API, что будет вызывать бот.
- */
 export function TelegramExtensionDemo({ visit, onClose }: { visit?: VisitListItem; onClose: () => void }) {
-  // помним последнее посещение, чтобы содержимое не пропадало во время анимации закрытия
   const last = useRef<VisitListItem | undefined>(visit)
   if (visit) last.current = visit
   const v = visit ?? last.current

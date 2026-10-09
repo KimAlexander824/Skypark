@@ -6,7 +6,6 @@ import { LANGS, setLang, useLang } from '@/i18n'
 import { cn } from '@/lib/format'
 import { usePopover } from './usePopover'
 
-/** Выбор языка: кнопка с флагом текущего языка и выпадающий список. Язык меняется сразу, без перезагрузки. */
 export function LanguageSwitch({ className }: { className?: string }) {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)

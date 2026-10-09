@@ -1,7 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 import { cn, initials } from '@/lib/format'
 
-/* ---------- Card ---------- */
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('glass min-w-0 rounded-3xl', className)} {...props} />
@@ -32,7 +31,6 @@ export function CardHeader({
   )
 }
 
-/* ---------- IconTile ---------- */
 
 type Tone = 'brand' | 'violet' | 'sun' | 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 
@@ -63,7 +61,6 @@ export function IconTile({ tone = 'brand', size = 'md', children }: { tone?: Ton
   )
 }
 
-/* ---------- Badge ---------- */
 
 const badgeTones: Record<Tone, string> = {
   brand: 'bg-accent-50 text-accent-700',
@@ -124,9 +121,7 @@ export function Badge({
 
 export type { Tone }
 
-/* ---------- Avatar ---------- */
 
-// Пастельные плашки с инициалами — как в референсе
 const gradients = ['bg-accent-100 text-accent-700', 'bg-rose-100 text-rose-500', 'bg-grape-100 text-grape-500', 'bg-mint-100 text-mint-600', 'bg-sky-100 text-sky-500']
 
 const hash = (s: string) => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7)
@@ -169,7 +164,6 @@ export function Avatar({
   )
 }
 
-/* ---------- Skeleton / EmptyState / Spinner ---------- */
 
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('animate-pulse rounded-xl bg-mist-200/70', className)} />
@@ -202,7 +196,6 @@ export function EmptyState({
 }
 
 
-/* ---------- PageHeader ---------- */
 
 export function PageHeader({
   title,

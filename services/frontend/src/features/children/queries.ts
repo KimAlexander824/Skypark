@@ -24,10 +24,6 @@ export function useRegisterChild() {
   })
 }
 
-/**
- * Добавить фото для распознавания позже — если при регистрации лицо не сохранилось
- * (сервис отклонил фото) или фото пропустили. Порядок как при регистрации: enroll(registration) → отметка в карточке.
- */
 export function useAddFacePhoto(childId: ID) {
   const qc = useQueryClient()
   return useMutation({

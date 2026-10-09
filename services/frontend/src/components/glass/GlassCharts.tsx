@@ -3,10 +3,6 @@ import type { SeriesPoint } from '@/api/analytics'
 import { cn } from '@/lib/format'
 import { t } from '@/i18n'
 
-/*
- * Графики v3. Одна серия — нейтральные «пилюли», активная (наведённая или максимум) — оранжевая со штриховкой.
- * Легенда для одной серии не нужна: её называет заголовок карточки.
- */
 
 function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null)
@@ -53,7 +49,7 @@ export function PillBarChart({
   const axisLeft = 34
   const axisBottom = 22
   const plotW = Math.max(0, width - axisLeft)
-  const top = 48 // место под подсказку над столбцом
+  const top = 48
   const plotH = height - axisBottom - top
   const rawMax = Math.max(1, ...data.map((d) => d.value))
   const step = Math.max(1, Math.ceil(rawMax / yTicks))
@@ -67,7 +63,6 @@ export function PillBarChart({
     <div ref={ref} className="relative w-full select-none" style={{ height }} onMouseLeave={() => setHover(null)} role="img" aria-label={ariaLabel}>
       {width > 0 && (
         <>
-          {/* сетка и ось Y — приглушённые */}
           {Array.from({ length: yTicks + 1 }, (_, i) => {
             const y = top + plotH - (i / yTicks) * plotH
             return (
@@ -91,7 +86,6 @@ export function PillBarChart({
                   )}
                   style={{ left: x, width: barW, height: h, top: top + plotH - h }}
                 />
-                {/* зона наведения шире столбца */}
                 <div className="absolute cursor-pointer" style={{ left: axisLeft + i * slot, width: slot, top: 0, height: plotH + top }} onMouseEnter={() => setHover(i)} />
               </div>
             )
@@ -120,7 +114,6 @@ export function PillBarChart({
   )
 }
 
-/** Плавная линия с мягкой оранжевой заливкой. */
 export function GlassAreaChart({ data, height = 160, format = String, ariaLabel }: { data: SeriesPoint[]; height?: number; format?: (v: number) => string; ariaLabel: string }) {
   const [ref, width] = useWidth<HTMLDivElement>()
   const [hover, setHover] = useState<number | null>(null)
@@ -130,7 +123,6 @@ export function GlassAreaChart({ data, height = 160, format = String, ariaLabel 
   const step = data.length > 1 ? width / (data.length - 1) : 0
   const pts = data.map((d, i) => [data.length > 1 ? i * step : width / 2, plotH - (d.value / max) * (plotH - 12)] as const)
 
-  // сглаживание (catmull-rom → bezier)
   const path = pts
     .map(([x, y], i) => {
       if (i === 0) return `M${x},${y}`
@@ -188,7 +180,6 @@ export function GlassAreaChart({ data, height = 160, format = String, ariaLabel 
   )
 }
 
-/** Кольцевая диаграмма с зазорами и скруглёнными концами. Подписи и значения — в легенде рядом. */
 export function Donut({
   segments,
   size = 168,
@@ -239,13 +230,7 @@ export function Donut({
   )
 }
 
-/* ---------- Сравнение с прошлым периодом ---------- */
 
-/**
- * Посещения по интервалам: в каждом слоте рядом стоят прошлый период (серая «пилюля»)
- * и текущий (оранжевая). Будущие часы сегодняшнего дня — пустые пунктирные дорожки,
- * текущий час отмечен точкой под подписью. Наведение подсвечивает слот и показывает сравнение.
- */
 export function ComparisonBarChart({
   current,
   previous,
@@ -273,16 +258,13 @@ export function ComparisonBarChart({
   const max = step * yTicks
   const slotW = n ? Math.max(0, width - axisLeft) / n : 0
   const barW = Math.max(4, Math.min(16, slotW * 0.26))
-  // последний наступивший слот — «сейчас» (только когда в серии есть будущие слоты)
   const firstFuture = current.findIndex((d) => d.future)
   const nowIndex = firstFuture > 0 ? firstFuture - 1 : -1
-  // подписи: все, если помещаются, иначе — равномерная выборка
   const labelEvery = slotW >= 38 ? 1 : Math.ceil(38 / Math.max(1, slotW))
   const pct = (v: number) => `${(v / max) * 100}%`
 
   return (
     <div ref={ref} role="img" aria-label={ariaLabel} className="relative w-full select-none" style={{ height }} onMouseLeave={() => setHover(null)}>
-      {/* сетка и ось Y */}
       {Array.from({ length: yTicks + 1 }, (_, i) => (
         <div key={i} className="pointer-events-none absolute inset-x-0 flex h-0 items-center" style={{ top: top + plotH - (i / yTicks) * plotH }}>
           <span className="tabular w-[22px] text-right text-[10.5px] font-semibold text-mist-400">{i * step}</span>
@@ -299,7 +281,6 @@ export function ComparisonBarChart({
             const showLabel = i % labelEvery === 0 || isNow
             return (
               <div key={d.key} className="relative flex-1" onMouseEnter={() => setHover(i)}>
-                {/* подсветка слота */}
                 <div
                   className={cn('absolute inset-x-[10%] rounded-xl bg-mist-200/50 transition-opacity duration-200', active ? 'opacity-100' : 'opacity-0')}
                   style={{ top, height: plotH }}
