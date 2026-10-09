@@ -1,10 +1,12 @@
 import {
   BadgePercent,
   Baby,
+  Bell,
   CalendarClock,
   ClipboardList,
   CreditCard,
   HeartHandshake,
+  History,
   LayoutDashboard,
   Megaphone,
   Newspaper,
@@ -26,6 +28,8 @@ export interface NavItem {
   icon: LucideIcon
   roles: Role[]
   end?: boolean
+  /** Счётчик справа от пункта */
+  badge?: 'unreadNotifications'
 }
 
 export interface NavGroup {
@@ -64,6 +68,13 @@ export const navigation: NavGroup[] = [
     ],
   },
   {
+    id: 'notifications',
+    title: 'Уведомления',
+    icon: Bell,
+    flat: true,
+    items: [{ to: '/notifications', label: 'Уведомления', icon: Bell, roles: ['staff', 'admin'], badge: 'unreadNotifications' }],
+  },
+  {
     id: 'people',
     title: 'Люди',
     icon: Contact,
@@ -95,6 +106,7 @@ export const navigation: NavGroup[] = [
     icon: Settings2,
     items: [
       { to: '/admin/schedule', label: 'Время работы', icon: CalendarClock, roles: ['admin'] },
+      { to: '/admin/audit', label: 'Журнал действий', icon: History, roles: ['admin'] },
       { to: '/admin/settings', label: 'Настройки', icon: Settings, roles: ['admin'] },
       { to: '/settings', label: 'Настройки', icon: Settings, roles: ['staff', 'nanny'] },
     ],

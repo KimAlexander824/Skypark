@@ -10,23 +10,30 @@ import {
   Play,
   RefreshCw,
   Search,
+  Tag,
+  X,
   Timer,
   UsersRound,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ChildListItem } from '@/api/children'
 import { errorMessage } from '@/api/errors'
-import { checkWorkHours, priceFor, type NannyWithLoad } from '@/api/visits'
+import { checkWorkHours, discountAmount, priceFor, pricingApi, type NannyWithLoad } from '@/api/visits'
 import { Button } from '@/components/ui/Button'
 import { Avatar, Badge, Card, EmptyState, PageHeader, Skeleton } from '@/components/ui/Display'
 import { Input } from '@/components/ui/Field'
+import { Select } from '@/components/ui/Select'
 import { useCurrentUser } from '@/features/auth/AuthProvider'
 import { useChildren } from '@/features/children/queries'
-import { useCreateVisit, useNannies, useVisitSettings } from '@/features/visits/queries'
+import { useActiveDiscounts, useCreateVisit, useNannies, useVisitSettings } from '@/features/visits/queries'
 import { cn, formatAge, formatDuration, formatMoney, formatPhone, formatTime, fullName, plural } from '@/lib/format'
 import { nannyStatus } from '@/lib/statuses'
 import { addMinutes, useNow } from '@/lib/time'
 import { TelegramLogo } from '@/components/brand/TelegramLogo'
+import type { Discount, PromoCode } from '@/types'
+
+/** Что применено к цене: скидка или промокод (ТЗ §27, §28). */
+type Adjustment = { source: 'discount'; item: Discount } | { source: 'promo'; item: PromoCode }
 
 export function NewVisitPage() {
   const user = useCurrentUser()
@@ -35,6 +42,7 @@ export function NewVisitPage() {
   const childId = params.get('childId')
   const [nannyId, setNannyId] = useState<string>()
   const [duration, setDuration] = useState<number>()
+  const [adjustment, setAdjustment] = useState<Adjustment>()
 
   const { data: children } = useChildren({})
   const { data: nannies, isLoading: nanniesLoading, refetch: refetchNannies, isFetching: nanniesFetching } = useNannies()
@@ -55,10 +63,25 @@ export function NewVisitPage() {
   const childBusy = Boolean(child?.activeVisit)
   const ready = child && nanny?.available && duration && !hoursError && !childBusy
 
+  // промокод проверяется для конкретного родителя — при смене ребёнка сбрасываем
+  useEffect(() => {
+    setAdjustment((a) => (a?.source === 'promo' ? undefined : a))
+  }, [childId])
+
+  const basePrice = settings && duration ? priceFor(duration, settings) : undefined
+  const discount = adjustment && basePrice !== undefined ? discountAmount(adjustment.item.kind, adjustment.item.value, basePrice) : 0
+
   const submit = async () => {
     if (!ready) return
     try {
-      await create.mutateAsync({ childId: child.id, nannyId: nanny.id, durationMin: duration, createdBy: user.id })
+      await create.mutateAsync({
+        childId: child.id,
+        nannyId: nanny.id,
+        durationMin: duration,
+        createdBy: user.id,
+        discountId: adjustment?.source === 'discount' ? adjustment.item.id : undefined,
+        promoCode: adjustment?.source === 'promo' ? adjustment.item.code : undefined,
+      })
       toast.success('Посещение началось', { description: `${fullName(child)} · ${fullName(nanny)} · ${formatDuration(duration)}` })
       // ТЗ §15 п.1, §44 — уведомление родителю
       if (child.parent.telegram?.linked) toast.info('Родителю отправлено уведомление в Telegram', { icon: <TelegramLogo className="size-8" /> })
@@ -186,7 +209,9 @@ export function NewVisitPage() {
           child={child}
           nanny={nanny}
           duration={duration}
-          price={settings && duration ? priceFor(duration, settings) : undefined}
+          basePrice={basePrice}
+          discount={discount}
+          discountSlot={<DiscountPicker parentId={child?.parentId} value={adjustment} onChange={setAdjustment} amount={basePrice !== undefined ? discount : undefined} />}
           now={now}
           ready={Boolean(ready)}
           loading={create.isPending}
@@ -386,7 +411,9 @@ function Summary({
   child,
   nanny,
   duration,
-  price,
+  basePrice,
+  discount,
+  discountSlot,
   now,
   ready,
   loading,
@@ -395,7 +422,9 @@ function Summary({
   child?: ChildListItem
   nanny?: NannyWithLoad
   duration?: number
-  price?: number
+  basePrice?: number
+  discount: number
+  discountSlot: ReactNode
   now: number
   ready: boolean
   loading: boolean
@@ -407,7 +436,10 @@ function Summary({
       <Card className="sticky top-24 overflow-hidden">
         <div className="glass-accent relative px-5 pt-5 pb-6">
           <div className="text-[13px] font-semibold text-snow/70">Итого к посещению</div>
-          <div className="tabular mt-1 text-[32px] leading-none font-extrabold">{price !== undefined ? formatMoney(price) : '—'}</div>
+          <div className="mt-1 flex items-baseline gap-2.5">
+            <span className="tabular text-[32px] leading-none font-extrabold">{basePrice !== undefined ? formatMoney(basePrice - discount) : '—'}</span>
+            {basePrice !== undefined && discount > 0 && <s className="tabular text-sm font-semibold text-snow/60">{formatMoney(basePrice)}</s>}
+          </div>
           <div className="mt-4 flex items-center gap-4 text-sm">
             <div>
               <div className="text-xs text-snow/60">Начало</div>
@@ -441,6 +473,7 @@ function Summary({
             }
           />
         </dl>
+        {discountSlot}
         <div className="p-5 pt-3">
           <Button size="lg" className="w-full" disabled={!ready} loading={loading} onClick={onSubmit} leftIcon={<Play />}>
             Начать посещение
@@ -459,6 +492,109 @@ function Row({ label, value }: { label: string; value?: ReactNode }) {
     <div className="flex items-center justify-between gap-3 py-3">
       <dt className="text-ink-500">{label}</dt>
       <dd className={cn('truncate text-right font-semibold', value ? 'text-ink-900' : 'text-ink-300')}>{value ?? 'не выбрано'}</dd>
+    </div>
+  )
+}
+
+/* ---------- Скидка или промокод (ТЗ §27, §28) ---------- */
+
+function DiscountPicker({
+  parentId,
+  value,
+  onChange,
+  amount,
+}: {
+  parentId?: string
+  value?: Adjustment
+  onChange: (a?: Adjustment) => void
+  amount?: number
+}) {
+  const { data: discounts } = useActiveDiscounts()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState<string>()
+  const [checking, setChecking] = useState(false)
+
+  const applyPromo = async () => {
+    if (!parentId || !code.trim()) return
+    setChecking(true)
+    try {
+      const res = await pricingApi.checkPromo(code, parentId)
+      if (res.valid) {
+        onChange({ source: 'promo', item: res.promo })
+        setCode('')
+        setError(undefined)
+      } else setError(res.reason)
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  if (value) {
+    const label = value.source === 'promo' ? `Промокод ${value.item.code}` : value.item.name
+    const size = value.item.kind === 'percent' ? `${value.item.value}%` : formatMoney(value.item.value)
+    return (
+      <div className="border-t border-cream-200 px-5 py-4">
+        <div className="flex items-center gap-3 rounded-2xl bg-mint-50 px-3.5 py-2.5 ring-1 ring-mint-100">
+          <Tag className="size-4 shrink-0 text-mint-600" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-bold text-ink-900">{label}</div>
+            <div className="tabular text-xs font-semibold text-mint-600">
+              {size}
+              {amount ? ` · −${formatMoney(amount)}` : ''}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange(undefined)}
+            aria-label="Убрать скидку"
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-mist-500 transition hover:bg-white hover:text-ink-900"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        {value.source === 'discount' && value.item.conditions && (
+          <p className="mt-2 text-xs leading-snug font-medium text-ink-500">Условие: {value.item.conditions}</p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5 border-t border-cream-200 px-5 py-4">
+      <div className="text-xs font-semibold text-ink-500">Скидка или промокод</div>
+      <Select
+        size="sm"
+        value=""
+        placeholder={discounts?.length === 0 ? 'Нет действующих скидок' : 'Выбрать скидку'}
+        disabled={!discounts?.length}
+        onChange={(e) => {
+          const d = discounts?.find((x) => x.id === e.target.value)
+          if (d) onChange({ source: 'discount', item: d })
+        }}
+        options={(discounts ?? []).map((d) => ({
+          value: d.id,
+          label: d.name,
+          hint: d.kind === 'percent' ? `${d.value}%` : formatMoney(d.value),
+        }))}
+      />
+      <div className="flex items-start gap-2">
+        <Input
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value.toUpperCase())
+            setError(undefined)
+          }}
+          onKeyDown={(e) => e.key === 'Enter' && applyPromo()}
+          placeholder="Промокод"
+          disabled={!parentId}
+          containerClassName="flex-1"
+          className="uppercase placeholder:normal-case"
+          error={error}
+        />
+        <Button variant="secondary" onClick={applyPromo} loading={checking} disabled={!parentId || !code.trim()}>
+          Применить
+        </Button>
+      </div>
     </div>
   )
 }

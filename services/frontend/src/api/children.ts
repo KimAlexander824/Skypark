@@ -2,6 +2,7 @@ import type { Child, Gender, ID, Nanny, Parent, Visit } from '@/types'
 import { normalizePhone } from '@/lib/format'
 import { isOngoing } from '@/lib/time'
 import { ApiError } from './errors'
+import { audit } from './journal'
 import { db, delay, persist, uid } from './mock/db'
 import { syncVisits } from './visits'
 
@@ -152,6 +153,7 @@ export const childrenApi = {
       createdBy: input.createdBy,
     }
     db.children.push(child)
+    audit({ action: 'child_registered', actorId: input.createdBy, subject: `${child.firstName} ${child.lastName}`, link: `/children/${child.id}` })
     persist()
     return child
   },

@@ -20,8 +20,10 @@ const paidExtMinutes = (v: VisitListItem) => v.extensions.filter((e) => e.paymen
 /** ТЗ §13 — информация о продлении для няни. */
 function extensionInfo(v: VisitListItem): { text: string; tone: 'peri' | 'blush' | 'muted' } {
   const ext = paidExtMinutes(v)
-  if (ext > 0) return { text: `Продлено +${formatDuration(ext)}`, tone: 'peri' }
+  if (v.extensions.some((e) => e.paymentStatus === 'pending')) return { text: 'Продление ждёт оплаты', tone: 'blush' }
   if (v.status === 'awaiting_extension') return { text: 'Ждём решения родителя', tone: 'blush' }
+  if (v.extensionDeclined?.endAt === v.endAt) return { text: ext > 0 ? `Продлено +${formatDuration(ext)}, дальше без продления` : 'Родитель не продлевает', tone: 'muted' }
+  if (ext > 0) return { text: `Продлено +${formatDuration(ext)}`, tone: 'peri' }
   return { text: 'Без продления', tone: 'muted' }
 }
 

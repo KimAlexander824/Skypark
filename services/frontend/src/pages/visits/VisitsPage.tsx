@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/Button'
 import { PastelStat } from '@/components/admin/AdminKit'
 import { GlassCard } from '@/components/glass/Glass'
 import { TelegramLogo } from '@/components/brand/TelegramLogo'
+import { TelegramExtensionDemo } from '@/components/visits/TelegramExtensionDemo'
 import { Avatar, Badge, Card, EmptyState, PageHeader, Skeleton } from '@/components/ui/Display'
 import { Modal, Segmented } from '@/components/ui/Overlay'
 import { useCurrentUser } from '@/features/auth/AuthProvider'
@@ -34,6 +35,7 @@ export function VisitsPage() {
   const [params, setParams] = useSearchParams()
   const scope = (params.get('tab') as VisitsScope) || 'current'
   const [finishing, setFinishing] = useState<VisitListItem>()
+  const [extendingId, setExtendingId] = useState<string>()
 
   const current = useVisits('current')
   const history = useVisits(scope === 'current' ? 'completed' : scope)
@@ -101,7 +103,7 @@ export function VisitsPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {active.map((v) => (
-              <VisitCard key={v.id} visit={v} now={now} onFinish={() => setFinishing(v)} />
+              <VisitCard key={v.id} visit={v} now={now} onFinish={() => setFinishing(v)} onParentReply={() => setExtendingId(v.id)} />
             ))}
           </div>
         )
@@ -110,6 +112,7 @@ export function VisitsPage() {
       )}
 
       <FinishModal visit={finishing} now={now} onClose={() => setFinishing(undefined)} />
+      <TelegramExtensionDemo visit={active.find((v) => v.id === extendingId)} onClose={() => setExtendingId(undefined)} />
     </div>
   )
 }
@@ -156,11 +159,13 @@ function ProgressRing({ value, tone, children }: { value: number; tone: CardTone
   )
 }
 
-function VisitCard({ visit, now, onFinish }: { visit: VisitListItem; now: number; onFinish: () => void }) {
+function VisitCard({ visit, now, onFinish, onParentReply }: { visit: VisitListItem; now: number; onFinish: () => void; onParentReply: () => void }) {
   const qc = useQueryClient()
   const t = visitTiming(visit, now)
   const st = visitStatus[visit.status]
   const extMin = visit.extensions.filter((e) => e.paymentStatus === 'paid').reduce((s, e) => s + e.minutes, 0)
+  const pendingExt = visit.extensions.find((e) => e.paymentStatus === 'pending')
+  const declined = visit.extensionDeclined?.endAt === visit.endAt
   const expiredRef = useRef(false)
   const tone: CardTone = visit.status === 'extended' ? 'mint' : t.endingSoon || visit.status === 'awaiting_extension' ? 'rose' : 'accent'
 
@@ -204,7 +209,11 @@ function VisitCard({ visit, now, onFinish }: { visit: VisitListItem; now: number
           <Info
             label="Продление"
             value={
-              extMin > 0 ? (
+              pendingExt ? (
+                <span className="text-sun-600">ждёт оплаты</span>
+              ) : declined ? (
+                <span className="text-rose-500">{extMin > 0 ? `+${formatDuration(extMin)}, дальше отказ` : 'отказ'}</span>
+              ) : extMin > 0 ? (
                 <span className="inline-flex items-center gap-1 text-mint-600">
                   <TimerReset className="size-3.5" />+{formatDuration(extMin)}
                 </span>
@@ -215,6 +224,20 @@ function VisitCard({ visit, now, onFinish }: { visit: VisitListItem; now: number
           />
         </dl>
       </div>
+
+      {visit.status === 'awaiting_extension' && (
+        <div className="mx-5 mb-4 flex items-center gap-3 rounded-2xl bg-rose-50 px-3.5 py-2.5 ring-1 ring-rose-100">
+          <TelegramLogo className={cn('size-7', !visit.parent.telegram?.linked && 'opacity-40 grayscale')} />
+          <div className="min-w-0 flex-1 text-[12.5px] leading-snug font-semibold text-ink-800">
+            {visit.parent.telegram?.linked ? 'Родителю предложено продление' : 'Telegram не привязан — спросите родителя лично'}
+          </div>
+          {visit.parent.telegram?.linked && (
+            <button type="button" onClick={onParentReply} className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-sky-500 transition hover:bg-white/70">
+              Ответ родителя
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="mt-auto flex items-center gap-3 border-t border-white/80 bg-white/40 px-5 py-3">
         {visit.nanny && (
@@ -372,7 +395,7 @@ function HistoryTable({ items, loading }: { items?: VisitListItem[]; loading: bo
             {items.map((v) => {
               const st = visitStatus[v.status]
               const pay = paymentStatus[v.paymentStatus]
-              const ext = v.extensions.reduce((s, e) => s + e.minutes, 0)
+              const ext = v.extensions.filter((e) => e.paymentStatus === 'paid').reduce((s, e) => s + e.minutes, 0)
               const early = v.endedAt && new Date(v.endedAt) < new Date(v.endAt)
               return (
                 <tr key={v.id} className="transition hover:bg-cream-100">
@@ -396,6 +419,11 @@ function HistoryTable({ items, loading }: { items?: VisitListItem[]; loading: bo
                   </td>
                   <td className="px-3 py-3 text-right">
                     <div className="tabular font-semibold text-ink-900">{formatMoney(visitTotalPrice(v))}</div>
+                    {v.discount && (
+                      <div className="truncate text-xs font-medium text-mint-600" title={v.discount.label}>
+                        −{formatMoney(v.discount.amount)} · {v.discount.label}
+                      </div>
+                    )}
                     <div className={cn('text-xs font-medium', pay.tone === 'success' ? 'text-success-600' : 'text-ink-500')}>{pay.label}</div>
                   </td>
                   <td className="px-3 py-3 text-ink-600">{v.status === 'cancelled' ? '—' : (v.endedByName ?? 'Автоматически')}</td>

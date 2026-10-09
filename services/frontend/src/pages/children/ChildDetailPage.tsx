@@ -69,7 +69,7 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
   const stats = {
     visits: visits.filter((v) => v.status !== 'cancelled').length,
     minutes: done.reduce((s, v) => s + totalMinutes(v), 0),
-    extensions: visits.reduce((s, v) => s + v.extensions.length, 0),
+    extensions: visits.reduce((s, v) => s + v.extensions.filter((e) => e.paymentStatus === 'paid').length, 0),
     paid: visits.filter((v) => v.paymentStatus === 'paid').reduce((s, v) => s + totalPrice(v), 0),
   }
 
@@ -295,7 +295,7 @@ function VisitsTable({ visits }: { visits: VisitWithNanny[] }) {
         </thead>
         <tbody className="divide-y divide-cream-200">
           {visits.map((v) => {
-            const ext = v.extensions.reduce((s, e) => s + e.minutes, 0)
+            const ext = v.extensions.filter((e) => e.paymentStatus === 'paid').reduce((s, e) => s + e.minutes, 0)
             const st = visitStatus[v.status]
             const pay = paymentStatus[v.paymentStatus]
             return (

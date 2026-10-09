@@ -103,6 +103,24 @@ export interface Visit {
   createdBy: ID
   endedAt?: ISODate
   endedBy?: ID
+  /** ТЗ §18 — родитель отказался от продления; endAt — окончание, от продления которого отказались. */
+  extensionDeclined?: { at: ISODate; endAt: ISODate }
+  /** ТЗ §27–28 — цена до скидки; price — итог с учётом скидки. */
+  basePrice?: number
+  discount?: VisitDiscount
+}
+
+/** Скидка или промокод, применённые к посещению (ТЗ §27, §28, §41 — кто применил). */
+export interface VisitDiscount {
+  source: 'discount' | 'promo'
+  id: ID
+  /** Название скидки или код промокода */
+  label: string
+  kind: DiscountKind
+  value: number
+  /** Сумма скидки, сум */
+  amount: number
+  appliedBy: ID
 }
 
 export interface Session {
@@ -195,4 +213,55 @@ export interface News {
   publishAt: ISODate
   status: NewsStatus
   createdAt: ISODate
+}
+
+/* ---------- Журнал действий (ТЗ §41) ---------- */
+
+export type AuditAction =
+  | 'child_registered'
+  | 'visit_created'
+  | 'visit_finished'
+  | 'visit_extended'
+  | 'extension_declined'
+  | 'discount_applied'
+  | 'discount_saved'
+  | 'promo_saved'
+
+export interface AuditEntry {
+  id: ID
+  at: ISODate
+  action: AuditAction
+  /** Сотрудник; пусто — действие системы или родителя (см. actorLabel). */
+  actorId?: ID
+  actorLabel?: string
+  /** О ком или о чём запись: ребёнок, скидка, промокод. */
+  subject: string
+  details?: string
+  /** Ссылка на карточку внутри приложения. */
+  link?: string
+}
+
+/* ---------- Уведомления (ТЗ §15, §30, §40 Notification) ---------- */
+
+export type NotificationEvent =
+  | 'visit_started'
+  | 'ending_soon'
+  | 'extended'
+  | 'extension_declined'
+  | 'payment_paid'
+  | 'payment_failed'
+  | 'visit_finished'
+
+export interface AppNotification {
+  id: ID
+  at: ISODate
+  event: NotificationEvent
+  recipient: 'parent' | 'staff'
+  visitId: ID
+  childId: ID
+  text: string
+  /** Для родителя: отправлено в Telegram или Telegram не привязан (ТЗ §44). */
+  delivery?: 'sent' | 'not_linked'
+  /** Для сотрудников: прочитано. */
+  read?: boolean
 }

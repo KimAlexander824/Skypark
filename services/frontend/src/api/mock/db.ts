@@ -1,4 +1,4 @@
-import type { AppSettings, Child, Discount, Employee, Nanny, News, Parent, PromoCode, Visit, WorkSchedule } from '@/types'
+import type { AppNotification, AppSettings, AuditEntry, Child, Discount, Employee, Nanny, News, Parent, PromoCode, Visit, WorkSchedule } from '@/types'
 
 /**
  * Временное хранилище до подключения backend.
@@ -16,6 +16,10 @@ export interface MockDB {
   discounts: Discount[]
   promoCodes: PromoCode[]
   news: News[]
+  /** ТЗ §41 — журнал действий, новые записи первыми */
+  audit: AuditEntry[]
+  /** ТЗ §30 — уведомления родителям и сотрудникам, новые первыми */
+  notifications: AppNotification[]
 }
 
 const STORAGE_KEY = 'skypark.mockdb.v5'
@@ -146,7 +150,9 @@ function seed(): MockDB {
     { id: 'nw3', title: 'Летние каникулы', text: 'Специальное расписание и скидки на весь летний сезон.', publishAt: daysAgo(100), status: 'archived', createdAt: daysAgo(101) },
   ]
 
-  return { parents, children, employees, nannies, visits, passwords, settings, schedule, discounts, promoCodes, news }
+  const out: MockDB = { parents, children, employees, nannies, visits, passwords, settings, schedule, discounts, promoCodes, news, audit: [], notifications: [] }
+  out.audit = deriveAudit(out)
+  return out
 }
 
 /** Детерминированный генератор, чтобы история была одинаковой при каждом сбросе. */
@@ -210,10 +216,38 @@ function generateHistory(children: Child[], nannies: Nanny[]): Visit[] {
   return out
 }
 
+/** Журнал по уже существующим данным — для демо-базы и баз, созданных до появления журнала. */
+function deriveAudit(d: Pick<MockDB, 'children' | 'visits' | 'nannies' | 'discounts' | 'promoCodes'>): AuditEntry[] {
+  const out: AuditEntry[] = []
+  const name = (c?: Child) => (c ? `${c.firstName} ${c.lastName}` : '—')
+  let n = 0
+  const add = (e: Omit<AuditEntry, 'id'>) => out.push({ id: `a-seed-${n++}`, ...e })
+  for (const c of d.children) add({ at: c.createdAt, action: 'child_registered', actorId: c.createdBy, subject: name(c), link: `/children/${c.id}` })
+  for (const v of d.visits) {
+    const child = d.children.find((c) => c.id === v.childId)
+    const nanny = d.nannies.find((x) => x.id === v.nannyId)
+    const link = `/children/${v.childId}`
+    add({ at: v.startAt, action: 'visit_created', actorId: v.createdBy, subject: name(child), details: nanny ? `Няня: ${nanny.firstName} ${nanny.lastName}` : undefined, link })
+    for (const e of v.extensions)
+      if (e.paymentStatus === 'paid') add({ at: e.createdAt, action: 'visit_extended', actorLabel: 'Родитель (Telegram)', subject: name(child), details: `+${e.minutes} мин`, link })
+    if (v.status === 'completed' && v.endedAt)
+      add({ at: v.endedAt, action: 'visit_finished', actorId: v.endedBy, actorLabel: v.endedBy ? undefined : 'Система', subject: name(child), link })
+  }
+  for (const x of d.discounts) add({ at: x.createdAt, action: 'discount_saved', actorId: x.createdBy, subject: x.name, details: 'Создана скидка' })
+  for (const x of d.promoCodes) add({ at: x.createdAt, action: 'promo_saved', actorId: x.createdBy, subject: x.code, details: 'Создан промокод' })
+  return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 1000)
+}
+
 function load(): MockDB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as MockDB
+    if (raw) {
+      const parsed = JSON.parse(raw) as MockDB
+      // базы, сохранённые до появления журнала и уведомлений
+      parsed.audit ??= deriveAudit(parsed)
+      parsed.notifications ??= []
+      return parsed
+    }
   } catch {
     // повреждённые данные — пересоздаём
   }

@@ -17,13 +17,14 @@ import type {
   WorkSchedule,
 } from '@/types'
 import { normalizePhone } from '@/lib/format'
+import { auditActionLabel } from '@/lib/statuses'
 import { isOngoing, visitTotalMinutes } from '@/lib/time'
 import { ApiError } from './errors'
+import { audit } from './journal'
 import { db, delay, persist, resetMockDB, uid } from './mock/db'
 import { syncVisits } from './visits'
 
 const now = () => new Date().toISOString()
-const fullNameOf = (p?: { firstName: string; lastName?: string }) => (p ? [p.firstName, p.lastName].filter(Boolean).join(' ') : '—')
 
 /* ---------- Сотрудники (ТЗ §21) ---------- */
 
@@ -45,14 +46,9 @@ export interface WorkHistoryItem {
 
 /** История работы сотрудника по посещениям (ТЗ §21, §41). */
 function historyOf(employeeId: ID): WorkHistoryItem[] {
-  const items: WorkHistoryItem[] = []
-  for (const v of db.visits) {
-    const child = db.children.find((c) => c.id === v.childId)
-    if (v.createdBy === employeeId) items.push({ id: v.id + '-c', at: v.startAt, action: 'Создал посещение', subject: fullNameOf(child) })
-    if (v.endedBy === employeeId && v.endedAt) items.push({ id: v.id + '-e', at: v.endedAt, action: 'Завершил посещение', subject: fullNameOf(child) })
-  }
-  for (const c of db.children) if (c.createdBy === employeeId) items.push({ id: c.id + '-r', at: c.createdAt, action: 'Зарегистрировал ребёнка', subject: fullNameOf(c) })
-  return items.sort((a, b) => b.at.localeCompare(a.at))
+  return db.audit
+    .filter((a) => a.actorId === employeeId)
+    .map((a) => ({ id: a.id, at: a.at, action: a.details && a.action.endsWith('_saved') ? a.details : auditActionLabel[a.action], subject: a.subject }))
 }
 
 function validateEmployee(input: EmployeeInput, exceptId?: ID) {
@@ -307,11 +303,13 @@ export const discountsApi = {
       const d = db.discounts.find((x) => x.id === id)
       if (!d) throw new ApiError('not_found', 'Скидка не найдена')
       Object.assign(d, input)
+      audit({ action: 'discount_saved', actorId: by, subject: d.name, details: 'Изменена скидка' })
       persist()
       return d
     }
     const d: Discount = { id: uid('d'), ...input, createdAt: now(), createdBy: by }
     db.discounts.push(d)
+    audit({ action: 'discount_saved', actorId: by, subject: d.name, details: 'Создана скидка' })
     persist()
     return d
   },
@@ -350,11 +348,13 @@ export const promoCodesApi = {
       const p = db.promoCodes.find((x) => x.id === id)
       if (!p) throw new ApiError('not_found', 'Промокод не найден')
       Object.assign(p, input, { code })
+      audit({ action: 'promo_saved', actorId: by, subject: code, details: 'Изменён промокод' })
       persist()
       return p
     }
     const p: PromoCode = { id: uid('pc'), ...input, code, usedCount: 0, createdAt: now(), createdBy: by }
     db.promoCodes.push(p)
+    audit({ action: 'promo_saved', actorId: by, subject: code, details: 'Создан промокод' })
     persist()
     return p
   },
