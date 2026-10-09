@@ -112,7 +112,6 @@ export function DiscountsPage() {
   )
 }
 
-/** Общие поля для скидок и промокодов: тип, размер, период. */
 export function DiscountFields<T extends { kind: DiscountKind; value: number; dateFrom: string; dateTo: string }>({
   form,
   set,

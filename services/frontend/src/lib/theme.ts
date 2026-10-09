@@ -1,6 +1,5 @@
 import { useSyncExternalStore } from 'react'
 
-/** Тема интерфейса. `system` — следовать настройке ОС. Хранится локально на устройстве. */
 export type ThemePreference = 'light' | 'dark' | 'system'
 
 const STORAGE_KEY = 'skypark:theme'
@@ -12,7 +11,6 @@ function read(): ThemePreference {
     const v = localStorage.getItem(STORAGE_KEY)
     if (v === 'light' || v === 'dark' || v === 'system') return v
   } catch {
-    /* localStorage недоступен — используем системную */
   }
   return 'system'
 }
@@ -29,17 +27,12 @@ function apply() {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0f0f12' : '#f2f2f6')
 }
 
-/**
- * Переключить тему. Если передать точку (например, центр нажатой кнопки), новая тема
- * раскроется кругом из неё (View Transitions API); иначе — плавный кроссфейд цветов.
- */
 export function setTheme(next: ThemePreference, origin?: { x: number; y: number }) {
   const changed = resolve(next) !== resolve(preference)
   preference = next
   try {
     localStorage.setItem(STORAGE_KEY, next)
   } catch {
-    /* ignore */
   }
   const commit = () => {
     apply()
@@ -70,7 +63,6 @@ export function setTheme(next: ThemePreference, origin?: { x: number; y: number 
   window.setTimeout(() => root.classList.remove('theme-transition'), 400)
 }
 
-/** Центр элемента — точка, из которой раскрывается новая тема. */
 export const originOf = (el: Element) => {
   const r = el.getBoundingClientRect()
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 }

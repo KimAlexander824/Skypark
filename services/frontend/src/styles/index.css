@@ -1,13 +1,6 @@
 @import '@fontsource-variable/manrope';
 @import 'tailwindcss';
 
-/*
- * Skypark — дизайн-токены. Монохромная палитра: белый, серый, #1a1a1a.
- * brand   — основной (графит #1a1a1a): кнопки, активная навигация, акценты.
- * ink     — нейтральная серая шкала для текста, фона и границ.
- * violet / info — приглушённые серые оттенки (вторичные акценты).
- * sun / success / warning / danger — только семантика статусов.
- */
 @theme {
   --font-sans: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, sans-serif;
 
@@ -64,8 +57,6 @@
   --color-danger-600: #ce2c31;
   --color-danger-700: #a8211f;
 
-  /* ---------- Дизайн v3: Apple / liquid glass (референс Sociafy) ---------- */
-  /* Основной акцент — оранжевый */
   --color-accent-50: #fff4ed;
   --color-accent-100: #ffe6d5;
   --color-accent-200: #ffcaa8;
@@ -75,7 +66,6 @@
   --color-accent-600: #f05312;
   --color-accent-700: #c73f0b;
 
-  /* Категориальные цвета (метки, иконки, сегменты диаграмм) */
   --color-rose-50: #fff0f5;
   --color-rose-100: #ffdbe8;
   --color-rose-500: #ff4f8b;
@@ -90,7 +80,6 @@
   --color-sky-100: #d9eeff;
   --color-sky-500: #3ba9ff;
 
-  /* Системные серые в духе iOS */
   --color-mist-50: #f9f9fb;
   --color-mist-100: #f2f2f6;
   --color-mist-200: #e8e8ee;
@@ -99,10 +88,6 @@
   --color-mist-500: #8e8e96;
   --color-mist-600: #6e6e76;
 
-  /*
-   * Наследие v2 (кремово-пастельная тема). В v3 эти имена указывают на светлые оттенки
-   * новой палитры, чтобы старые классы автоматически выглядели в новом стиле.
-   */
   --color-cream-50: var(--color-white);
   --color-cream-100: var(--color-mist-100);
   --color-cream-200: var(--color-mist-200);
@@ -124,7 +109,6 @@
   --color-peri-300: var(--color-grape-100);
   --color-peri-500: var(--color-grape-500);
 
-  /* Всегда белый — текст на оранжевых/цветных кнопках, элементы поверх фото и видео */
   --color-snow: #ffffff;
 
   --color-info-50: #f2f2f2;
@@ -132,10 +116,8 @@
   --color-info-500: #3b3b3b;
   --color-info-700: #262626;
 
-  /* Широкие мониторы */
   --breakpoint-3xl: 1920px;
 
-  /* Радиусы в духе iOS: крупнее и мягче; там, где браузер умеет, — «сквиркл» (см. ниже) */
   --radius-md: 0.625rem;
   --radius-lg: 0.875rem;
   --radius-xl: 1.125rem;
@@ -143,7 +125,6 @@
   --radius-3xl: 1.875rem;
   --radius-4xl: 2.25rem;
 
-  /* Плавность как в iOS */
   --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-spring: cubic-bezier(0.2, 0.9, 0.25, 1.15);
   --default-transition-duration: 220ms;
@@ -159,7 +140,6 @@
   --animate-slide-up: slide-up 0.42s cubic-bezier(0.32, 0.72, 0, 1);
   --animate-scan: scan 1.8s ease-in-out infinite;
   --animate-bar-grow: bar-grow 0.7s cubic-bezier(0.32, 0.72, 0, 1) both;
-  /* Модальные окна в духе iOS */
   --animate-backdrop-in: backdrop-in 0.28s cubic-bezier(0.32, 0.72, 0, 1) both;
   --animate-backdrop-out: backdrop-out 0.2s ease-in both;
   --animate-alert-in: alert-in 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.12) both;
@@ -239,11 +219,6 @@
   }
 }
 
-/*
- * Непрерывные углы как у iPhone (squircle). Браузеры без поддержки corner-shape
- * просто показывают обычное скругление тех же размеров.
- * У сквиркла визуально меньше радиус, поэтому увеличиваем его ~в 1.35 раза.
- */
 @supports (corner-shape: squircle) {
   :root {
     --radius-md: 0.875rem;
@@ -257,9 +232,6 @@
     corner-shape: squircle;
   }
 }
-
-
-/* ---------- Liquid glass ---------- */
 
 :root {
   color-scheme: light;
@@ -278,12 +250,6 @@
   --blob-opacity: 0.55;
 }
 
-/*
- * Тёмная тема. Переопределяем только токены — все классы остаются прежними.
- * Нейтрали — одна холодная графитовая шкала (без коричневых/синих подтонов).
- * Светлые оттенки цветов (-50/-100/-200) — это сам цвет, подмешанный к поверхности карточки
- * в фиксированной пропорции, поэтому все цветные плашки одной «плотности» и сочетаются друг с другом.
- */
 :root[data-theme='dark'] {
   color-scheme: dark;
 
@@ -292,7 +258,6 @@
   --tint-100: 22%;
   --tint-200: 34%;
 
-  /* Поверхности: фон < карточка < приподнятый элемент */
   --color-white: var(--dk-surface);
 
   --color-mist-50: #17171b;
@@ -326,7 +291,6 @@
   --color-info-500: #d2d2d8;
   --color-info-700: #e7e7eb;
 
-  /* Акцент */
   --color-accent-50: color-mix(in oklab, #ff6b2c var(--tint-50), var(--dk-surface));
   --color-accent-100: color-mix(in oklab, #ff6b2c var(--tint-100), var(--dk-surface));
   --color-accent-200: color-mix(in oklab, #ff6b2c var(--tint-200), var(--dk-surface));
@@ -336,7 +300,6 @@
   --color-accent-600: #ff7a3d;
   --color-accent-700: #ffa77a;
 
-  /* Категориальные */
   --color-rose-50: color-mix(in oklab, #ff5c95 var(--tint-50), var(--dk-surface));
   --color-rose-100: color-mix(in oklab, #ff5c95 var(--tint-100), var(--dk-surface));
   --color-rose-500: #ff6b9e;
@@ -351,7 +314,6 @@
   --color-sky-100: color-mix(in oklab, #4aa8ff var(--tint-100), var(--dk-surface));
   --color-sky-500: #5cb4ff;
 
-  /* Семантика */
   --color-danger-50: color-mix(in oklab, #ff4d4f var(--tint-50), var(--dk-surface));
   --color-danger-100: color-mix(in oklab, #ff4d4f var(--tint-100), var(--dk-surface));
   --color-danger-500: #ff5a5c;
@@ -369,7 +331,6 @@
   --color-sun-50: color-mix(in oklab, #ffb020 var(--tint-50), var(--dk-surface));
   --color-sun-100: color-mix(in oklab, #ffb020 var(--tint-100), var(--dk-surface));
 
-  /* Стекло: плотнее, чтобы карточки отделялись от фона */
   --glass-from: rgb(33 33 39 / 0.8);
   --glass-to: rgb(26 26 31 / 0.72);
   --glass-strong-from: rgb(34 34 40 / 0.94);
@@ -380,21 +341,18 @@
   --glass-shadow: rgb(0 0 0 / 0.5);
   --glass-shadow-strong: rgb(0 0 0 / 0.65);
 
-  /* Фоновое свечение: те же оттенки бренда, но очень тихо */
   --blob-1: #ff6b2c;
   --blob-2: #ff4f8b;
   --blob-3: #6d5dfc;
   --blob-opacity: 0.11;
 }
 
-/* Смена темы через View Transitions: новая тема раскрывается кругом от кнопки */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 
-/* Запасной вариант без View Transitions (класс ставится на время переключения) */
 .theme-transition,
 .theme-transition *,
 .theme-transition *::before,
@@ -407,7 +365,6 @@
     stroke 0.35s var(--ease-ios) !important;
 }
 
-/* Цветной фон под стеклом: мягкие пятна, чтобы было что «преломлять» */
 .app-backdrop {
   position: fixed;
   inset: 0;
@@ -470,7 +427,6 @@
     0 24px 48px -16px var(--glass-shadow-strong);
 }
 
-/* Оранжевая «стеклянная» кнопка с бликом */
 @utility glass-accent {
   background: linear-gradient(180deg, #ff8a52 0%, #ff6b2c 55%, #f45a18 100%);
   box-shadow:
@@ -480,13 +436,11 @@
   color: white;
 }
 
-/* Диагональная штриховка для активного столбца, как в референсе */
 @utility stripes-accent {
   background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.28) 0 4px, transparent 4px 9px),
     linear-gradient(180deg, #ff9a66, #ff6b2c);
 }
 
-/* Chrome подсвечивает автозаполненные поля голубым — возвращаем кремовый фон */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {

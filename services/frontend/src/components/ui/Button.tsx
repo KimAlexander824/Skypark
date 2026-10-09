@@ -15,7 +15,6 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary: 'glass-accent hover:brightness-105 disabled:opacity-50 disabled:shadow-none',
-  /** Монохромная: графит в светлой теме, белая в тёмной */
   contrast: 'bg-ink-900 text-mist-50 shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] hover:bg-ink-800 disabled:opacity-50',
   secondary: 'glass text-ink-900 hover:bg-white disabled:text-mist-400',
   soft: 'bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-100 hover:bg-accent-100 disabled:opacity-50',

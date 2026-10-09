@@ -10,7 +10,6 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; hint: string; icon
   { value: 'system', label: t('Как в системе'), hint: t('Следует настройке устройства'), icon: <Monitor /> },
 ]))
 
-/** Выбор темы интерфейса карточками с мини-превью. Используется в настройках всех ролей. */
 export function ThemePicker() {
   const { preference, setTheme } = useTheme()
   return (
@@ -59,7 +58,6 @@ export function ThemePicker() {
   )
 }
 
-/** Мини-превью интерфейса. Цвета зашиты намеренно: превью не должно зависеть от текущей темы. */
 function ThemePreview({ variant }: { variant: ThemePreference }) {
   if (variant === 'system')
     return (

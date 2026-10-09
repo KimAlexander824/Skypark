@@ -18,7 +18,6 @@ import { nannyStatus } from '@/lib/statuses'
 import { formatCountdown, useNow, visitTiming } from '@/lib/time'
 import { t as tr, LOCALE } from '@/i18n'
 
-/* ---------- Период (ТЗ §24) ---------- */
 
 type Preset = 'today' | 'yesterday' | 'week' | 'month' | 'custom'
 
@@ -43,7 +42,6 @@ const compactMoney = (v: number) =>
   v >= 1_000_000 ? tr('{0} млн', (v / 1_000_000).toFixed(1).replace('.', ',')) : v >= 1000 ? tr('{0} тыс', Math.round(v / 1000)) : String(v)
 
 
-/* ---------- Страница ---------- */
 
 export function DashboardPage() {
   const user = useCurrentUser()
@@ -65,7 +63,6 @@ export function DashboardPage() {
 
   return (
     <div className="animate-slide-up">
-      {/* Заголовок */}
       <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <h1 className="text-[30px] leading-tight font-extrabold tracking-tight text-ink-900">
@@ -102,7 +99,6 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatTile
           label={tr('Посещения')}
@@ -134,7 +130,6 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Графики */}
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.9fr)]">
         <GlassCard className="p-5">
           <GlassHeader
@@ -195,7 +190,6 @@ export function DashboardPage() {
         </GlassCard>
       </div>
 
-      {/* Няни и окончания */}
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <GlassCard className="p-5">
           <GlassHeader
@@ -216,7 +210,6 @@ export function DashboardPage() {
   )
 }
 
-/* ---------- Компоненты ---------- */
 
 function Pill({ tone, children }: { tone: GlassTone; children: ReactNode }) {
   return <span className={cn('inline-flex h-7 shrink-0 items-center rounded-full px-3 text-xs font-bold ring-1', toneChip[tone])}>{children}</span>
@@ -236,7 +229,6 @@ function ChartSkeleton({ h }: { h: number }) {
   return <div className="mt-4 animate-pulse rounded-2xl bg-mist-200/70" style={{ height: h }} />
 }
 
-/** Первые и повторные посещения (ТЗ §25 «Дети»). */
 function RepeatDonut({ data }: { data: DashboardStats }) {
   const repeat = data.children.repeatVisits
   const first = Math.max(0, data.visits.total - repeat)
@@ -345,7 +337,6 @@ function NanniesTable({ stats, nannies }: { stats?: DashboardStats; nannies?: Na
   )
 }
 
-/** Ближайшие окончания посещений с живым таймером. */
 function EndingSoon({ visits, now }: { visits?: VisitListItem[]; now: number }) {
   return (
     <GlassCard className="flex flex-col p-5">
@@ -409,7 +400,6 @@ function EndingSoon({ visits, now }: { visits?: VisitListItem[]; now: number }) 
   )
 }
 
-/** Кнопка-календарь для произвольного периода. */
 function RangePicker({ value, onChange, active }: { value: DateRange; onChange: (r: DateRange) => void; active: boolean }) {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)

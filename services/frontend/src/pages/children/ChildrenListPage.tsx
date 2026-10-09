@@ -123,7 +123,6 @@ function ChildrenTable({ items }: { items: ChildListItem[] }) {
   const navigate = useNavigate()
   return (
     <>
-      {/* desktop */}
       <table className="hidden w-full text-left md:table">
         <thead>
           <tr className="text-xs font-semibold text-ink-500">
@@ -173,7 +172,6 @@ function ChildrenTable({ items }: { items: ChildListItem[] }) {
         </tbody>
       </table>
 
-      {/* mobile */}
       <ul className="divide-y divide-cream-200 md:hidden">
         {items.map((c) => (
           <li key={c.id}>

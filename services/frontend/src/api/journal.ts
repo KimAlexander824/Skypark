@@ -2,11 +2,6 @@ import type { AuditEntry, NotificationEvent, Visit } from '@/types'
 import { db, uid } from './mock/db'
 import { t } from '@/i18n'
 
-/*
- * Журнал действий (ТЗ §41) и уведомления (ТЗ §15, §30). На backend это будут отдельные
- * таблицы и очередь отправки в Telegram; здесь — записи в демо-базе.
- * Функции не вызывают persist(): сохраняет вызывающий метод API вместе со своими изменениями.
- */
 
 const AUDIT_LIMIT = 1000
 const NOTIFICATIONS_LIMIT = 300
@@ -24,7 +19,6 @@ export const childLabel = (childId: string) => {
   return c ? `${c.firstName} ${c.lastName}` : '—'
 }
 
-/** Уведомление о событии посещения. Родителю — в Telegram, если он привязан (ТЗ §44). */
 export function notify(visit: Visit, event: NotificationEvent, recipients: ('parent' | 'staff')[], text: string) {
   const child = db.children.find((c) => c.id === visit.childId)
   const parent = db.parents.find((p) => p.id === child?.parentId)

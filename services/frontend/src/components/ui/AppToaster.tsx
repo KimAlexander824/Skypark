@@ -19,7 +19,6 @@ function ToastIcon({ tone, children }: { tone: 'success' | 'error' | 'warning' |
   )
 }
 
-/** Уведомления интерфейса: тёмная карточка, иконка-маркер типа, описание второй строкой. */
 export function AppToaster() {
   return (
     <Toaster

@@ -1,16 +1,6 @@
 import type { ID } from '@/types'
 import { db, delay } from './mock/db'
 
-/**
- * Распознавание лиц. Два режима (переменная `VITE_FACE_API` в `.env.local`):
- * - `mock` (по умолчанию) — правдоподобные случайные ответы, без сервиса;
- * - `service` — настоящий сервис распознавания (services/recognition, HTTP API)
- *   через прокси Vite `/recognition` → `RECOGNITION_URL` (см. vite.config.ts).
- *
- * Контракт сервиса: docs/contracts/recognition.md.
- * Когда появится основной backend, фронтенд будет ходить в него, а не в сервис напрямую —
- * поменяется только этот файл.
- */
 export const faceMode: 'mock' | 'service' = import.meta.env.VITE_FACE_API === 'service' ? 'service' : 'mock'
 
 export interface FaceCandidate {
@@ -18,7 +8,6 @@ export interface FaceCandidate {
   confidence: number
 }
 
-/** Ответ поиска по фото (ТЗ §39) и ошибки фото (§44). */
 export type FaceResult =
   | { status: 'match'; childId: ID; confidence: number }
   | { status: 'ambiguous'; candidates: FaceCandidate[] }
@@ -27,20 +16,13 @@ export type FaceResult =
   | { status: 'multiple_faces' }
   | { status: 'low_quality' }
   | { status: 'bad_image' }
-  /** Сервис недоступен (§43): искать ребёнка по телефону. */
   | { status: 'unavailable' }
 
 export type FaceErrorCode = 'no_face' | 'multiple_faces' | 'low_quality' | 'bad_image' | 'unavailable'
 
 export type EnrollResult = { ok: true; facesCount: number; ignoredFaces: number } | { ok: false; error: FaceErrorCode; message?: string }
 
-/* ---------- Мост идентификаторов ---------- */
 
-/*
- * Сервис хранит лица по целому child_id, а в демо-базе id строковые («c2», «cl8x…»).
- * До появления backend (где id будут общими) держим соответствие в localStorage:
- * «c<число>» → это число, остальные — по порядку начиная с 1000.
- */
 const IDS_KEY = 'skypark.faceIds'
 
 function readIds(): { map: Record<ID, number>; next: number } {
@@ -48,7 +30,6 @@ function readIds(): { map: Record<ID, number>; next: number } {
     const raw = localStorage.getItem(IDS_KEY)
     if (raw) return JSON.parse(raw)
   } catch {
-    /* повреждённые данные — начинаем заново */
   }
   return { map: {}, next: 1000 }
 }
@@ -62,7 +43,6 @@ function toServiceId(childId: ID): number {
     try {
       localStorage.setItem(IDS_KEY, JSON.stringify(ids))
     } catch {
-      /* не критично */
     }
   }
   return ids.map[childId]
@@ -75,7 +55,6 @@ function fromServiceId(serviceId: number): ID | undefined {
   return entry && db.children.some((c) => c.id === entry[0]) ? entry[0] : undefined
 }
 
-/* ---------- HTTP ---------- */
 
 const BASE = '/recognition/api/recognition'
 
@@ -91,7 +70,6 @@ async function photoForm(photo: string) {
 
 type ServiceError = { error?: string; message?: string }
 
-/** Ошибка фото (422) или недоступность сервиса (сеть, 5xx, прокси без сервиса). */
 async function toFaceError(res: Response | null): Promise<{ error: FaceErrorCode; message?: string }> {
   if (!res || res.status >= 500) return { error: 'unavailable' }
   const body: ServiceError = await res.json().catch(() => ({}))
@@ -123,7 +101,6 @@ const service = {
 
     if (out.status === 'found' && out.child_id !== null) {
       const childId = fromServiceId(out.child_id)
-      // лицо есть в сервисе, но такого ребёнка нет в демо-базе (например, после сброса демо-данных)
       return childId ? { status: 'match', childId, confidence: out.confidence ?? 0 } : { status: 'not_found' }
     }
     if (out.status === 'ambiguous') {
@@ -143,7 +120,6 @@ const service = {
     return { ok: true, facesCount: out.faces_count, ignoredFaces: out.ignored_faces }
   },
 
-  /** Вырезка последнего запомненного лица — сотрудник сверяет, то ли лицо сохранено. */
   thumbnailUrl(childId: ID) {
     return `${BASE}/faces/${toServiceId(childId)}/thumbnail?t=${Date.now()}`
   },
@@ -153,7 +129,6 @@ const service = {
   },
 }
 
-/* ---------- Заглушка ---------- */
 
 const mock = {
   async identify(_photo: string): Promise<FaceResult> {

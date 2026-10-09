@@ -13,7 +13,6 @@ export const visitKeys = {
   extensionOptions: (visitId: ID) => ['visits', 'extension-options', visitId] as const,
 }
 
-/** Список обновляется раз в 30 секунд, чтобы подхватывать автоматические переходы статусов. */
 export const useVisits = (scope: VisitsScope) =>
   useQuery({ queryKey: visitKeys.list(scope), queryFn: () => visitsApi.list(scope), refetchInterval: 30_000, placeholderData: (p) => p })
 
@@ -27,7 +26,6 @@ export const useNannyWorkspace = (employeeId: ID) =>
     placeholderData: (p) => p,
   })
 
-/** ТЗ §27 — скидки, действующие сегодня. */
 export const useActiveDiscounts = () => useQuery({ queryKey: visitKeys.discounts, queryFn: pricingApi.discounts, staleTime: 60_000 })
 
 export const useVisitSettings = () => useQuery({ queryKey: visitKeys.settings, queryFn: settingsApi.get, staleTime: 60_000 })
@@ -53,7 +51,6 @@ export function useFinishVisit() {
   return useMutation({ mutationFn: ({ id, by }: { id: ID; by: ID }) => visitsApi.finish(id, by), onSuccess: invalidate })
 }
 
-/* ---------- Продление (ТЗ §16–18) ---------- */
 
 export const useExtensionOptions = (visitId: ID | undefined) =>
   useQuery({

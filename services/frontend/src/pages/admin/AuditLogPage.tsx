@@ -12,8 +12,6 @@ import { auditActionLabel } from '@/lib/statuses'
 import type { AuditAction } from '@/types'
 import { t } from '@/i18n'
 
-// ТЗ §41 — история ключевых действий для контроля сотрудников
-
 const actionTone: Record<AuditAction, PastelTone | 'muted' | 'dark'> = {
   child_registered: 'peri',
   visit_created: 'butter',
@@ -25,7 +23,6 @@ const actionTone: Record<AuditAction, PastelTone | 'muted' | 'dark'> = {
   promo_saved: 'dark',
 }
 
-/** Подпись действия: для скидок и промокодов — что именно сделали («Создана скидка»). */
 const actionText = (a: AuditItem) => (a.action.endsWith('_saved') && a.details ? a.details : auditActionLabel[a.action])
 
 export function AuditLogPage() {

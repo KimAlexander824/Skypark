@@ -2,14 +2,6 @@ import { useSyncExternalStore } from 'react'
 import { en } from './en'
 import { uz } from './uz'
 
-/**
- * Языки интерфейса. Ключи перевода — сами русские строки: русский текст в коде остаётся
- * как есть, а `uz.ts` / `en.ts` сопоставляют его с переводом. Нет перевода — показываем русский.
- *
- * Язык меняется без перезагрузки: корень приложения подписан на `useLang()` и перерисовывает
- * всё дерево. Константы с переводом на уровне модуля оборачиваются в `localized()`,
- * чтобы пересчитываться для нового языка.
- */
 export type Lang = 'uz' | 'ru' | 'en'
 
 export const LANGS: { value: Lang; label: string }[] = [
@@ -27,18 +19,14 @@ function readLang(): Lang {
     const v = localStorage.getItem(KEY)
     if (v === 'uz' || v === 'ru' || v === 'en') return v
   } catch {
-    /* хранилище недоступно — язык по умолчанию */
   }
   return 'ru'
 }
 
-/** Текущий язык (живая привязка: импортёры видят новое значение после `setLang`). */
 export let LANG: Lang = readLang()
-/** Локаль для Intl: даты, время, числа. */
 export let LOCALE = LOCALES[LANG]
 let dict = DICTS[LANG]
 
-/** `t('Осталось {0}', time)` — перевод с подстановкой `{0}`, `{1}`… */
 export function t(key: string, ...args: unknown[]): string {
   const text = dict?.[key] ?? key
   return args.length ? text.replace(/\{(\d+)\}/g, (_, i) => String(args[Number(i)] ?? '')) : text
@@ -54,13 +42,11 @@ export function setLang(lang: Lang) {
   try {
     localStorage.setItem(KEY, lang)
   } catch {
-    /* не сохранится до перезагрузки — не критично */
   }
   document.documentElement.lang = lang
   listeners.forEach((l) => l())
 }
 
-/** Подписка на смену языка — для корня приложения и компонентов, которые кешируют переводы. */
 export function useLang(): Lang {
   return useSyncExternalStore(
     (cb) => {
@@ -71,10 +57,6 @@ export function useLang(): Lang {
   )
 }
 
-/**
- * Константа с переводами на уровне модуля, которая пересчитывается при смене языка.
- * Возвращает прокси: обращаться с ней можно как с обычным объектом или массивом.
- */
 export function localized<T extends object>(build: () => T): T {
   let lang: Lang | undefined
   let value: T
@@ -95,7 +77,6 @@ export function localized<T extends object>(build: () => T): T {
     ownKeys: () => Reflect.ownKeys(current()),
     getOwnPropertyDescriptor: (_, p) => {
       const d = Reflect.getOwnPropertyDescriptor(current(), p)
-      // прокси-цель пустая, поэтому свойства должны быть настраиваемыми
       return d && { ...d, configurable: true }
     },
   })

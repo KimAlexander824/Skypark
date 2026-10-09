@@ -2,7 +2,6 @@ import type { AppNotification, AuditAction, AuditEntry, ID } from '@/types'
 import { db, delay, persist } from './mock/db'
 import { syncVisits } from './visits'
 
-/* ---------- Уведомления (ТЗ §15, §30) ---------- */
 
 export interface NotificationItem extends AppNotification {
   childName: string
@@ -19,7 +18,6 @@ export const notificationsApi = {
     syncVisits()
     return db.notifications.map(withChild)
   },
-  /** Непрочитанные уведомления сотрудникам — для счётчика в меню. */
   async unreadCount(): Promise<number> {
     syncVisits()
     return db.notifications.filter((n) => n.recipient === 'staff' && !n.read).length
@@ -31,7 +29,6 @@ export const notificationsApi = {
   },
 }
 
-/* ---------- Журнал действий (ТЗ §41) ---------- */
 
 export interface AuditItem extends AuditEntry {
   actorName: string
@@ -40,7 +37,6 @@ export interface AuditItem extends AuditEntry {
 export interface AuditQuery {
   actorId?: ID
   action?: AuditAction
-  /** YYYY-MM-DD */
   date?: string
 }
 

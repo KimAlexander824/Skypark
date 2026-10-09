@@ -3,21 +3,18 @@ import { LANG, LOCALE, t } from '@/i18n'
 
 export const cn = (...inputs: ClassValue[]) => clsx(inputs)
 
-/** Оставляет только цифры и приводит к виду 998XXXXXXXXX. */
 export function normalizePhone(value: string): string {
   let digits = value.replace(/\D/g, '')
   if (digits.startsWith('998')) digits = digits.slice(3)
   return '998' + digits.slice(0, 9)
 }
 
-/** 998901234567 → +998 90 123 45 67 */
 export function formatPhone(phone: string): string {
   const d = normalizePhone(phone).slice(3)
   const parts = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean)
   return ['+998', ...parts].join(' ')
 }
 
-/** Национальная часть номера (9 цифр) для поля ввода. */
 export function phoneLocalPart(value: string): string {
   return normalizePhone(value).slice(3)
 }
@@ -26,9 +23,7 @@ export function isPhoneComplete(value: string): boolean {
   return phoneLocalPart(value).length === 9
 }
 
-/** Формы — по-русски: [1 ребёнок, 2 ребёнка, 5 детей]; переводятся через t(). */
 export function plural(n: number, forms: [string, string, string]): string {
-  // в узбекском слово после числа не меняется, в английском — две формы
   if (LANG === 'uz') return forms[0]
   if (LANG === 'en') return Math.abs(n) === 1 ? forms[0] : forms[2]
   const mod10 = n % 10
@@ -54,12 +49,10 @@ export function formatAge(birthDate: string): string {
     const months = (now.getFullYear() - b.getFullYear()) * 12 + now.getMonth() - b.getMonth()
     return `${months} ${plural(months, [t('месяц'), t('месяца'), t('месяцев')])}`
   }
-  // по-узбекски возраст — «yosh», а «yil» (год) — для стажа
   if (LANG === 'uz') return `${age} yosh`
   return `${age} ${plural(age, [t('год'), t('года'), t('лет')])}`
 }
 
-/** Форматтер Intl для текущего языка; пересоздаётся только при смене языка. */
 function intl<T>(make: (locale: string) => T): () => T {
   let locale: string | undefined
   let fmt: T

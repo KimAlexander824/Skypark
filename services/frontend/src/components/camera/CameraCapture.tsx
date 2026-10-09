@@ -6,7 +6,6 @@ import { t } from '@/i18n'
 
 const MAX_SIDE = 640
 
-/** Уменьшает изображение и возвращает JPEG data URL. */
 function toCompressedDataUrl(source: CanvasImageSource, width: number, height: number): string {
   const scale = Math.min(1, MAX_SIDE / Math.max(width, height))
   const canvas = document.createElement('canvas')
@@ -33,10 +32,8 @@ type CamState = 'idle' | 'starting' | 'live' | 'denied' | 'unavailable'
 export interface CameraCaptureProps {
   value?: string
   onChange: (dataUrl: string | undefined) => void
-  /** Подсказка внутри кадра. */
   hint?: string
   className?: string
-  /** Режим сканирования — анимированная рамка поиска лица. */
   scanning?: boolean
   autoStart?: boolean
 }
@@ -80,8 +77,6 @@ export function CameraCapture({ value, onChange, hint = t('Лицо ребёнк
   useEffect(() => {
     if (!value && autoStart) start()
     return stop
-    // запускаем камеру только при монтировании
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const capture = () => {
@@ -126,7 +121,6 @@ export function CameraCapture({ value, onChange, hint = t('Лицо ребёнк
           />
         )}
 
-        {/* рамка лица */}
         {(state === 'live' || (value && scanning)) && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="relative aspect-[3/4] h-[72%]">

@@ -12,7 +12,6 @@ import { paymentStatus } from '@/lib/statuses'
 import type { PaymentStatus } from '@/types'
 import { t } from '@/i18n'
 
-// ТЗ §19 / §32
 const statusTone: Record<PaymentStatus, PastelTone | 'muted' | 'danger' | 'dark'> = {
   unpaid: 'muted',
   pending: 'butter',

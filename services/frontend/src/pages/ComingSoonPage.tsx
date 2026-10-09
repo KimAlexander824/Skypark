@@ -4,7 +4,6 @@ import { navigation } from '@/app/navigation'
 import { Card, EmptyState, PageHeader } from '@/components/ui/Display'
 import { t } from '@/i18n'
 
-/** Заглушка для разделов, которые ещё будут реализованы по ТЗ. */
 export function ComingSoonPage({ title, section }: { title?: string; section?: string }) {
   const { pathname } = useLocation()
   const item = navigation.flatMap((g) => g.items).find((i) => i.to === pathname)

@@ -15,7 +15,6 @@ import { t, localized } from '@/i18n'
 
 const KEY = ['admin', 'news']
 
-// ТЗ §29
 const statusMeta: Record<NewsStatus, { label: string; tone: PastelTone | 'dark' | 'muted' }> = localized(() => ({
   draft: { label: t('Черновик'), tone: 'butter' },
   published: { label: t('Опубликовано'), tone: 'olive' },

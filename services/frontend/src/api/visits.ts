@@ -6,14 +6,10 @@ import { audit, childLabel, notify, PARENT_ACTOR, SYSTEM_ACTOR } from './journal
 import { db, delay, persist, uid } from './mock/db'
 import { t, LOCALE } from '@/i18n'
 
-/* ---------- Настройки посещений (ТЗ §17, §26) ---------- */
 
 export interface VisitSettings {
-  /** Стоимость часа посещения, сум. Правило расчёта согласуется отдельно (ТЗ §48 п.7). */
   hourlyRate: number
-  /** Доступные варианты продолжительности, минуты (ТЗ §48 п.6). */
   durations: number[]
-  /** Часы работы на сегодня; null — сегодня закрыто. */
   workHours: { open: string; close: string } | null
   closedReason?: string
 }
@@ -40,13 +36,7 @@ const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(LOCALE, { hour: '
 
 export const priceFor = (minutes: number, s: VisitSettings) => Math.round((s.hourlyRate * minutes) / 60)
 
-/* ---------- Скидки и промокоды при оформлении (ТЗ §27, §28) ---------- */
 
-/*
- * К посещению применяется что-то одно: скидка или промокод. Можно ли их совмещать
- * и как скидка зависит от «условий применения», ТЗ не уточняет (§48 п.15–16) —
- * условия скидки проверяет сотрудник, система проверяет статус, период и лимиты.
- */
 
 const localDay = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
@@ -58,7 +48,6 @@ const isDiscountActive = (d: Pick<Discount, 'status' | 'dateFrom' | 'dateTo'>, t
 
 export type PromoCheck = { valid: true; promo: PromoCode } | { valid: false; reason: string }
 
-/** ТЗ §28 — проверка промокода перед применением, включая лимит на одного родителя. */
 function checkPromo(code: string, parentId: ID): PromoCheck {
   const p = db.promoCodes.find((x) => x.code === code.trim().toUpperCase())
   const today = localDay()
@@ -76,7 +65,6 @@ function checkPromo(code: string, parentId: ID): PromoCheck {
 }
 
 export const pricingApi = {
-  /** Скидки, которые можно выбрать сейчас: включены и действуют сегодня. */
   async discounts(): Promise<Discount[]> {
     await delay(200)
     return db.discounts.filter((d) => isDiscountActive(d)).sort((a, b) => a.name.localeCompare(b.name))
@@ -87,15 +75,7 @@ export const pricingApi = {
   },
 }
 
-/* ---------- Автоматические переходы статусов (ТЗ §12, §16) ---------- */
 
-/**
- * На backend это будет фоновая задача. В мок-режиме выполняется при каждом чтении:
- * — за 15 минут до конца посещение переходит в «Ожидает продления» (если родитель
- *   ещё не отказался продлевать именно это окончание);
- * — по окончании оплаченного времени посещение завершается автоматически,
- *   неоплаченный платёж за продление отменяется.
- */
 export function syncVisits(now = Date.now()) {
   let changed = false
   for (const v of db.visits) {
@@ -104,7 +84,7 @@ export function syncVisits(now = Date.now()) {
     if (now >= end) {
       v.status = 'completed'
       v.endedAt = v.endAt
-      v.endedBy = undefined // система
+      v.endedBy = undefined
       cancelPendingExtensions(v)
       finishedEvents(v)
       changed = true
@@ -114,7 +94,6 @@ export function syncVisits(now = Date.now()) {
       v.extensionDeclined?.endAt !== v.endAt
     ) {
       v.status = 'awaiting_extension'
-      // ТЗ §16 — предложение продлить
       notify(v, 'ending_soon', ['parent'], t('{0}: до окончания посещения 15 минут. Продлить?', childLabel(v.childId)))
       changed = true
     }
@@ -122,7 +101,6 @@ export function syncVisits(now = Date.now()) {
   if (changed) persist()
 }
 
-/** ТЗ §12, §30 — посещение завершено: запись в журнал и уведомления родителю и сотрудникам. */
 function finishedEvents(v: Visit) {
   const name = childLabel(v.childId)
   audit({
@@ -136,14 +114,12 @@ function finishedEvents(v: Visit) {
   notify(v, 'visit_finished', ['parent', 'staff'], t('{0}: посещение завершено', name))
 }
 
-/** Статус посещения, когда вопрос о продлении закрыт. */
 const runningStatus = (v: Visit): VisitStatus => (v.extensions.some((e) => e.paymentStatus === 'paid') ? 'extended' : 'active')
 
 function cancelPendingExtensions(v: Visit) {
   for (const e of v.extensions) if (e.paymentStatus === 'pending') e.paymentStatus = 'cancelled'
 }
 
-/* ---------- Няни (ТЗ §10) ---------- */
 
 export interface NannyWithLoad extends Nanny {
   available: boolean
@@ -170,7 +146,6 @@ export const nanniesApi = {
   },
 }
 
-/* ---------- Интерфейс няни (ТЗ §13, §33 — только назначенные дети) ---------- */
 
 export interface NannyWorkspace {
   nanny: NannyWithLoad
@@ -197,13 +172,11 @@ export const nannyWorkspaceApi = {
   },
 }
 
-/* ---------- Посещения (ТЗ §9, §11, §12) ---------- */
 
 export interface VisitListItem extends Visit {
   child: Child
   parent: Parent
   nanny?: Nanny
-  /** ТЗ §41 — кто завершил посещение (undefined — автоматически). */
   endedByName?: string
 }
 
@@ -214,7 +187,6 @@ export interface CreateVisitInput {
   nannyId: ID
   durationMin: number
   createdBy: ID
-  /** Скидка или промокод — что-то одно */
   discountId?: ID
   promoCode?: string
 }
@@ -233,7 +205,6 @@ const toItem = (v: Visit): VisitListItem => {
   }
 }
 
-/** Проверка рабочего времени (ТЗ §26). Возвращает текст ошибки или null. */
 export function checkWorkHours(start: Date, durationMin: number, s: VisitSettings): string | null {
   if (!s.workHours) return t('Скайпарк сегодня закрыт{0}', s.closedReason ? `: ${s.closedReason.toLowerCase()}` : '')
   const startMin = start.getHours() * 60 + start.getMinutes()
@@ -257,7 +228,6 @@ export const visitsApi = {
     return sorted.map(toItem)
   },
 
-  /** ТЗ §9.1 — создание посещения и запуск таймера. */
   async create(input: CreateVisitInput): Promise<Visit> {
     await delay(500)
     syncVisits()
@@ -330,7 +300,6 @@ export const visitsApi = {
     return visit
   },
 
-  /** ТЗ §12 — ручное завершение посещения сотрудником. */
   async finish(id: ID, by: ID): Promise<Visit> {
     await delay(400)
     const v = db.visits.find((x) => x.id === id)
@@ -346,18 +315,11 @@ export const visitsApi = {
   },
 }
 
-/* ---------- Продление (ТЗ §16–19, §37, §38) ---------- */
 
-/*
- * Решение принимает родитель в Telegram-боте. Пока бота нет, эти же вызовы делает
- * демо-окно на экране посещений. Оплата — заглушка: исход задаётся вызовом pay(),
- * позже его будет присылать платёжный провайдер.
- */
 
 export interface ExtensionOption {
   minutes: number
   price: number
-  /** ТЗ §44 — «выбранное время недоступно» (продление выходит за часы работы). */
   unavailableReason?: string
 }
 
@@ -377,7 +339,6 @@ function extensionFitError(endAt: string, minutes: number, s: VisitSettings): st
 }
 
 export const extensionsApi = {
-  /** Шаг 1 — варианты дополнительного времени (настраиваются в «Настройках»). */
   async options(visitId: ID): Promise<ExtensionOption[]> {
     await delay(200)
     syncVisits()
@@ -390,7 +351,6 @@ export const extensionsApi = {
     }))
   },
 
-  /** Шаги 1–2 — родитель выбрал время: система считает стоимость и создаёт платёж «Ожидает оплаты». */
   async request(visitId: ID, minutes: number): Promise<Extension> {
     await delay(400)
     syncVisits()
@@ -414,7 +374,6 @@ export const extensionsApi = {
     return ext
   },
 
-  /** Шаги 3–4 — результат онлайн-оплаты. После успешной оплаты время окончания сдвигается. */
   async pay(visitId: ID, extensionId: ID, outcome: 'paid' | 'failed'): Promise<Visit> {
     await delay(900)
     syncVisits()
@@ -438,7 +397,6 @@ export const extensionsApi = {
     return v
   },
 
-  /** ТЗ §18 — отказ: решение фиксируется, окончание не меняется, по времени посещение завершится само. */
   async decline(visitId: ID): Promise<Visit> {
     await delay(400)
     syncVisits()

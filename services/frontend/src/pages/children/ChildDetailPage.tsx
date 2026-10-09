@@ -88,7 +88,6 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
         <ArrowLeft className="size-4" />  {t(' К списку детей')}
       </Link>
 
-      {/* Hero */}
       <Card className="relative overflow-hidden">
         <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:px-7 sm:py-6">
           <Avatar
@@ -143,7 +142,6 @@ function ChildDetailView({ data }: { data: ChildDetail }) {
         {active && <ActiveVisitBanner visit={active} />}
       </Card>
 
-      {/* Stats */}
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <PastelStat tone="butter" icon={<History />} label={t('Посещений')} value={stats.visits} />
         <PastelStat tone="peri" icon={<Clock3 />} label={t('Время в парке')} value={formatDuration(stats.minutes)} />
@@ -370,7 +368,6 @@ function DetailSkeleton() {
   )
 }
 
-/** Вырезка лица, которое запомнил сервис распознавания, — для сверки сотрудником. В демо-режиме не показывается. */
 function FaceThumb({ childId }: { childId: string }) {
   const [failed, setFailed] = useState(false)
   const src = useMemo(() => faceApi.thumbnailUrl(childId), [childId])
@@ -394,7 +391,6 @@ const photoErrorText: Record<FaceErrorCode, string> = localized(() => ({
   unavailable: t('Сервис распознавания недоступен. Попробуйте позже'),
 }))
 
-/** Фото для распознавания, если при регистрации лицо не сохранилось или фото пропустили. */
 function AddPhotoModal({ childId, open, onClose }: { childId: string; open: boolean; onClose: () => void }) {
   const [photo, setPhoto] = useState<string>()
   const add = useAddFacePhoto(childId)

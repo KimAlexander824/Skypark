@@ -71,7 +71,6 @@ export function SchedulePage() {
         }
       />
 
-      {/* Сегодня */}
       <section className={cn('relative isolate mb-5 flex items-center gap-4 overflow-hidden rounded-3xl p-5', today.open ? 'bg-olive-300' : 'bg-blush-300')}>
         <span className="flex size-12 items-center justify-center rounded-2xl bg-white/55 text-ink-900">
           {today.open ? <Clock3 className="size-6" /> : <CalendarOff className="size-6" />}
@@ -84,7 +83,6 @@ export function SchedulePage() {
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        {/* Неделя */}
         <Panel>
           <h2 className="mb-3 text-[17px] font-extrabold text-ink-900">{t('Обычная неделя')}</h2>
           <ul className="space-y-1.5">
@@ -114,7 +112,6 @@ export function SchedulePage() {
           </button>
         </Panel>
 
-        {/* Исключения */}
         <Panel>
           <div className="mb-3 flex items-center justify-between">
             <div>

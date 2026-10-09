@@ -4,7 +4,6 @@ import { ThemePicker } from '@/components/ui/ThemePicker'
 import { LanguagePicker } from '@/components/ui/LanguagePicker'
 import { t } from '@/i18n'
 
-/** Личные настройки сотрудника и няни (у администратора они в общем разделе «Настройки»). */
 export function PreferencesPage() {
   return (
     <div className="animate-slide-up">

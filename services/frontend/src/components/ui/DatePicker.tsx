@@ -26,7 +26,6 @@ const display = (s?: string) => {
 type View = 'days' | 'months' | 'years'
 
 export interface DatePickerProps {
-  /** YYYY-MM-DD или пустая строка */
   value: string
   onChange: (value: string) => void
   label?: string
@@ -43,7 +42,6 @@ export interface DatePickerProps {
   'aria-label'?: string
 }
 
-/** Календарь Skypark: кремовая панель, выбранный день — графитовый, быстрый выбор месяца и года. */
 export function DatePicker({
   value,
   onChange,
@@ -208,7 +206,6 @@ export function DatePicker({
                       onClick={() => pick(d)}
                       className={cn(
                         'tabular mx-auto flex size-9 items-center justify-center rounded-full text-[13px] font-semibold transition',
-                        // цвет текста — строго один класс, чтобы состояния не перебивали друг друга
                         sel ? 'glass-accent' : disabled ? 'cursor-not-allowed text-mist-300 line-through decoration-mist-300' : out ? 'text-mist-400' : 'text-ink-800',
                         !sel && !disabled && 'hover:bg-accent-50',
                         isToday && !sel && 'ring-1 ring-accent-400',
@@ -315,7 +312,6 @@ function NavButton({ label, onClick, children }: { label: string; onClick: () =>
   )
 }
 
-/* ---------- Время ---------- */
 
 const timeOptions = (step: number, extra?: string) => {
   const list = Array.from({ length: (24 * 60) / step }, (_, i) => `${pad(Math.floor((i * step) / 60))}:${pad((i * step) % 60)}`)
@@ -323,7 +319,6 @@ const timeOptions = (step: number, extra?: string) => {
   return list.sort()
 }
 
-/** Выбор времени в том же стиле — список с шагом 15 минут. */
 export function TimePicker({
   value,
   onChange,
@@ -356,7 +351,6 @@ export function TimePicker({
   )
 }
 
-/** Дата + время (ISO-строка в UTC). */
 export function DateTimePicker({ value, onChange, label }: { value: string; onChange: (iso: string) => void; label?: string }) {
   const d = new Date(value)
   const date = toIso(d)

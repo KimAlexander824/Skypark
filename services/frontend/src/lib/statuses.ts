@@ -7,7 +7,6 @@ interface StatusMeta {
   tone: Tone
 }
 
-// ТЗ §31
 export const visitStatus: Record<VisitStatus, StatusMeta> = localized(() => ({
   created: { label: t('Создано'), tone: 'neutral' },
   active: { label: t('Активно'), tone: 'success' },
@@ -17,7 +16,6 @@ export const visitStatus: Record<VisitStatus, StatusMeta> = localized(() => ({
   cancelled: { label: t('Отменено'), tone: 'danger' },
 }))
 
-// ТЗ §32
 export const paymentStatus: Record<PaymentStatus, StatusMeta> = localized(() => ({
   unpaid: { label: t('Не оплачено'), tone: 'neutral' },
   pending: { label: t('Ожидает оплаты'), tone: 'warning' },
@@ -27,7 +25,6 @@ export const paymentStatus: Record<PaymentStatus, StatusMeta> = localized(() => 
   refunded: { label: t('Возвращено'), tone: 'info' },
 }))
 
-// ТЗ §10
 export const nannyStatus: Record<NannyStatus, StatusMeta> = localized(() => ({
   free: { label: t('Свободна'), tone: 'success' },
   busy: { label: t('Занята'), tone: 'warning' },
@@ -41,7 +38,6 @@ export const roleLabel: Record<Role, string> = localized(() => ({
   nanny: t('Няня'),
 }))
 
-// ТЗ §41
 export const auditActionLabel: Record<AuditAction, string> = localized(() => ({
   child_registered: t('Зарегистрировал ребёнка'),
   visit_created: t('Создал посещение и назначил няню'),
@@ -53,7 +49,6 @@ export const auditActionLabel: Record<AuditAction, string> = localized(() => ({
   promo_saved: t('Промокод'),
 }))
 
-// ТЗ §15, §30
 export const notificationEventLabel: Record<NotificationEvent, string> = localized(() => ({
   visit_started: t('Посещение началось'),
   ending_soon: t('До окончания 15 минут'),

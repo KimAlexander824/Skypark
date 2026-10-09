@@ -37,8 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null)
       })
       .finally(() => setReady(true))
-    // проверяем сессию один раз при старте
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const login = useCallback(async (phone: string, password: string) => {
@@ -70,7 +68,6 @@ export function useCurrentUser(): Employee {
   return user
 }
 
-/** Стартовая страница для каждой роли. */
 export const homeFor = (role: Role) => (role === 'nanny' ? '/nanny' : role === 'admin' ? '/admin' : '/reception')
 
 export function RequireAuth({ roles, children }: { roles?: Role[]; children: ReactNode }) {

@@ -16,24 +16,17 @@ export function AppLayout() {
   useEffect(() => setMobileOpen(false), [location.pathname])
 
   return (
-    /*
-     * Сайдбар и контент — один блок. На очень широких мониторах блок центрируется целиком,
-     * поэтому расстояние «меню → контент» всегда одинаковое и не растягивается.
-     */
     <div className="mx-auto flex min-h-dvh w-full max-w-[1920px]">
-      {/* Цветной фон под стеклом */}
       <div className="app-backdrop" aria-hidden>
         <span />
       </div>
 
-      {/* Desktop sidebar — стеклянная «плавающая» панель */}
       <aside className="sticky top-0 z-30 hidden h-dvh w-[264px] shrink-0 p-3 lg:block 3xl:w-[288px]">
         <Sidebar />
       </aside>
 
       <div className="min-w-0 flex-1">
 
-      {/* Mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 animate-fade-in bg-ink-900/25 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
@@ -60,7 +53,6 @@ export function AppLayout() {
   )
 }
 
-/* ---------- Sidebar ---------- */
 
 const OPEN_GROUP_KEY = 'skypark.nav.group'
 
@@ -145,14 +137,11 @@ function Sidebar() {
   const { logout } = useAuth()
   const { pathname } = useLocation()
   const groups = navigationFor(user.role)
-  // аккордеон: одновременно раскрыта только одна группа
   const [open, setOpen] = useState<string | null>(readOpenGroup)
 
-  // группа с активным разделом раскрывается автоматически
   useEffect(() => {
     const active = groups.find((g) => !g.flat && g.items.some((i) => isItemActive(i, pathname)))
     if (active) setOpen(active.id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
   useEffect(() => {
@@ -160,7 +149,6 @@ function Sidebar() {
       if (open) localStorage.setItem(OPEN_GROUP_KEY, open)
       else localStorage.removeItem(OPEN_GROUP_KEY)
     } catch {
-      // не критично
     }
   }, [open])
 
@@ -171,7 +159,6 @@ function Sidebar() {
   return (
     <div className="glass-strong flex h-full flex-col rounded-4xl">
       <div className="flex h-[68px] items-center gap-2.5 px-6">
-        {/* место под знак логотипа — пользователь пришлёт позже */}
         <Logo />
       </div>
 
@@ -227,7 +214,6 @@ function Sidebar() {
   )
 }
 
-/* ---------- Topbar (только мобильный: кнопка меню) ---------- */
 
 function Topbar({ onMenu }: { onMenu: () => void }) {
   return (

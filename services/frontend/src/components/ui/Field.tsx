@@ -90,14 +90,8 @@ export interface NumberInputProps extends Omit<InputProps, 'value' | 'onChange' 
   onValueChange: (value: number) => void
 }
 
-/**
- * Числовое поле: держит введённый текст локально, поэтому его можно полностью стереть и набрать заново
- * (обычный `Number('')` сразу возвращал 0). Ведущие нули убираются, при уходе с поля пустое значение
- * или значение вне диапазона приводится к `min`/`max`.
- */
 export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(function NumberInput({ value, onValueChange, onBlur, min, max, ...props }, ref) {
   const [text, setText] = useState(String(value))
-  // значение поменялось снаружи (сброс, загрузка) — показываем его
   useEffect(() => {
     setText((t) => (t !== '' && Number(t) === value ? t : String(value)))
   }, [value])
@@ -156,7 +150,6 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   )
 })
 
-/** Маска номера Узбекистана: +998 XX XXX XX XX. Значение — 9 цифр национальной части. */
 export interface PhoneInputProps extends Omit<InputProps, 'value' | 'onChange' | 'type'> {
   value: string
   onChange: (localDigits: string) => void
@@ -182,7 +175,6 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
       value={maskLocal(value)}
       onChange={(e) => {
         const raw = e.target.value.replace(/\D/g, '')
-        // при вставке полного номера с кодом страны
         onChange(raw.length > 9 ? phoneLocalPart(raw) : raw.slice(0, 9))
       }}
       {...props}

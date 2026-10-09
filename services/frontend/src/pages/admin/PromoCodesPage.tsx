@@ -162,7 +162,6 @@ export function PromoCodesPage() {
   )
 }
 
-/** ТЗ §28 — проверка валидности промокода. */
 function PromoChecker() {
   const [code, setCode] = useState('')
   const [result, setResult] = useState<PromoCheck>()

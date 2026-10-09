@@ -29,7 +29,6 @@ export interface NavItem {
   icon: LucideIcon
   roles: Role[]
   end?: boolean
-  /** Счётчик справа от пункта */
   badge?: 'unreadNotifications'
 }
 
@@ -37,12 +36,10 @@ export interface NavGroup {
   id: string
   title: string
   icon: LucideIcon
-  /** Пункты без раскрывающегося заголовка (например, Dashboard). */
   flat?: boolean
   items: NavItem[]
 }
 
-// Права доступа по ТЗ §33, разделы админ-панели по ТЗ §20
 export const navigation: NavGroup[] = localized(() => ([
   {
     id: 'overview',

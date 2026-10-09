@@ -27,8 +27,6 @@ import { t } from '@/i18n'
 
 const now = () => new Date().toISOString()
 
-/* ---------- Сотрудники (ТЗ §21) ---------- */
-
 export interface EmployeeInput {
   firstName: string
   lastName: string
@@ -45,7 +43,6 @@ export interface WorkHistoryItem {
   subject: string
 }
 
-/** История работы сотрудника по посещениям (ТЗ §21, §41). */
 function historyOf(employeeId: ID): WorkHistoryItem[] {
   return db.audit
     .filter((a) => a.actorId === employeeId)
@@ -122,8 +119,6 @@ function nannyFromEmployee(e: Employee): Nanny {
   }
 }
 
-/* ---------- Няни (ТЗ §22) ---------- */
-
 export interface NannyAdminItem extends Nanny {
   employeeStatus: EmployeeStatus
   servedChildren: number
@@ -155,7 +150,6 @@ export const nanniesAdminApi = {
       const done = own.filter((v) => v.status === 'completed')
       const emp = db.employees.find((e) => e.id === n.employeeId)
       const activeNow = own.filter(isOngoing).length
-      // статус как при выборе няни: «Занята» — только когда нет свободных мест
       const status: NannyStatus = n.status === 'off' || n.status === 'break' ? n.status : activeNow >= n.maxChildren ? 'busy' : 'free'
       return {
         ...n,
@@ -212,7 +206,6 @@ export const nanniesAdminApi = {
     persist()
   },
 
-  /** «Отключить няню» — она больше не доступна для назначения. */
   async setEnabled(id: ID, enabled: boolean): Promise<void> {
     await delay(300)
     const n = db.nannies.find((x) => x.id === id)
@@ -223,8 +216,6 @@ export const nanniesAdminApi = {
     persist()
   },
 }
-
-/* ---------- Родители ---------- */
 
 export interface ParentAdminItem extends Parent {
   children: Child[]
@@ -250,8 +241,6 @@ export const parentsAdminApi = {
       .sort((a, b) => (b.lastVisitAt ?? b.createdAt).localeCompare(a.lastVisitAt ?? a.createdAt))
   },
 }
-
-/* ---------- Оплаты (ТЗ §19) ---------- */
 
 export interface PaymentRow {
   id: string
@@ -279,8 +268,6 @@ export const paymentsApi = {
     return rows.sort((a, b) => b.at.localeCompare(a.at))
   },
 }
-
-/* ---------- Скидки (ТЗ §27) ---------- */
 
 export type DiscountInput = Omit<Discount, 'id' | 'createdAt' | 'createdBy'>
 
@@ -327,8 +314,6 @@ export const discountsApi = {
   },
 }
 
-/* ---------- Промокоды (ТЗ §28) ---------- */
-
 export type PromoInput = Omit<PromoCode, 'id' | 'createdAt' | 'createdBy' | 'usedCount'>
 
 export type PromoCheck = { valid: true; promo: PromoCode } | { valid: false; reason: string }
@@ -370,7 +355,6 @@ export const promoCodesApi = {
     db.promoCodes = db.promoCodes.filter((x) => x.id !== id)
     persist()
   },
-  /** ТЗ §28 — проверка валидности перед применением. */
   async check(code: string): Promise<PromoCheck> {
     await delay(350)
     const p = db.promoCodes.find((x) => x.code === code.trim().toUpperCase())
@@ -383,8 +367,6 @@ export const promoCodesApi = {
     return { valid: true, promo: p }
   },
 }
-
-/* ---------- Новости (ТЗ §29) ---------- */
 
 export type NewsInput = Omit<News, 'id' | 'createdAt'>
 
@@ -415,8 +397,6 @@ export const newsApi = {
     persist()
   },
 }
-
-/* ---------- Время работы (ТЗ §26) и настройки ---------- */
 
 export const scheduleApi = {
   async get(): Promise<WorkSchedule> {

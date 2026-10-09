@@ -6,10 +6,6 @@ import { t } from '@/i18n'
 
 const EXIT_MS = 240
 
-/**
- * Модальное окно в духе iOS: на десктопе — «алерт» с пружинным появлением,
- * на телефоне — шторка снизу. Закрытие тоже анимировано.
- */
 export function Modal({
   open,
   onClose,
@@ -27,10 +23,8 @@ export function Modal({
   children: ReactNode
   footer?: ReactNode
   size?: 'xs' | 'sm' | 'md' | 'lg'
-  /** Без шапки, отступов и подвала — содержимое оформляется само. */
   bare?: boolean
 }) {
-  // держим окно смонтированным, пока идёт анимация закрытия
   const [mounted, setMounted] = useState(open)
   const [closing, setClosing] = useState(false)
 
@@ -47,7 +41,6 @@ export function Modal({
       setClosing(false)
     }, EXIT_MS)
     return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   useEffect(() => {
@@ -82,7 +75,6 @@ export function Modal({
           size === 'lg' && 'sm:max-w-3xl',
         )}
       >
-        {/* «ручка» шторки на телефоне */}
         <span className="mx-auto mt-2.5 h-1.5 w-10 shrink-0 rounded-full bg-mist-300 sm:hidden" aria-hidden />
 
         {bare ? (
@@ -114,7 +106,6 @@ export function Modal({
   )
 }
 
-/* ---------- SegmentedControl ---------- */
 
 export function Segmented<T extends string>({
   value,
@@ -155,7 +146,6 @@ export function Segmented<T extends string>({
   )
 }
 
-/* ---------- Switch ---------- */
 
 export function Switch({
   checked,
@@ -185,7 +175,6 @@ export function Switch({
   )
 }
 
-/* ---------- Confirm ---------- */
 
 export function ConfirmModal({
   open,

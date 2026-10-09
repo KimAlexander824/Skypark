@@ -37,7 +37,6 @@ import { t, localized } from '@/i18n'
 type Recognition = {
   result: FaceResult
   detail?: ChildDetail
-  /** Несколько похожих детей — сотрудник выбирает сам. */
   candidates?: { detail: ChildDetail; confidence: number }[]
 }
 
@@ -419,7 +418,6 @@ function InParkNow() {
   )
 }
 
-/** Пастельные показатели ресепшн — как на Dashboard. */
 function ReceptionStats() {
   const { data: current } = useVisits('current')
   const { data: done } = useVisits('completed')

@@ -7,10 +7,6 @@ export interface PopoverPos {
   placement: 'bottom' | 'top'
 }
 
-/**
- * Позиция выпадающей панели относительно кнопки (через portal, position: fixed),
- * чтобы панель не обрезалась внутри модалок и карточек с overflow.
- */
 export function usePopover(
   triggerRef: RefObject<HTMLElement | null>,
   panelRef: RefObject<HTMLElement | null>,
@@ -25,7 +21,6 @@ export function usePopover(
     const vh = window.innerHeight
     const below = vh - r.bottom
     const placement = below < panelHeight + 16 && r.top > below ? 'top' : 'bottom'
-    // панель всегда остаётся внутри экрана
     const rawTop = placement === 'bottom' ? r.bottom + 6 : r.top - 6 - panelHeight
     const top = Math.max(8, Math.min(rawTop, vh - panelHeight - 8))
     const width = panelWidth ?? Math.max(r.width, minWidth)
@@ -37,7 +32,6 @@ export function usePopover(
   useLayoutEffect(() => {
     if (!open) return
     place()
-    // прокрутка страницы закрывает панель (иначе она «прилипает» к краю экрана); прокрутка внутри самой панели — нет
     const onScroll = (e: Event) => {
       if (!panelRef.current?.contains(e.target as Node)) setOpen(false)
     }

@@ -33,7 +33,6 @@ import { TelegramLogo } from '@/components/brand/TelegramLogo'
 import type { Discount, PromoCode } from '@/types'
 import { t } from '@/i18n'
 
-/** Что применено к цене: скидка или промокод (ТЗ §27, §28). */
 type Adjustment = { source: 'discount'; item: Discount } | { source: 'promo'; item: PromoCode }
 
 export function NewVisitPage() {
@@ -54,7 +53,6 @@ export function NewVisitPage() {
   const child = children?.find((c) => c.id === childId)
   const nanny = nannies?.find((n) => n.id === nannyId)
 
-  // если выбранная няня стала недоступна — сбрасываем выбор
   useEffect(() => {
     if (nanny && !nanny.available) setNannyId(undefined)
   }, [nanny])
@@ -64,7 +62,6 @@ export function NewVisitPage() {
   const childBusy = Boolean(child?.activeVisit)
   const ready = child && nanny?.available && duration && !hoursError && !childBusy
 
-  // промокод проверяется для конкретного родителя — при смене ребёнка сбрасываем
   useEffect(() => {
     setAdjustment((a) => (a?.source === 'promo' ? undefined : a))
   }, [childId])
@@ -84,7 +81,6 @@ export function NewVisitPage() {
         promoCode: adjustment?.source === 'promo' ? adjustment.item.code : undefined,
       })
       toast.success(t('Посещение началось'), { description: `${fullName(child)} · ${fullName(nanny)} · ${formatDuration(duration)}` })
-      // ТЗ §15 п.1, §44 — уведомление родителю
       if (child.parent.telegram?.linked) toast.info(t('Родителю отправлено уведомление в Telegram'), { icon: <TelegramLogo className="size-8" /> })
       else toast.warning(t('Telegram родителя не привязан — уведомление не отправлено'))
       navigate('/visits', { replace: true })
@@ -115,7 +111,6 @@ export function NewVisitPage() {
 
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-5">
-          {/* 1. Ребёнок */}
           <Section n={1} icon={<Baby />} title={t('Ребёнок')} done={Boolean(child) && !childBusy}>
             {child ? (
               <SelectedChild
@@ -136,7 +131,6 @@ export function NewVisitPage() {
             )}
           </Section>
 
-          {/* 2. Няня */}
           <Section
             n={2}
             icon={<HeartHandshake />}
@@ -164,7 +158,6 @@ export function NewVisitPage() {
             )}
           </Section>
 
-          {/* 3. Продолжительность */}
           <Section n={3} icon={<Clock3 />} title={t('Продолжительность')} done={Boolean(duration) && !hoursError}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {settings?.durations.map((d) => {
@@ -502,8 +495,6 @@ function Row({ label, value }: { label: string; value?: ReactNode }) {
     </div>
   )
 }
-
-/* ---------- Скидка или промокод (ТЗ §27, §28) ---------- */
 
 function DiscountPicker({
   parentId,

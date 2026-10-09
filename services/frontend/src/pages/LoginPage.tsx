@@ -148,7 +148,6 @@ function DemoAccounts({ onPick, disabled }: { onPick: (phone: string) => void; d
 function BrandPanel() {
   return (
     <aside className="relative isolate hidden overflow-hidden rounded-4xl bg-[#121216] ring-1 ring-snow/5 lg:flex lg:flex-col lg:justify-between lg:p-12">
-      {/* приглушённая иллюстрация-дашборд и затемнение к тексту */}
       <AnalyticsArt className="absolute inset-0 -z-10 size-full opacity-45" />
       <div className="absolute inset-0 -z-10 bg-linear-to-t from-[#121216] via-[#121216]/75 to-[#121216]/20" />
       <div className="absolute -top-40 -right-32 -z-10 size-[30rem] rounded-full bg-snow/[0.06] blur-3xl" />

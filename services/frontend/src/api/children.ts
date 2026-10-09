@@ -28,7 +28,6 @@ export interface ChildDetail {
 export interface ChildrenQuery {
   search?: string
   status?: 'all' | 'active' | 'no_visits'
-  /** ТЗ §23 — дата посещения, YYYY-MM-DD */
   visitDate?: string
 }
 
@@ -52,7 +51,6 @@ export interface RegisterChildInput {
   parent: { existingId: ID } | { new: NewParentInput }
   child: NewChildInput
   createdBy: ID
-  /** Сотрудник подтвердил, что это другой ребёнок, хотя лицо совпало (например, близнецы) — имя совпавшего ребёнка. */
   faceMatchOverride?: string
 }
 
@@ -69,7 +67,6 @@ function toListItem(child: Child): ChildListItem {
 }
 
 export const parentsApi = {
-  /** ТЗ §5.1 — проверка существования родителя по номеру телефона. */
   async findByPhone(phone: string): Promise<{ parent: Parent; children: Child[] } | null> {
     await delay(300)
     const parent = db.parents.find((p) => p.phone === normalizePhone(phone))
@@ -126,7 +123,6 @@ export const childrenApi = {
     }
   },
 
-  /** ТЗ §5 — регистрация ребёнка (с созданием родителя при необходимости). */
   async register(input: RegisterChildInput): Promise<Child> {
     await delay(600)
     let parentId: ID
@@ -167,8 +163,6 @@ export const childrenApi = {
     return child
   },
 
-  /** Есть ли у ребёнка сохранённый профиль лица (после успешной/неудачной записи в сервис распознавания). */
-  /** `photoUrl` — новое фото карточки (когда лицо добавили позже, из карточки ребёнка). */
   async setFaceProfile(id: ID, hasFaceProfile: boolean, photoUrl?: string): Promise<void> {
     const child = db.children.find((c) => c.id === id)
     if (!child) throw new ApiError('not_found', t('Ребёнок не найден'))
