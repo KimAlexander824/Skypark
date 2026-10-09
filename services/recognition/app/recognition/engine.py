@@ -5,6 +5,7 @@
 """
 
 import logging
+import struct
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Protocol
@@ -18,6 +19,7 @@ from app.recognition.errors import (
     LowQuality,
     MultipleFaces,
     NoFace,
+    PhotoTooLarge,
     RecognitionUnavailable,
 )
 from app.recognition.models import EMBEDDING_DIM
@@ -50,13 +52,14 @@ class FaceEngine(Protocol):
 
 
 class InsightFaceEngine:
-    def __init__(self, model_name: str, det_size: int):
+    def __init__(self, model_name: str, det_size: int, root: str = "~/.insightface"):
         # Тяжёлый импорт делаем только здесь, чтобы тесты и fake-режим
         # работали без установленного insightface.
         from insightface.app import FaceAnalysis
 
         self._app = FaceAnalysis(
             name=model_name,
+            root=root,
             allowed_modules=["detection", "recognition"],
             providers=["CPUExecutionProvider"],
         )
@@ -101,7 +104,7 @@ def get_face_engine() -> FaceEngine:
     s = get_settings()
     if s.face_engine == "fake":
         return FakeFaceEngine()
-    return InsightFaceEngine(s.face_model, s.face_det_size)
+    return InsightFaceEngine(s.face_model, s.face_det_size, s.face_model_root)
 
 
 def require_face_engine() -> FaceEngine:
@@ -116,9 +119,58 @@ def require_face_engine() -> FaceEngine:
         ) from exc
 
 
-def decode_image(data: bytes, max_side: int) -> np.ndarray:
+def image_size(data: bytes) -> tuple[int, int] | None:
+    """Ширина и высота из заголовка JPEG/PNG — без декодирования картинки.
+    None — формат не JPEG/PNG или заголовок повреждён."""
+    if data[:8] == b"\x89PNG\r\n\x1a\n" and len(data) >= 24 and data[12:16] == b"IHDR":
+        w, h = struct.unpack(">II", data[16:24])
+        return w, h
+    if data[:2] != b"\xff\xd8":
+        return None
+    i, n = 2, len(data)
+    while i + 4 <= n:
+        if data[i] != 0xFF:
+            return None
+        marker = data[i + 1]
+        if marker == 0xFF:  # заполняющий байт
+            i += 1
+            continue
+        if marker in (0x01, *range(0xD0, 0xD8)):  # маркеры без длины
+            i += 2
+            continue
+        (length,) = struct.unpack(">H", data[i + 2 : i + 4])
+        # SOF0..SOF15, кроме DHT (C4), JPG (C8), DAC (CC): здесь записан размер кадра
+        if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
+            if i + 9 > n:
+                return None
+            h, w = struct.unpack(">HH", data[i + 5 : i + 9])
+            return w, h
+        if marker in (0xD9, 0xDA):  # конец файла / начались данные, а размера не было
+            return None
+        i += 2 + length
+    return None
+
+
+def check_image(data: bytes, settings: Settings) -> None:
+    """Проверки ДО декодирования: размер файла, формат, число пикселей.
+    Маленький файл может объявить разрешение 50000x50000 — декодер выделил бы
+    гигабайты памяти и уронил воркер («фото-бомба»), поэтому смотрим заголовок."""
     if not data:
         raise BadImage("Пустой файл")
+    if len(data) > settings.max_photo_bytes:
+        raise PhotoTooLarge(f"Фото больше {settings.max_photo_bytes // (1024 * 1024)} МБ")
+    size = image_size(data)
+    if size is None:
+        raise BadImage("Не удалось прочитать изображение (нужен JPEG или PNG)")
+    w, h = size
+    if w == 0 or h == 0:
+        raise BadImage("Повреждённое изображение")
+    if w * h > settings.max_image_pixels:
+        raise PhotoTooLarge(f"Слишком большое разрешение ({w}x{h})")
+
+
+def decode_image(data: bytes, max_side: int, settings: Settings | None = None) -> np.ndarray:
+    check_image(data, settings or get_settings())
     image = cv2.imdecode(np.frombuffer(data, dtype=np.uint8), cv2.IMREAD_COLOR)
     if image is None:
         raise BadImage("Не удалось прочитать изображение (нужен JPEG/PNG)")
@@ -175,7 +227,7 @@ def extract_face(
     (на фоне могут попасть другие дети).
     """
     s = settings or get_settings()
-    image = decode_image(data, s.max_image_side)
+    image = decode_image(data, s.max_image_side, s)
 
     faces = [f for f in engine.detect(image) if f.det_score >= s.min_det_score]
     if not faces:

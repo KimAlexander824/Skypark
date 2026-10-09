@@ -1,12 +1,16 @@
-# СКАЙПАРК — все сервисы вместе.
+# СКАЙПАРК — все сервисы вместе. ЭТОТ ФАЙЛ — ДЛЯ РАЗРАБОТКИ.
 #   docker compose up -d --build                       всё
 #   docker compose up -d --scale recognition-worker=3  больше воркеров распознавания
 # Настройки — в .env рядом с этим файлом (скопируйте .env.example).
+#
+# На сервере — вместе с продакшен-настройками (порты закрыты, пароль Redis, без Swagger):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 x-recognition: &recognition
   build: ./services/recognition
   restart: unless-stopped
   environment:
+    APP_ENV: ${APP_ENV:-dev}
     # Шарды: 3 базы на одном сервере Postgres. В продакшене — разные серверы,
     # меняются только адреса. Порядок и число шардов после запуска не менять!
     SHARD_DATABASE_URLS: >-
@@ -16,8 +20,7 @@ x-recognition: &recognition
     MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.5}
     MULTIPLE_FACES_MIN_RATIO: ${MULTIPLE_FACES_MIN_RATIO:-0.25}
     INTERNAL_TOKEN: ${INTERNAL_TOKEN:-}
-  volumes:
-    - insightface:/root/.insightface  # веса модели (~300 МБ) скачиваются один раз
+  # Веса модели — внутри образа (скачиваются при сборке и проверяются по sha256)
 
 services:
   db:
@@ -33,7 +36,9 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
     ports:
-      - "5432:5432"  # для разработки (DBeaver, тесты); на сервере убрать
+      # Только с этого компьютера (DBeaver, тесты). Из локальной сети и интернета недоступно.
+      # В docker-compose.prod.yml порт закрыт совсем.
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
@@ -47,7 +52,7 @@ services:
     volumes:
       - redisdata:/data
     ports:
-      - "6379:6379"  # для разработки; на сервере убрать
+      - "127.0.0.1:6379:6379"  # только с этого компьютера; в продакшене закрыт
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -67,6 +72,12 @@ services:
   recognition-worker:  # берёт задачи из очереди BullMQ; масштабируется --scale
     <<: *recognition
     command: python -m app.worker
+    healthcheck:  # воркер обновляет файл-пульс раз в 10 с; завис — docker перезапустит
+      test: ["CMD", "python", "-m", "app.worker", "--check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s  # загрузка модели
     depends_on:
       redis:
         condition: service_healthy
@@ -76,7 +87,13 @@ services:
   recognition-api:  # синхронный HTTP-вход для Swagger и отладки: http://localhost:8001/docs
     <<: *recognition
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
     depends_on:
       recognition-migrator:
         condition: service_completed_successfully
@@ -101,4 +118,3 @@ services:
 volumes:
   pgdata:
   redisdata:
-  insightface:

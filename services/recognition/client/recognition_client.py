@@ -17,6 +17,12 @@
     job_id = await client.submit_identify(photo_bytes)   # POST /recognize → {"job_id": ...}
     info = await client.get_result(job_id)               # GET /jobs/{job_id}
     # {"state": "completed", "result": {...}} | {"state": "waiting"} | {"state": "failed", "error": ...}
+
+Кто сделал запрос — для журнала доступа к биометрии (обязательно передавайте):
+
+    await client.identify(photo_bytes, actor="staff:17", branch="chilanzar")
+
+Redis в продакшене с паролем: RecognitionClient("redis://:ПАРОЛЬ@redis:6379").
 """
 
 import asyncio
@@ -48,23 +54,40 @@ class RecognitionClient:
 
     # ------------------------------------------------------------ положить задачу
 
-    async def submit(self, name: str, data: dict, *, priority: int | None = None) -> str:
+    async def submit(
+        self, name: str, data: dict, *, priority: int | None = None,
+        actor: str | None = None, branch: str | None = None,
+    ) -> str:
         opts = {"attempts": DEFAULT_ATTEMPTS, "backoff": DEFAULT_BACKOFF}
         if priority:
             opts["priority"] = priority
+        data = {**data, **{k: v for k, v in {"actor": actor, "branch": branch}.items() if v}}
         job = await self.queue.add(name, data, opts)
         return job.id
 
-    async def submit_identify(self, photo: bytes) -> str:
-        return await self.submit("identify", {"photo": _b64(photo)})
+    async def submit_identify(self, photo: bytes, **who) -> str:
+        return await self.submit("identify", {"photo": _b64(photo)}, **who)
 
-    async def submit_enroll(self, child_id: int, photo: bytes, source: str = "registration") -> str:
+    async def submit_enroll(
+        self, child_id: int, photo: bytes, source: str = "registration", **who
+    ) -> str:
         priority = PRIORITY_REGISTRATION if source == "registration" else PRIORITY_BACKGROUND
         data = {"child_id": child_id, "photo": _b64(photo), "source": source}
-        return await self.submit("enroll", data, priority=priority)
+        return await self.submit("enroll", data, priority=priority, **who)
 
-    async def submit_delete_faces(self, child_id: int) -> str:
-        return await self.submit("delete_faces", {"child_id": child_id}, priority=PRIORITY_BACKGROUND)
+    async def submit_delete_faces(self, child_id: int, **who) -> str:
+        return await self.submit(
+            "delete_faces", {"child_id": child_id}, priority=PRIORITY_BACKGROUND, **who
+        )
+
+    async def submit_sync_children(
+        self, child_ids: list[int], *, dry_run: bool = False, force: bool = False,
+        allow_empty: bool = False, **who,
+    ) -> str:
+        """Сверка: передать ВСЕ существующие child_id. Лица остальных детей удаляются.
+        Запускайте раз в сутки (ночью). Сначала можно dry_run=True — только показать."""
+        data = {"child_ids": list(child_ids), "dry_run": dry_run, "force": force, "allow_empty": allow_empty}
+        return await self.submit("sync_children", data, priority=PRIORITY_BACKGROUND, **who)
 
     # ------------------------------------------------------------ узнать результат
 
@@ -107,16 +130,19 @@ class RecognitionClient:
 
     # ------------------------------------------------------------ положить и дождаться
 
-    async def identify(self, photo: bytes, timeout: float = 15) -> dict:
-        return await self.wait(await self.submit_identify(photo), timeout)
+    async def identify(self, photo: bytes, timeout: float = 15, **who) -> dict:
+        return await self.wait(await self.submit_identify(photo, **who), timeout)
 
     async def enroll(
-        self, child_id: int, photo: bytes, source: str = "registration", timeout: float = 15
+        self, child_id: int, photo: bytes, source: str = "registration", timeout: float = 15, **who
     ) -> dict:
-        return await self.wait(await self.submit_enroll(child_id, photo, source), timeout)
+        return await self.wait(await self.submit_enroll(child_id, photo, source, **who), timeout)
 
-    async def delete_faces(self, child_id: int, timeout: float = 15) -> dict:
-        return await self.wait(await self.submit_delete_faces(child_id), timeout)
+    async def delete_faces(self, child_id: int, timeout: float = 15, **who) -> dict:
+        return await self.wait(await self.submit_delete_faces(child_id, **who), timeout)
+
+    async def sync_children(self, child_ids: list[int], timeout: float = 120, **kwargs) -> dict:
+        return await self.wait(await self.submit_sync_children(child_ids, **kwargs), timeout)
 
 
 def _b64(photo: bytes) -> str:

@@ -32,11 +32,26 @@ class LowQuality(FaceError):
     code = "low_quality"
 
 
+class PhotoTooLarge(FaceError):
+    """Файл больше MAX_PHOTO_BYTES или разрешение больше MAX_IMAGE_PIXELS."""
+
+    status_code = 413
+    code = "photo_too_large"
+
+
 class RecognitionUnavailable(DomainError):
     """Модель не загрузилась. Остальная система должна продолжать работать (§43)."""
 
     status_code = 503
     code = "recognition_unavailable"
+
+
+class SyncRefused(DomainError):
+    """Сверка с backend отказалась удалять: список подозрительный (пустой или
+    удаление слишком многих детей). Защита от ошибки на стороне backend."""
+
+    status_code = 409
+    code = "sync_refused"
 
 
 class InvalidSource(DomainError):
