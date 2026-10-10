@@ -17,17 +17,18 @@
 | Готовый клиент на Python | `services/recognition/client/recognition_client.py` — скопировать к себе, `pip install bullmq` |
 
 ```python
-from recognition_client import RecognitionClient
+from recognition_client import RecognitionClient, RecognitionJobFailed
 
-rc = RecognitionClient("redis://redis:6379")
+rc = RecognitionClient("redis://redis:6379")   # один на всё приложение
 
-# 1) положить и дождаться (фронтенд делает один запрос)
-result = await rc.identify(photo_bytes)
-
-# 2) как на схеме: POST кладёт задачу, GET спрашивает результат
-job_id = await rc.submit_identify(photo_bytes)   # вернуть фронтенду {"job_id": job_id}
-info = await rc.get_result(job_id)               # {"state": "completed", "result": {...}}
+try:
+    result = await rc.identify(photo_bytes, actor="staff:17", branch="chilanzar")
+except (RecognitionJobFailed, TimeoutError):
+    ...  # распознавание недоступно — искать ребёнка по телефону
 ```
+
+Метод сам кладёт задачу в очередь и ждёт ответ (поиск — около 0,3 с, ждёт до 15 с).
+Фронтенд делает к backend один обычный запрос и получает готовый ответ.
 
 **Кто сделал запрос.** Каждое действие с биометрией пишется в журнал доступа. Сервис не знает
 пользователей, поэтому backend передаёт в задаче `actor` (кто, например `"staff:17"`) и `branch`
